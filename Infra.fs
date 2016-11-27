@@ -1,5 +1,5 @@
 
-namespace Fsx.Infrastructure
+namespace FSX.Infrastructure
 
 open System
 open System.Text
@@ -88,3 +88,4 @@ module Util =
 
     let FsxArguments() =
         FsxArgumentsInternal((List.ofSeq(Environment.GetCommandLineArgs())), false)
+
