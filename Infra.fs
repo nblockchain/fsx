@@ -6,12 +6,27 @@ open System.Text
 open System.Threading
 open System.Diagnostics
 
-module Process =
-    let Execute (commandWithArguments: string, echo: bool, hidden: bool)
-        : int * string * string =
+type OutChunk = StdOut of string | StdErr of string
+type OutputBuffer = list<OutChunk>
+type ProcessResult = { ExitCode: int; Output: OutputBuffer }
 
-        let outBuilder = new StringBuilder()
-        let errBuilder = new StringBuilder()
+module Process =
+
+    let rec PrintToScreen (outputBuffer: OutputBuffer) =
+        match outputBuffer with
+        | [] -> ()
+        | head::tail ->
+            match head with
+            | StdOut(out) -> Console.WriteLine(out)
+            | StdErr(err) -> Console.Error.WriteLine(err)
+            PrintToScreen(tail)
+
+    let Execute (commandWithArguments: string, echo: bool, hidden: bool)
+        : ProcessResult =
+
+        // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events
+        let outputBuffer = new System.Collections.Generic.List<OutChunk>()
+        let outputBufferLock = new Object()
 
         use outWaitHandle = new AutoResetEvent(false)
         use errWaitHandle = new AutoResetEvent(false)
@@ -39,7 +54,7 @@ module Process =
             else
                 if not (hidden) then
                     Console.WriteLine(e.Data)
-                outBuilder.AppendLine(e.Data) |> ignore
+                lock outputBufferLock (fun _ -> outputBuffer.Add(OutChunk.StdOut(e.Data)))
 
         let errReceived (e: DataReceivedEventArgs): unit =
             if (e.Data = null) then
@@ -47,7 +62,7 @@ module Process =
             else
                 if not (hidden) then
                     Console.Error.WriteLine(e.Data)
-                errBuilder.AppendLine(e.Data) |> ignore
+                lock outputBufferLock (fun _ -> outputBuffer.Add(OutChunk.StdErr(e.Data)))
 
         proc.OutputDataReceived.Add outReceived
         proc.ErrorDataReceived.Add errReceived
@@ -65,7 +80,7 @@ module Process =
                 outWaitHandle.WaitOne() |> ignore
                 errWaitHandle.WaitOne() |> ignore
 
-        (exitCode, outBuilder.ToString(), errBuilder.ToString())
+        { ExitCode = exitCode; Output = List.ofSeq(outputBuffer) }
 
 
 module Util =
