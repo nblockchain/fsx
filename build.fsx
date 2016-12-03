@@ -7,14 +7,25 @@ open System.Linq
 #load "Infra.fs"
 open FSX.Infrastructure
 
+Console.WriteLine("Checking if all .fsx scripts build")
+
+let allFsxScripts = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fsx", SearchOption.AllDirectories)
+let fsxScripts = allFsxScripts.Where(fun scriptPath -> scriptPath.EndsWith("fsx.fsx"))
+if (fsxScripts.Count() > 1) then
+    Console.Error.WriteLine("More than one fsx.fsx file found, please just leave one")
+    Environment.Exit(1)
+if (fsxScripts.Count() = 0) then
+    Console.Error.WriteLine("fsx.fsx script not found")
+    Environment.Exit(1)
+let fsxLocation = fsxScripts.Single()
+
 let buildFsxScript(script: string, sofar: bool) : bool =
     if (script = null) then
         raise(new ArgumentNullException("script"))
 
     let currentDir = Directory.GetCurrentDirectory()
-    let fsx = Path.Combine(currentDir, "fsx.fsx")
     Console.WriteLine(sprintf "Building %s" script)
-    let procResult = Process.Execute(sprintf "%s -k %s" fsx script, false, false)
+    let procResult = Process.Execute(sprintf "%s -k %s" fsxLocation script, false, false)
 
     let success = match procResult.ExitCode with
                   | 0 -> true
@@ -31,9 +42,6 @@ let rec buildAll(scripts: string list, sofar: bool) : bool =
         let sofarPlusOne = buildFsxScript(script, sofar)
         buildAll(tail, sofarPlusOne)
 
-Console.WriteLine("Checking if all .fsx scripts build")
-
-let allFsxScripts = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fsx", SearchOption.AllDirectories)
 let scripts = List.ofArray (allFsxScripts)
 let allCompile = buildAll(scripts, true)
 
