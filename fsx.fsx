@@ -192,18 +192,7 @@ let RunTheExecutable(exe: FileInfo) =
     let runResult = Process.Execute(sprintf "mono %s" exe.FullName, false, false)
     runResult.ExitCode
 
-let maybeExe = GetAlreadyBuiltExecutable(parsedArgs.Script)
-match maybeExe with
-| Some(exe) ->
-    if (parsedArgs.Flags.Contains(Flag.OnlyCheck)) then
-        Environment.Exit(0)
-    if (parsedArgs.Flags.Contains(Flag.OnlyCompile)) then
-        Environment.Exit(0)
-
-    let exitCodeOfTheRun = RunTheExecutable(exe)
-    Environment.Exit(exitCodeOfTheRun)
-
-| None ->
+let Build() =
     let buildResult = BuildFsxScript(parsedArgs.Script)
 
     match buildResult with
@@ -216,10 +205,25 @@ match maybeExe with
         if (parsedArgs.Flags.Contains(Flag.OnlyCheck)) then
             if (exeTarget.BinFolderCreated) then
                 exeTarget.Exe.Directory.Delete(true)
-                Environment.Exit(0)
+            Environment.Exit(0)
 
         if (parsedArgs.Flags.Contains(Flag.OnlyCompile)) then
             Environment.Exit(0)
         else
             let exitCodeOfTheRun = RunTheExecutable(exeTarget.Exe)
             Environment.Exit(exitCodeOfTheRun)
+
+// if it has any of these 2 flags, force build, not even check if the .exe is there
+if (parsedArgs.Flags.Contains(Flag.OnlyCheck) ||
+    parsedArgs.Flags.Contains(Flag.OnlyCompile)) then
+    Build()
+
+else
+    Console.WriteLine("else build")
+    let maybeExe = GetAlreadyBuiltExecutable(parsedArgs.Script)
+    match maybeExe with
+    | Some(exe) ->
+        let exitCodeOfTheRun = RunTheExecutable(exe)
+        Environment.Exit(exitCodeOfTheRun)
+    | None ->
+        Build()
