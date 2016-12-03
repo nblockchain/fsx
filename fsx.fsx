@@ -195,8 +195,14 @@ let RunTheExecutable(exe: FileInfo) =
 let maybeExe = GetAlreadyBuiltExecutable(parsedArgs.Script)
 match maybeExe with
 | Some(exe) ->
+    if (parsedArgs.Flags.Contains(Flag.OnlyCheck)) then
+        Environment.Exit(0)
+    if (parsedArgs.Flags.Contains(Flag.OnlyCompile)) then
+        Environment.Exit(0)
+
     let exitCodeOfTheRun = RunTheExecutable(exe)
     Environment.Exit(exitCodeOfTheRun)
+
 | None ->
     let buildResult = BuildFsxScript(parsedArgs.Script)
 
