@@ -67,9 +67,10 @@ module Process =
         proc.OutputDataReceived.Add outReceived
         proc.ErrorDataReceived.Add errReceived
 
+        proc.Start() |> ignore
+
         let exitCode =
             try
-                proc.Start() |> ignore
                 proc.BeginOutputReadLine()
                 proc.BeginErrorReadLine()
 
