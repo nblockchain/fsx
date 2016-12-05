@@ -17,8 +17,12 @@ module Process =
         | [] -> ()
         | head::tail ->
             match head with
-            | StdOut(out) -> Console.WriteLine(out)
-            | StdErr(err) -> Console.Error.WriteLine(err)
+            | StdOut(out) ->
+                Console.WriteLine(out)
+                Console.Out.Flush()
+            | StdErr(err) ->
+                Console.Error.WriteLine(err)
+                Console.Error.Flush()
             PrintToScreen(tail)
 
     let Execute (commandWithArguments: string, echo: bool, hidden: bool)
@@ -54,6 +58,7 @@ module Process =
             else
                 if not (hidden) then
                     Console.WriteLine(e.Data)
+                    Console.Out.Flush()
                 lock outputBufferLock (fun _ -> outputBuffer.Add(OutChunk.StdOut(e.Data)))
 
         let errReceived (e: DataReceivedEventArgs): unit =
@@ -62,6 +67,7 @@ module Process =
             else
                 if not (hidden) then
                     Console.Error.WriteLine(e.Data)
+                    Console.Error.Flush()
                 lock outputBufferLock (fun _ -> outputBuffer.Add(OutChunk.StdErr(e.Data)))
 
         proc.OutputDataReceived.Add outReceived
