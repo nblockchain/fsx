@@ -19,7 +19,7 @@ if (fsxScripts.Count() = 0) then
     Environment.Exit(1)
 let fsxLocation = fsxScripts.Single()
 
-let buildFsxScript(script: string, soFar: bool): bool =
+let buildFsxScript (script: string) (soFar: bool): bool =
     if (script = null) then
         raise(ArgumentNullException("script"))
 
@@ -35,15 +35,15 @@ let buildFsxScript(script: string, soFar: bool): bool =
 
     (success && soFar)
 
-let rec buildAll(scripts: string list, soFar: bool): bool =
+let rec buildAll(scripts: string list) (soFar: bool): bool =
     match scripts with
     | [] -> soFar
     | script::tail ->
-        let sofarPlusOne = buildFsxScript(script, soFar)
-        buildAll(tail, sofarPlusOne)
+        let sofarPlusOne = buildFsxScript script soFar
+        buildAll tail sofarPlusOne
 
 let scripts = List.ofArray (allFsxScripts)
-let allCompile = buildAll(scripts, true)
+let allCompile = buildAll scripts true
 
 if (allCompile) then
     Console.WriteLine("Success")
