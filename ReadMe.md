@@ -20,7 +20,7 @@ FSX answers both of these latter questions with a categorical YES!
 In debian-based Linux, instead of running `fsharpi` command, you could use fsx instead, which would reuse binaries from a previous run, or generate new binaries first if needed.
 You could even install it system wide, and use it in your hashbang too (instead of `#!/usr/bin/env fsharpi`, use `#!/usr/bin/env fsx`).
 
-For your CI needs, you could include fsx repository as a submodule, and then bootstrap it in your CI script, and call `build.fsx`, which will find all the F# script files in your repository and try to compile them (but not run them). An example of how to do this with GitLabCI, is this `.gitlab-ci.yml` configuration file sample:
+For your CI needs, you could include fsx repository as a submodule, and then bootstrap it in your CI script, and call `ci-build.fsx`, which will find all the F# script files in your repository and try to compile them (but not run them). An example of how to do this with GitLabCI, is this `.gitlab-ci.yml` configuration file sample:
 
 ```
 image: ubuntu:16.04
@@ -32,7 +32,7 @@ before_script:
   - apt-get install -y -qq fsharp
 build:
   script:
-    - ./fsx/build.fsx
+    - ./fsx/ci-build.fsx
 ```
 
 # Acknowledgements
