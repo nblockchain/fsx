@@ -98,7 +98,9 @@ module Util =
         | head::tail ->
             match fsxFileFound with
             | false ->
-                if (head.EndsWith(".fsx")) then
+                if (head.EndsWith(".fsx") || //normal FSI way
+                    // below for #!/usr/bin/fsx shebang
+                    head.EndsWith("fsx.exe")) then
                     FsxArgumentsInternal(tail, true)
                 else
                     FsxArgumentsInternal(tail, false)
@@ -109,5 +111,6 @@ module Util =
                     args
 
     let FsxArguments() =
-        FsxArgumentsInternal((List.ofSeq(Environment.GetCommandLineArgs())), false)
+        let cmdLineArgs = Environment.GetCommandLineArgs()
+        FsxArgumentsInternal((List.ofSeq(cmdLineArgs)), false)
 

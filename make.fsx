@@ -26,7 +26,7 @@ let fsxInstallPath = Path.Combine(prefix, "lib", "fsx")
 let binInstallPath = Path.Combine(prefix, "bin")
 
 let fsxLauncherScriptPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx"))
-let fsxBinaryPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx.exe"))
+let fsxBinaryPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx.fsx.exe"))
 
 let JustBuild() =
     Console.WriteLine("Compiling fsx...")
@@ -35,7 +35,7 @@ let JustBuild() =
     if (fsharpcWhich.ExitCode <> 0) then
         Environment.Exit 1
     File.WriteAllText(fsxLauncherScriptPath.FullName,
-                      sprintf "#!/bin/sh\nexec mono %s/fsx.exe \"$@\"" fsxInstallPath)
+                      sprintf "#!/bin/sh\nset -e\nmono %s/fsx.fsx.exe -c \"$@\"\nexec mono bin/$1.exe" fsxInstallPath)
 
 
 let maybeTarget = GatherTarget(Util.FsxArguments(), None)
