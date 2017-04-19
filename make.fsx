@@ -28,8 +28,7 @@ let binInstallPath = Path.Combine(prefix, "bin")
 let fsxLauncherScriptPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx"))
 let fsxBinaryPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx.fsx.exe"))
 
-let wrapperFsxScript = """
-#!/bin/sh
+let wrapperFsxScript = """#!/bin/sh
 set -e
 mono {0}/fsx.fsx.exe -c "$@"
 TARGET_DIR=$(dirname -- "$1")
