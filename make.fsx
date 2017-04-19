@@ -28,14 +28,24 @@ let binInstallPath = Path.Combine(prefix, "bin")
 let fsxLauncherScriptPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx"))
 let fsxBinaryPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx.fsx.exe"))
 
+let wrapperFsxScript = """
+#!/bin/sh
+set -e
+mono {0}/fsx.fsx.exe -c "$@"
+TARGET_DIR=$(dirname -- "$1")
+TARGET_FILE=$(basename -- "$1")
+exec mono "$TARGET_DIR/bin/$TARGET_FILE.exe"
+"""
+
 let JustBuild() =
     Console.WriteLine("Compiling fsx...")
     let fsxPath = Path.Combine(__SOURCE_DIRECTORY__, "fsx.fsx")
     let fsharpcWhich = Process.Execute(sprintf "%s -c %s" fsxPath fsxPath, true, false)
     if (fsharpcWhich.ExitCode <> 0) then
         Environment.Exit 1
+
     File.WriteAllText(fsxLauncherScriptPath.FullName,
-                      sprintf "#!/bin/sh\nset -e\nmono %s/fsx.fsx.exe -c \"$@\"\nexec mono bin/$1.exe" fsxInstallPath)
+                      String.Format(wrapperFsxScript, fsxInstallPath))
 
 
 let maybeTarget = GatherTarget(Util.FsxArguments(), None)
