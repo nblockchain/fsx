@@ -10,6 +10,7 @@ open FSX.Infrastructure
 let verbose = false
 
 let PrintUsage () =
+    Console.WriteLine()
     Console.WriteLine("Usage: ./fsxc.fsx  [OPTION] yourscript.fsx")
     Console.WriteLine()
     Console.WriteLine("Options")
@@ -17,9 +18,14 @@ let PrintUsage () =
     Console.WriteLine("  -k, --check     Only check if it compiles, removing generated binaries")
 
 let args = Util.FsxArguments()
-if (args.Length = 0 || (args.Length = 1 && args.[0] = "--help")) then
+if (args.Length = 0) then
+    Console.Error.WriteLine "Please pass the .fsx script as an argument"
     PrintUsage()
-    Environment.Exit(1)
+    Environment.Exit 1
+
+if (args.Length = 1 && args.[0] = "--help") then
+    PrintUsage()
+    Environment.Exit 0
 
 type Flag = Force | OnlyCheck
 type ProvidedCommandLineArguments =
