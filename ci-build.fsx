@@ -9,7 +9,7 @@ open FSX.Infrastructure
 
 Console.WriteLine("Checking if all .fsx scripts build")
 
-let fsxCompiler = "fsx.fsx"
+let fsxCompiler = "fsxc.fsx"
 
 let allFsxScripts = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fsx", SearchOption.AllDirectories)
 let fsxScripts = allFsxScripts.Where(fun scriptPath -> FileInfo(scriptPath).Name = fsxCompiler)

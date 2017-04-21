@@ -10,20 +10,18 @@ open FSX.Infrastructure
 let verbose = false
 
 let PrintUsage () =
-    Console.WriteLine("Usage: ./fsx.fsx  [OPTION]... yourscript.fsx")
+    Console.WriteLine("Usage: ./fsxc.fsx  [OPTION] yourscript.fsx")
     Console.WriteLine()
     Console.WriteLine("Options")
-    Console.WriteLine("  -c, --compile     Only compile (don't run), if binaries don't exist")
-    Console.WriteLine("                    or their timestamp is older than source")
-    Console.WriteLine("  -k, --check       Check if it compiles (don't run), without checking previous")
-    Console.WriteLine("                    existence or timestamp, and without generating binaries")
+    Console.WriteLine("  -f, --force     Always generate binaries again even if existing binaries are new enough")
+    Console.WriteLine("  -k, --check     Only check if it compiles, removing generated binaries")
 
 let args = Util.FsxArguments()
 if (args.Length = 0 || (args.Length = 1 && args.[0] = "--help")) then
     PrintUsage()
     Environment.Exit(1)
 
-type Flag = OnlyCompile | OnlyCheck
+type Flag = Force | OnlyCheck
 type ProvidedCommandLineArguments =
     { Flags: list<Flag>; MaybeScript: Option<FileInfo> }
 type ParsedCommandLineArguments =
@@ -38,8 +36,8 @@ let rec ParseArgsInternal (args: string list) (finalArgs: ProvidedCommandLineArg
     | [] -> finalArgs
     | arg::tail ->
         let maybeFlag: Option<Flag> =
-            if (arg = "-c" || arg = "--compile") then
-                Some(OnlyCompile)
+            if (arg = "-f" || arg = "--force") then
+                Some(Force)
             else if (arg = "-k" || arg = "--check") then
                 Some(OnlyCheck)
             else if (arg.StartsWith("-")) then
@@ -247,10 +245,6 @@ let GetAlreadyBuiltExecutable(script: FileInfo): Option<FileInfo> =
     else
         Some(exeTarget)
 
-let RunTheExecutable(exe: FileInfo) =
-    let runResult = Process.Execute(sprintf "mono %s" exe.FullName, false, false)
-    runResult.ExitCode
-
 let Build(artifacts: bool) =
     let buildResult = BuildFsxScript(parsedArgs.Script)
 
@@ -267,19 +261,15 @@ let Build(artifacts: bool) =
                 exeTarget.Exe.Directory.Delete(true)
         exeTarget.Exe
 
-// force build, not even check if the .exe is there
-if (parsedArgs.Flags.Contains(Flag.OnlyCheck)) then
-    Build(false) |> ignore
+let (check,force) =
+    (parsedArgs.Flags.Contains(Flag.OnlyCheck),parsedArgs.Flags.Contains(Flag.Force))
+
+if (check || force) then
+    Build(not check) |> ignore
     Environment.Exit 0
 
 let maybeExe = GetAlreadyBuiltExecutable(parsedArgs.Script)
-let theExe =
-    match maybeExe with
-    | None -> Build(true)
-    | Some(alreadyExistingExe) -> alreadyExistingExe
+if (maybeExe.IsNone) then
+    Build(true) |> ignore
 
-if (parsedArgs.Flags.Contains(Flag.OnlyCompile)) then
-    Environment.Exit 0
-
-let exitCodeOfTheRun = RunTheExecutable(theExe)
-Environment.Exit exitCodeOfTheRun
+Environment.Exit 0

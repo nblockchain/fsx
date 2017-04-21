@@ -114,7 +114,7 @@ module Util =
                 if (ExtensionMatchesIfArgumentIsAPath(head, "fsx") || //normal FSI way
 
                     // below for #!/usr/bin/fsx shebang
-                    FileNameMatchesIfArgumentIsAPath(head, "fsx.fsx.exe")) then
+                    FileNameMatchesIfArgumentIsAPath(head, "fsxc.fsx.exe")) then
 
                     FsxArgumentsInternal(tail, true)
                 else
