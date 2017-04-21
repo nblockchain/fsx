@@ -2,6 +2,7 @@
 namespace FSX.Infrastructure
 
 open System
+open System.IO
 open System.Text
 open System.Threading
 open System.Diagnostics
@@ -92,15 +93,29 @@ module Process =
 
 module Util =
 
+    let private FileNameMatchesIfArgumentIsAPath(argument: string, filename: string) =
+        try
+            Path.GetFileName(argument).Equals(filename)
+        with
+        | _ -> false
+
+    let private ExtensionMatchesIfArgumentIsAPath(argument: string, extension: string) =
+        try
+            Path.GetFileName(argument).EndsWith("." + extension)
+        with
+        | _ -> false
+
     let rec private FsxArgumentsInternal(args: string list, fsxFileFound: bool) =
         match args with
         | [] -> []
         | head::tail ->
             match fsxFileFound with
             | false ->
-                if (head.EndsWith(".fsx") || //normal FSI way
+                if (ExtensionMatchesIfArgumentIsAPath(head, "fsx") || //normal FSI way
+
                     // below for #!/usr/bin/fsx shebang
-                    head.EndsWith("fsx.exe")) then
+                    FileNameMatchesIfArgumentIsAPath(head, "fsx.fsx.exe")) then
+
                     FsxArgumentsInternal(tail, true)
                 else
                     FsxArgumentsInternal(tail, false)

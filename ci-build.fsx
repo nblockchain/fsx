@@ -9,13 +9,15 @@ open FSX.Infrastructure
 
 Console.WriteLine("Checking if all .fsx scripts build")
 
+let fsxCompiler = "fsx.fsx"
+
 let allFsxScripts = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fsx", SearchOption.AllDirectories)
-let fsxScripts = allFsxScripts.Where(fun scriptPath -> scriptPath.EndsWith("fsx.fsx"))
+let fsxScripts = allFsxScripts.Where(fun scriptPath -> FileInfo(scriptPath).Name = fsxCompiler)
 if (fsxScripts.Count() > 1) then
-    Console.Error.WriteLine("More than one fsx.fsx file found, please just leave one")
+    Console.Error.WriteLine(sprintf "More than one %s file found, please just leave one" fsxCompiler)
     Environment.Exit(1)
 if (fsxScripts.Count() = 0) then
-    Console.Error.WriteLine("fsx.fsx script not found")
+    Console.Error.WriteLine(sprintf "%s script not found" fsxCompiler)
     Environment.Exit(1)
 let fsxLocation = fsxScripts.Single()
 
