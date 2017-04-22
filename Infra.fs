@@ -5,6 +5,7 @@ open System
 open System.IO
 open System.Text
 open System.Threading
+open System.Reflection
 open System.Diagnostics
 
 type OutChunk = StdOut of string | StdErr of string
@@ -93,9 +94,9 @@ module Process =
 
 module Util =
 
-    let private FileNameMatchesIfArgumentIsAPath(argument: string, filename: string) =
+    let private FileMatchesIfArgumentIsAPath(argument: string, file: FileInfo) =
         try
-            Path.GetFileName(argument).Equals(filename)
+            FileInfo(argument).FullName.Equals(file.FullName)
         with
         | _ -> false
 
@@ -105,20 +106,28 @@ module Util =
         with
         | _ -> false
 
-    let rec private FsxArgumentsInternal(args: string list, fsxFileFound: bool) =
+    let private currentExe =
+        FileInfo(Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath)
+
+    let rec private FsxArgumentsInternalFsx(args: string list) =
+        match args with
+        | [] -> []
+        | head::tail ->
+            if FileMatchesIfArgumentIsAPath(head, currentExe) then
+                tail
+            else
+                FsxArgumentsInternalFsx(tail)
+
+    let rec private FsxArgumentsInternalFsi(args: string list, fsxFileFound: bool) =
         match args with
         | [] -> []
         | head::tail ->
             match fsxFileFound with
             | false ->
-                if (ExtensionMatchesIfArgumentIsAPath(head, "fsx") || //normal FSI way
-
-                    // below for #!/usr/bin/fsx shebang
-                    FileNameMatchesIfArgumentIsAPath(head, "fsxc.fsx.exe")) then
-
-                    FsxArgumentsInternal(tail, true)
+                if ExtensionMatchesIfArgumentIsAPath(head, "fsx") then
+                    FsxArgumentsInternalFsi(tail, true)
                 else
-                    FsxArgumentsInternal(tail, false)
+                    FsxArgumentsInternalFsi(tail, false)
             | true ->
                 if (head.Equals("--")) then
                     tail
@@ -126,6 +135,12 @@ module Util =
                     args
 
     let FsxArguments() =
-        let cmdLineArgs = Environment.GetCommandLineArgs()
-        FsxArgumentsInternal((List.ofSeq(cmdLineArgs)), false)
+        let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
+        let isFsi = (currentExe.Name = "fsi.exe")
+        if (isFsi) then
+            FsxArgumentsInternalFsi(cmdLineArgs, false)
+
+        // below for #!/usr/bin/fsx shebang
+        else
+            FsxArgumentsInternalFsx(cmdLineArgs)
 
