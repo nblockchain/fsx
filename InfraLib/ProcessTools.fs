@@ -15,6 +15,22 @@ open MiscTools
 
 module ProcessTools =
 
+    type QueuedLock() =
+        let innerLock = new Object()
+        let ticketsCount = ref 0
+        let ticketToRide = ref 1
+
+        member this.Enter() =
+            let myTicket = Interlocked.Increment(ticketsCount)
+            Monitor.Enter(innerLock)
+            while (myTicket <> !ticketToRide) do
+                Monitor.Wait(innerLock) |> ignore
+
+        member this.Exit() =
+            Interlocked.Increment(ticketToRide) |> ignore
+            Monitor.PulseAll(innerLock)
+            Monitor.Exit(innerLock)
+
     type Standard =
         | Output
         | Error
@@ -80,12 +96,17 @@ module ProcessTools =
             "Process could not start! %s" (procDetails.ToString()),
             innerException)
 
+    type private ReaderState =
+        | Continue // new character in the same line
+        | Pause // e.g. an EOL has arrived -> other thread can take the lock
+        | End // no more data
+
     let Execute (procDetails: ProcessDetails, echo: Echo)
         : ProcessResult =
 
         // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events?
         let mutable outputBuffer: list<OutputChunk> = []
-        let outputBufferLock = new Object()
+        let outputBufferLock = new QueuedLock()
 
         if (echo = Echo.All) then
             Console.WriteLine(sprintf "%s %s" procDetails.Command procDetails.Arguments)
@@ -123,7 +144,7 @@ module ProcessTools =
                 else //if (readCount = 0)
                     outputToReadFrom.EndOfStream
 
-            let ReadIteration(): bool =
+            let ReadIteration(): ReaderState =
 
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
@@ -142,19 +163,22 @@ module ProcessTools =
                     failwith "Failed to read"
 
                 let readCount = readTask.Result
-                if (readCount > bufferSize) then
-                    failwith "StreamReader.Read() should not read more than the bufferSize if we passed the bufferSize as a parameter"
 
-                if (readCount = bufferSize) then
-                    if (echo <> Echo.Off) then
-                        print outChar
-                        flush()
-
-                    lock outputBufferLock (fun _ ->
+                let readChar =
+                    if (readCount > bufferSize) then
+                        failwith (sprintf "StreamReader.Read() should not read more (%d) than the bufferSize (%d) if we passed the bufferSize as a parameter"
+                                     readCount bufferSize)
+                    else if (readCount < bufferSize) then
+                        None
+                    else //if (readCount = bufferSize) then
+                        if (echo <> Echo.Off) then
+                            print outChar
+                            flush()
 
                         let leChar = outChar.[uniqueElementIndexInTheSingleCharBuffer]
                         let newBuilder = new StringBuilder(leChar.ToString())
                         let newBlock = { OutputType = std; Chunk = newBuilder }
+
                         match outputBuffer with
                         | [] ->
                             outputBuffer <- [ newBlock ]
@@ -163,14 +187,35 @@ module ProcessTools =
                                 head.Chunk.Append(outChar) |> ignore
                             else
                                 outputBuffer <- newBlock::outputBuffer
-                    )
+                        Some(leChar)
 
-                let continueIterating = not(EndOfStream(readCount))
-                continueIterating
+                let readerState =
+                    if (EndOfStream(readCount)) then
+                        End
+                    else
+                        match readChar with
+                        | Some('\n') ->
+                            Pause
+                        | Some(aChar) ->
+                            Continue
+                        | None ->
+                            failwith "readChar=None should have been EndOfStream"
+                readerState
 
-            // this is a way to do a `do...while` loop in F#...
-            while (ReadIteration()) do
-                ignore None
+            let rec Loop(enter: bool) =
+                if (enter) then
+                      outputBufferLock.Enter()
+
+                match ReadIteration() with
+                | Continue ->
+                    Loop false
+                | End ->
+                    outputBufferLock.Exit()
+                | Pause ->
+                    outputBufferLock.Exit()
+                    Loop true
+
+            Loop true
 
         let outReaderThread = new Thread(new ThreadStart(fun _ ->
             ReadStandard(Standard.Output)
