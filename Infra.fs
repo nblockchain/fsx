@@ -27,6 +27,16 @@ module Process =
                 Console.Error.Flush()
             PrintToScreen(tail)
 
+    let rec ToString (outputBuffer: OutputBuffer): string =
+        match outputBuffer with
+        | [] -> String.Empty
+        | head::tail ->
+            match head with
+            | StdOut(out) ->
+                out + Environment.NewLine + ToString(tail)
+            | StdErr(err) ->
+                err + Environment.NewLine + ToString(tail)
+
     let Execute (commandWithArguments: string, echo: bool, hidden: bool)
         : ProcessResult =
 
