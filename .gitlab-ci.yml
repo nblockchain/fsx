@@ -19,3 +19,10 @@ install:
     - make
     - make install
 
+test:
+  script:
+    - ./configure.fsx
+    - make
+    - make install
+    - ./test.fsx
+
