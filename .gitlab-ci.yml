@@ -13,3 +13,9 @@ build:
   script:
     - ./ci-build.fsx
 
+install:
+  script:
+    - ./configure.fsx
+    - make
+    - make install
+
