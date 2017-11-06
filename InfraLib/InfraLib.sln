@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "InfraLib", "InfraLib.fsproj", "{4634F264-784E-42DA-B5A1-FE72125DEAFC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4634F264-784E-42DA-B5A1-FE72125DEAFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4634F264-784E-42DA-B5A1-FE72125DEAFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4634F264-784E-42DA-B5A1-FE72125DEAFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4634F264-784E-42DA-B5A1-FE72125DEAFC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

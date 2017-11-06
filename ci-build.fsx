@@ -4,8 +4,11 @@ open System
 open System.IO
 open System.Linq
 
-#load "Infra.fs"
+#r "System.Configuration"
+#load "InfraLib/MiscTools.fs"
+#load "InfraLib/ProcessTools.fs"
 open FSX.Infrastructure
+open ProcessTools
 
 Console.WriteLine("Checking if all .fsx scripts build")
 
@@ -27,7 +30,7 @@ let buildFsxScript (script: string) (soFar: bool): bool =
 
     let currentDir = Directory.GetCurrentDirectory()
     Console.WriteLine(sprintf "Building %s" script)
-    let procResult = Process.Execute(sprintf "%s -k %s" fsxLocation script, false, false)
+    let procResult = ProcessTools.Execute({ Command = fsxLocation; Arguments = sprintf "-k %s" script }, Echo.OutputOnly)
 
     let success = match procResult.ExitCode with
                   | 0 -> true
