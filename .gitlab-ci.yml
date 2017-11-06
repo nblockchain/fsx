@@ -1,0 +1,15 @@
+image: ubuntu:16.04
+
+before_script:
+  - apt-get update -qq
+
+  # workaround to Ubuntu messing up with deps in STABLE/LTS
+  - apt-get install -y tzdata
+
+  - apt-get install -y git
+  - apt-get install -y fsharp
+
+build:
+  script:
+    - ./ci-build.fsx
+
