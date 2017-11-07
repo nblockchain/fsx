@@ -4,8 +4,11 @@ open System
 open System.IO
 open System.Linq
 
-#load "Infra.fs"
+#r "System.Configuration"
+#load "InfraLib/MiscTools.fs"
+#load "InfraLib/ProcessTools.fs"
 open FSX.Infrastructure
+open ProcessTools
 
 let verbose = false
 
@@ -17,7 +20,7 @@ let PrintUsage () =
     Console.WriteLine("  -f, --force     Always generate binaries again even if existing binaries are new enough")
     Console.WriteLine("  -k, --check     Only check if it compiles, removing generated binaries")
 
-let args = Util.FsxArguments()
+let args = MiscTools.FsxArguments()
 if (args.Length = 0) then
     Console.Error.WriteLine "Please pass the .fsx script as an argument"
     PrintUsage()
@@ -209,9 +212,14 @@ let BuildFsxScript(script: FileInfo): BuildResult =
             let sourceFiles = String.Join(" ", filesToCompile)
             let refs = String.Join (" ", getCompilerReferences(compilerInputs))
             let fscompilerflags = (sprintf "%s --target:exe --out:%s %s" refs exeTarget.FullName sourceFiles)
-            let processResult = Process.Execute("fsharpc " + fscompilerflags, verbose, (not verbose))
+            let echo =
+                if verbose then
+                    Echo.All
+                else
+                    Echo.Off
+            let processResult = ProcessTools.Execute({ Command = "fsharpc"; Arguments = fscompilerflags }, echo)
             if not (processResult.ExitCode = 0) then
-                Process.PrintToScreen(processResult.Output)
+                processResult.Output.PrintToConsole()
             processResult.ExitCode,exeTarget
 
         finally
