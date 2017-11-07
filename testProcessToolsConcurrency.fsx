@@ -16,6 +16,7 @@ while (retryCount < 20) do //this is a stress test
     if (actual <> expected) then
         Console.Error.WriteLine (sprintf "Stress test failed, got `%s`, should have been `%s`" actual expected)
         Environment.Exit 1
+    retryCount <- retryCount + 1
 
 Console.WriteLine "Success"
 Environment.Exit 0

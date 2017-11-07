@@ -31,6 +31,13 @@ module ProcessTools =
             Monitor.PulseAll(innerLock)
             Monitor.Exit(innerLock)
 
+        member this.ExitAndReEnter() =
+            let myNewTicket = Interlocked.Increment(ticketsCount)
+            Interlocked.Increment(ticketToRide) |> ignore
+            Monitor.PulseAll(innerLock)
+            while (myNewTicket <> !ticketToRide) do
+                Monitor.Wait(innerLock) |> ignore
+
     type Standard =
         | Output
         | Error
@@ -161,7 +168,6 @@ module ProcessTools =
                 readTask.Wait()
                 if not (readTask.IsCompleted) then
                     failwith "Failed to read"
-
                 let readCount = readTask.Result
 
                 let readChar =
@@ -202,20 +208,18 @@ module ProcessTools =
                             failwith "readChar=None should have been EndOfStream"
                 readerState
 
-            let rec Loop(enter: bool) =
-                if (enter) then
-                      outputBufferLock.Enter()
-
+            let rec Loop() =
                 match ReadIteration() with
                 | Continue ->
-                    Loop false
+                    Loop()
                 | End ->
                     outputBufferLock.Exit()
                 | Pause ->
-                    outputBufferLock.Exit()
-                    Loop true
+                    outputBufferLock.ExitAndReEnter()
+                    Loop()
 
-            Loop true
+            outputBufferLock.Enter()
+            Loop()
 
         let outReaderThread = new Thread(new ThreadStart(fun _ ->
             ReadStandard(Standard.Output)
