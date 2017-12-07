@@ -25,8 +25,12 @@ module MiscTools =
         with
         | _ -> false
 
+    // this below is crazy but is to avoid # char being ignored in Uri.LocalPat h property, see https://stackoverflow.com/a/41203269
+    let private currentExeUri = Uri(Uri.EscapeUriString(Assembly.GetEntryAssembly().CodeBase))
     let private currentExe =
-        FileInfo(Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath)
+        FileInfo(sprintf "%s%s"
+                         (Uri.UnescapeDataString(currentExeUri.PathAndQuery))
+                         (Uri.UnescapeDataString(currentExeUri.Fragment)))
 
     let rec private FsxArgumentsInternalFsx(args: string list) =
         match args with
@@ -55,7 +59,8 @@ module MiscTools =
 
     let FsxArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
-        let isFsi = (currentExe.Name = "fsi.exe")
+
+        let isFsi = String.Equals(currentExe.Name, "fsi.exe", StringComparison.OrdinalIgnoreCase)
         if (isFsi) then
             // XXX: deprecate in favor of fsi.CommandLineArgs? see https://docs.microsoft.com/en-us/dotnet/articles/fsharp/tutorials/fsharp-interactive/
             FsxArgumentsInternalFsi(cmdLineArgs, false)
