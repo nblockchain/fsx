@@ -14,7 +14,7 @@ To the above two questions we could even follow-up with new ones:
 * Couldn't we run our script without FSI given that FSI eats a lot of memory (for REPL features, which scripts don't need)?
 * Couldn't we have a CI approach that takes care of our scripts in a similar way as we do with C# code?
 
-FSX answers both of these latter questions with a categorical YES!
+FSX answers all of these latter questions with a categorical YES!
 
 # How to use?
 
@@ -51,6 +51,7 @@ This work is half done in my spare time, and half sponsored by Gatecoin due to o
 
 The creation of FSX was inspired by several facts:
 * FSI is slower than the F# compiler, and it has some bugs (e.g.: https://bugzilla.xamarin.com/show_bug.cgi?id=42417).
+* There should be an easy and programatic way to compile an F# script without trying to run it (see https://stackoverflow.com/questions/33468298/f-how-can-i-compile-and-then-release-a-file-fsx ).
 * FSI stands for F Sharp **Interactive**, which means that it's not really suited for scripting but more for debugging:
   * It can even break altogether the advantage of the promise of "statically-compiled scripts", because what should be a compilation error could be translated to a runtime error when using currified arguments, due to FSI defaulting to "interactive" needs. (More info: https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it )
   * It can consume a lot of memory, just compare it this way:
@@ -72,4 +73,3 @@ andres   23600  0.0  0.0 129332 15936 pts/24   Sl   03:38   0:00 mono bin/./test
 
 Which is a huge difference in memory footprint.
 
-* There should be an easy and programatic way to compile an F# script without trying to run it (see https://stackoverflow.com/questions/33468298/f-how-can-i-compile-and-then-release-a-file-fsx ).
