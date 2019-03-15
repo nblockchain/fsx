@@ -47,7 +47,6 @@ build:
 ```
 
 # Acknowledgements
-This work is half done in my spare time, and half sponsored by Gatecoin due to our infrastructure needs. It is released under MIT/X11 license.
 
 The creation of FSX was inspired by several facts:
 * FSI is slower than the F# compiler (obviously).
