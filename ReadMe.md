@@ -50,7 +50,10 @@ build:
 This work is half done in my spare time, and half sponsored by Gatecoin due to our infrastructure needs. It is released under MIT/X11 license.
 
 The creation of FSX was inspired by several facts:
-* FSI is slower than the F# compiler, and it has some bugs (e.g.: https://bugzilla.xamarin.com/show_bug.cgi?id=42417).
+* FSI is slower than the F# compiler (obviously).
+* FSI (or the components required to run it) suffers from bugs frequently. Examples:
+  * If your version of Mono is too old (e.g. 4.6.2, the version that comes by default in Ubuntu 18.04), then it might crash with a segmentation fault. More info: https://bugzilla.xamarin.com/show_bug.cgi?id=42417 .
+  * If your version of Mono is not too old, but your version of F# is not too new (e.g. what happens exactly with Ubuntu 19.04), then FSI might not work at all. More info: https://github.com/fsharp/fsharp/issues/740 .
 * There should be an easy and programatic way to compile an F# script without trying to run it (see https://stackoverflow.com/questions/33468298/f-how-can-i-compile-and-then-release-a-file-fsx ).
 * FSI stands for F Sharp **Interactive**, which means that it's not really suited for scripting but more for debugging:
   * It can even break altogether the advantage of the promise of "statically-compiled scripts", because what should be a compilation error could be translated to a runtime error when using currified arguments, due to FSI defaulting to "interactive" needs. (More info: https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it )
