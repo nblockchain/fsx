@@ -260,7 +260,7 @@ let GetAlreadyBuiltExecutable(script: FileInfo): Option<FileInfo> =
     else
         Some(exeTarget)
 
-let Build(artifacts: bool) =
+let Build(generateArtifacts: bool) =
     let buildResult = BuildFsxScript(parsedArgs.Script)
 
     match buildResult with
@@ -271,7 +271,7 @@ let Build(artifacts: bool) =
         failwith "Unreachable"
 
     | Success(exeTarget) ->
-        if not (artifacts) then
+        if not generateArtifacts then
             if (exeTarget.BinFolderCreated) then
                 exeTarget.Exe.Directory.Delete(true)
         exeTarget.Exe
@@ -280,7 +280,8 @@ let (check,force) =
     (parsedArgs.Flags.Contains(Flag.OnlyCheck),parsedArgs.Flags.Contains(Flag.Force))
 
 if (check || force) then
-    Build(not check) |> ignore
+    let generateArtifacts = not check
+    Build generateArtifacts |> ignore
     Environment.Exit 0
 
 let maybeExe = GetAlreadyBuiltExecutable(parsedArgs.Script)
