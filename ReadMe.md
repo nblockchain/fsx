@@ -1,6 +1,6 @@
 # FSX
 
-# Motivation
+## Motivation
 
 FSX is the ideal tool for people that use F# for their scripting needs.
 
@@ -46,7 +46,7 @@ andres   23600  0.0  0.0 129332 15936 pts/24   Sl   03:38   0:00 mono bin/./test
 Which is a huge difference in memory footprint.
 
 
-# How to use?
+## How to use?
 
 The recommended way is to install fsx system wide, like this:
 
