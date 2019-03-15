@@ -34,7 +34,7 @@ run `fsx yourscript.fsx` every time.
 For your CI needs, you could include fsx repository as a submodule, and then bootstrap it in your CI script, and call `ci-build.fsx`, which will find all the F# script files in your repository and try to compile them (but not run them). An example of how to do this with GitLabCI, is this `.gitlab-ci.yml` configuration file sample:
 
 ```
-image: ubuntu:16.04
+image: ubuntu:18.04
 before_script:
   - apt-get update -qq
   - apt-get install -y -qq git
