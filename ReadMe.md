@@ -9,7 +9,7 @@ The best way to describe it is to start first with some questions:
 
 These are the two main annoyances when working with F# scripting. Granted, F#+FSI is already much better than the alternatives (as many more errors are thrown much earlier than at runtime, and as strongly-typed functional languages are generally faster). However, we can do better.
 
-To the above two questions we could even follow-up with new ones:
+To the above three questions we could even follow-up with new ones:
 * Couldn't we make FSI only compile what's changed, and reuse binaries from a previous run, to speed this up?
 * Couldn't we run our script without FSI given that FSI eats a lot of memory (for REPL features, which scripts don't need)?
 * Couldn't we have a CI approach that takes care of our scripts in a similar way as we do with C# code?
