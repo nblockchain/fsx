@@ -1,6 +1,8 @@
 # FSX
 
-FSX is the ideal tool for DevOps people that use F# in their sysadmin scripts.
+# Motivation
+
+FSX is the ideal tool for people that use F# for their scripting needs.
 
 The best way to describe it is to start first with some questions:
 * Have you found yourself waiting many seconds until your big script is parsed by FSI and run? This is unacceptable when doing many small changes and expecting a quick feedback loop to test them.
@@ -15,6 +17,34 @@ To the above three questions we could even follow-up with new ones:
 * Couldn't we have a CI approach that takes care of our scripts in a similar way as we do with C# code?
 
 FSX answers all of these latter questions with a categorical YES!
+
+The creation of FSX was inspired by several facts:
+* FSI is slower than the F# compiler (obviously).
+* FSI (or the components required to run it) suffers from bugs frequently. Examples:
+  * If your version of Mono is too old (e.g. 4.6.2, the version that comes by default in Ubuntu 18.04), then it might crash with a segmentation fault. More info: https://bugzilla.xamarin.com/show_bug.cgi?id=42417 .
+  * If your version of Mono is not too old, but your version of F# is not too new (e.g. what happens exactly with Ubuntu 19.04), then FSI might not work at all. More info: https://github.com/fsharp/fsharp/issues/740 .
+* There should be an easy and programatic way to compile an F# script without trying to run it (see https://stackoverflow.com/questions/33468298/f-how-can-i-compile-and-then-release-a-file-fsx ).
+* FSI stands for F Sharp **Interactive**, which means that it's not really suited for scripting but more for debugging:
+  * It can even break altogether the advantage of the promise of "statically-compiled scripts", because what should be a compilation error could be translated to a runtime error when using currified arguments, due to FSI defaulting to "interactive" needs. (More info: https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it )
+  * It can consume a lot of memory, just compare it this way:
+
+```
+echo $'#!/usr/bin/env fsharpi\nSystem.Threading.Thread.Sleep(999999999)'>testfsi.fsx
+echo $'#!/usr/bin/env fsx\nSystem.Threading.Thread.Sleep(999999999)'>testfsx.fsx
+chmod u+x test*.fsx
+nohup ./testfsi.fsx >/dev/null 2>&1 &
+nohup ./testfsx.fsx >/dev/null 2>&1 &
+ps aux | grep testfs
+```
+
+In my machine, the above prints:
+```
+andres   23596 16.6  0.9 254504 148268 pts/24  Sl   03:38   0:01 cli /usr/lib/cli/fsharp/fsi.exe --exename:fsharpi ./testfsi.fsx
+andres   23600  0.0  0.0 129332 15936 pts/24   Sl   03:38   0:00 mono bin/./testfsx.fsx.exe
+```
+
+Which is a huge difference in memory footprint.
+
 
 # How to use?
 
@@ -45,33 +75,4 @@ build:
   script:
     - ./fsx/ci-build.fsx
 ```
-
-# Acknowledgements
-
-The creation of FSX was inspired by several facts:
-* FSI is slower than the F# compiler (obviously).
-* FSI (or the components required to run it) suffers from bugs frequently. Examples:
-  * If your version of Mono is too old (e.g. 4.6.2, the version that comes by default in Ubuntu 18.04), then it might crash with a segmentation fault. More info: https://bugzilla.xamarin.com/show_bug.cgi?id=42417 .
-  * If your version of Mono is not too old, but your version of F# is not too new (e.g. what happens exactly with Ubuntu 19.04), then FSI might not work at all. More info: https://github.com/fsharp/fsharp/issues/740 .
-* There should be an easy and programatic way to compile an F# script without trying to run it (see https://stackoverflow.com/questions/33468298/f-how-can-i-compile-and-then-release-a-file-fsx ).
-* FSI stands for F Sharp **Interactive**, which means that it's not really suited for scripting but more for debugging:
-  * It can even break altogether the advantage of the promise of "statically-compiled scripts", because what should be a compilation error could be translated to a runtime error when using currified arguments, due to FSI defaulting to "interactive" needs. (More info: https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it )
-  * It can consume a lot of memory, just compare it this way:
-
-```
-echo $'#!/usr/bin/env fsharpi\nSystem.Threading.Thread.Sleep(999999999)'>testfsi.fsx
-echo $'#!/usr/bin/env fsx\nSystem.Threading.Thread.Sleep(999999999)'>testfsx.fsx
-chmod u+x test*.fsx
-nohup ./testfsi.fsx >/dev/null 2>&1 &
-nohup ./testfsx.fsx >/dev/null 2>&1 &
-ps aux | grep testfs
-```
-
-In my machine, the above prints:
-```
-andres   23596 16.6  0.9 254504 148268 pts/24  Sl   03:38   0:01 cli /usr/lib/cli/fsharp/fsi.exe --exename:fsharpi ./testfsi.fsx
-andres   23600  0.0  0.0 129332 15936 pts/24   Sl   03:38   0:00 mono bin/./testfsx.fsx.exe
-```
-
-Which is a huge difference in memory footprint.
 
