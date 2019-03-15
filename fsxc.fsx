@@ -18,6 +18,7 @@ let PrintUsage () =
     Console.WriteLine()
     Console.WriteLine("Options")
     Console.WriteLine("  -f, --force     Always generate binaries again even if existing binaries are new enough")
+    Console.WriteLine("  -h, --help      Show this help")
     Console.WriteLine("  -k, --check     Only check if it compiles, removing generated binaries")
 
 let args = MiscTools.FsxArguments()
