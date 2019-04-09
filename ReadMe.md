@@ -9,7 +9,7 @@ The best way to describe it is to start first with some questions:
 * Do you have long-running F# scripts that cause too much memory usage in your server?
 * Have you found that your scripts could bitrot over time (i.e. not compile anymore) especially when using helper functions in .fs files loaded by them?
 
-These are the two main annoyances when working with F# scripting. Granted, F#+FSI is already much better than the alternatives (as many more errors are thrown much earlier than at runtime, and as strongly-typed functional languages are generally faster). However, we can do better.
+These are the main annoyances when working with F# scripting. Granted, F#+FSI is already much better than the alternatives (as many more errors are thrown much earlier than at runtime, and as strongly-typed functional languages are generally faster). However, we can do better.
 
 To the above three questions we could even follow-up with new ones:
 * Couldn't we make FSI only compile what's changed, and reuse binaries from a previous run, to speed this up?
