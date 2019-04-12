@@ -1,0 +1,25 @@
+name: fsx # you probably want to 'snapcraft register <name>'
+base: core18 # the base snap is the execution environment for this snap
+version: 'constant' # just for humans, typically '1.2+git' or '1.3.2'
+summary: F# scrpting tool # 79 char long summary
+description: |
+  FSX is the ideal tool for people that use F# for their scripting needs.
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: classic # use 'strict' once you have the right plugs and slots
+
+apps:
+  fsx:
+    command: bin/fsx
+
+parts:
+  fsx:
+    plugin: dump
+    source: ./artifacts
+    override-build: |
+      echo "running sed"
+      # replace '$PREFIX/lib/fsx/fsxc.fsx.exe' path with '$SNAP/lib/fsx/fsxc.fsx.exe'
+      # (which resolves to /snap/fsx/x1/lib/fsx/fsxc.fsx.exe)
+      sed -i 's/mono .*fsx.exe.*/mono \$SNAP\/lib\/fsx\/fsxc.fsx.exe "$1"/' bin/fsx
+      echo "running snap build"
+      snapcraftctl build

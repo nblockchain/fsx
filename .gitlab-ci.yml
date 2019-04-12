@@ -19,6 +19,27 @@ install:
     - make
     - make install
 
+package:
+  script:
+    - mkdir -p artifacts/bin
+    - ./configure.fsx --prefix=./artifacts
+    - make
+    - make install
+    - apt-get install -y snapcraft 
+    - snapcraft
+    - mv fsx_constant_amd64.snap "fsx_$CI_COMMIT_REF_SLUG.snap"
+
+    # to publish it in the snap store:
+    # - echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > snapcraft.login
+    # - snapcraft login --with snapcraft.login
+    # - snapcraft push *.snap --release edge
+
+  artifacts:
+    name: "fsx_$CI_COMMIT_REF_SLUG.snap"
+    paths:
+      - "fsx_$CI_COMMIT_REF_SLUG.snap"
+    expire_in: 50 years
+    
 test:
   script:
     - ./configure.fsx
