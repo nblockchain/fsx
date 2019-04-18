@@ -25,6 +25,10 @@ package:
     - ./configure.fsx --prefix=./artifacts
     - make
     - make install
+
+    # replace '$PREFIX/lib/fsx/fsxc.fsx.exe' path with '$SNAP/lib/fsx/fsxc.fsx.exe'
+    # (which resolves to /snap/fsx/x1/lib/fsx/fsxc.fsx.exe)
+    - sed -i 's/mono .*fsx.exe.*/mono \$SNAP\/lib\/fsx\/fsxc.fsx.exe "$1"/' artifacts/bin/fsx
     - apt-get install -y snapcraft 
     - snapcraft
     - mv fsx_constant_amd64.snap "fsx_$CI_COMMIT_REF_SLUG.snap"

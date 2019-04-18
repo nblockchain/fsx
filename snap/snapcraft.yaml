@@ -16,10 +16,3 @@ parts:
   fsx:
     plugin: dump
     source: ./artifacts
-    override-build: |
-      echo "running sed"
-      # replace '$PREFIX/lib/fsx/fsxc.fsx.exe' path with '$SNAP/lib/fsx/fsxc.fsx.exe'
-      # (which resolves to /snap/fsx/x1/lib/fsx/fsxc.fsx.exe)
-      sed -i 's/mono .*fsx.exe.*/mono \$SNAP\/lib\/fsx\/fsxc.fsx.exe "$1"/' bin/fsx
-      echo "running snap build"
-      snapcraftctl build
