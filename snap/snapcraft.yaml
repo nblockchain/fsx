@@ -19,10 +19,8 @@ parts:
     source: ./staging
     override-build: |
       echo "running sed"
-      # binary is compiled at $SNAP/lib/fsx/fsxc.fsx.exe change the path in fsx shell script.
+      # replace '$PREFIX/lib/fsx/fsxc.fsx.exe' path with '$SNAP/lib/fsx/fsxc.fsx.exe'
+      # (which resolves to /snap/fsx/x1/lib/fsx/fsxc.fsx.exe)
       sed -i 's/mono .*fsx.exe.*/mono \$SNAP\/lib\/fsx\/fsxc.fsx.exe "$1"/' bin/fsx
       snapcraftctl build
 
-      
-      
-   
