@@ -65,4 +65,5 @@ test:
 testpkg:
   stage: testpkg
   script:
+    - apt-get install -y snapd
     - snap install fsx_experiments-snap.snap
