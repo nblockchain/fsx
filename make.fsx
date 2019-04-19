@@ -37,6 +37,9 @@ let fsxBinaryPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsxc.fsx
 let wrapperFsxScript = """#!/bin/sh
 set -e
 
+which fsharpc >/dev/null || \
+  (echo "Please install fsharp package first via apt" && exit 2)
+
 if [ $# -lt 1 ]; then
     echo "At least one argument expected"
     exit 1
