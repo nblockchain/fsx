@@ -45,7 +45,9 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-mono {0}/fsxc.fsx.exe "$1"
+DIR_OF_THIS_SCRIPT=$(dirname "$(realpath "$0")")
+FSXC_PATH="$DIR_OF_THIS_SCRIPT/../lib/fsx/fsxc.fsx.exe"
+mono "$FSXC_PATH" "$1"
 TARGET_DIR=$(dirname -- "$1")
 TARGET_FILE=$(basename -- "$1")
 shift
@@ -60,7 +62,7 @@ let JustBuild() =
         Environment.Exit 1
 
     File.WriteAllText(fsxLauncherScriptPath.FullName,
-                      String.Format(wrapperFsxScript, fsxInstallDir.FullName))
+                      wrapperFsxScript)
 
 
 let maybeTarget = GatherTarget(MiscTools.FsxArguments(), None)
