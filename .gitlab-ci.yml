@@ -9,17 +9,26 @@ before_script:
   - apt-get install -y git
   - apt-get install -y fsharp
 
+stages:
+  - build
+  - test
+  - deploy
+  - testpkg
+
 build:
+  stage: build
   script:
     - ./ci-build.fsx
 
 install:
+  stage: deploy
   script:
     - ./configure.fsx
     - make
     - make install
 
 package:
+  stage: deploy
   script:
     - mkdir -p artifacts/bin
     - ./configure.fsx --prefix=./artifacts
@@ -45,9 +54,15 @@ package:
     expire_in: 50 years
     
 test:
+  stage: test
   script:
     - ./configure.fsx
     - make
     - make install
     - ./test.fsx
     - ./testProcessToolsConcurrency.fsx
+
+testpkg:
+  stage: testpkg
+  script:
+    - snap install fsx_experiments-snap.snap
