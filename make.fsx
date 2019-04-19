@@ -26,8 +26,10 @@ let GatherPrefix(): string =
     buildConfigContents.Substring("Prefix=".Length).Trim()
 
 let prefix = GatherPrefix()
-let fsxInstallPath = Path.Combine(prefix, "lib", "fsx")
-let binInstallPath = Path.Combine(prefix, "bin")
+let fsxInstallDir = Path.Combine(prefix, "lib", "fsx")
+                    |> DirectoryInfo
+let binInstallDir = Path.Combine(prefix, "bin")
+                    |> DirectoryInfo
 
 let fsxLauncherScriptPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx"))
 let fsxBinaryPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsxc.fsx.exe"))
@@ -55,7 +57,7 @@ let JustBuild() =
         Environment.Exit 1
 
     File.WriteAllText(fsxLauncherScriptPath.FullName,
-                      String.Format(wrapperFsxScript, fsxInstallPath))
+                      String.Format(wrapperFsxScript, fsxInstallDir.FullName))
 
 
 let maybeTarget = GatherTarget(MiscTools.FsxArguments(), None)
@@ -65,10 +67,11 @@ match maybeTarget with
     if (target = "install") then
         Console.WriteLine("Installing fsx...")
         Console.WriteLine()
-        Directory.CreateDirectory(fsxInstallPath) |> ignore
-        File.Copy(fsxBinaryPath.FullName, Path.Combine(fsxInstallPath, fsxBinaryPath.Name), true)
+        fsxInstallDir.Create()
+        File.Copy(fsxBinaryPath.FullName, Path.Combine(fsxInstallDir.FullName, fsxBinaryPath.Name), true)
 
-        let finalPrefixPathOfWrapperScript = Path.Combine(binInstallPath, fsxLauncherScriptPath.Name)
+        binInstallDir.Create()
+        let finalPrefixPathOfWrapperScript = Path.Combine(binInstallDir.FullName, fsxLauncherScriptPath.Name)
         File.Copy(fsxLauncherScriptPath.FullName, finalPrefixPathOfWrapperScript, true)
         if ((ProcessTools.Execute({ Command = "chmod"; Arguments = sprintf "ugo+x %s" finalPrefixPathOfWrapperScript }, Echo.Off)).ExitCode <> 0) then
             failwith "Unexpected chmod failure, please report this bug"

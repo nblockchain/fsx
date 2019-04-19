@@ -21,7 +21,6 @@ install:
 
 package:
   script:
-    - mkdir -p staging/bin
     - ./configure.fsx --prefix ./staging
     - make
     - make install
