@@ -48,17 +48,31 @@ andres   23600  0.0  0.0 129332 15936 pts/24   Sl   03:38   0:00 mono bin/./test
 Which is a huge difference in memory footprint.
 
 
-## How to use?
+## How to install/use?
 
-The recommended way is to install fsx system wide, like this:
+
+### Installation
+
+There are two ways to install fsx; the old-fashioned way by cloning and compiling it yourself:
 
 ```
-./configure.sh --prefix=/usr
+./configure.sh --prefix=/usr/local
 make
 sudo make install
 ```
 
-After this, you can already use the `#!/usr/bin/env fsx` shebang in your scripts.
+Or simply by installing the snap package. You can grab it from the artifacts of our CI build by clicking on the icon on the right-top corner in the following page:
+https://gitlab.com/knocte/fsx/pipelines?ref=master
+
+After downloading and decompressing the artifacts, you have to use the command line:
+
+```
+snap install --dangerous --classic fsx*.snap
+```
+
+### Usage
+
+After installing, you can already use the `#!/usr/bin/env fsx` shebang in your scripts.
 
 If you want to use fsx without having to change the shebang of all your scripts, just
 run `fsx yourscript.fsx` every time.
