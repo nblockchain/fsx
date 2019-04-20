@@ -10,10 +10,10 @@ open System.Security.Cryptography
 let NUMBER_OF_LINES_OF_BUFFER_TO_SHOW_IN_NOTIFICATION = 20
 
 #r "System.Configuration"
-#load "MiscTools.fs"
-#load "ProcessTools.fs"
-#load "UnixTools.fs"
-#load "NetTools.fs"
+#load "../InfraLib/MiscTools.fs"
+#load "../InfraLib/ProcessTools.fs"
+#load "../InfraLib/UnixTools.fs"
+#load "../InfraLib/NetTools.fs"
 open FSX.Infrastructure
 
 open ProcessTools
