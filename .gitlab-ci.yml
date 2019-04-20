@@ -21,22 +21,14 @@ install:
 
 package:
   script:
-    - ./configure.fsx --prefix ./staging
-    - make
-    - make install
-    - apt-get install -y snapcraft 
-    - snapcraft
-
-    # TODO: to send snap package to the snap store:
-    # - echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > snapcraft.login
-    # - snapcraft login --with snapcraft.login
-    # - snapcraft push *.snap --release edge
+    - apt-get install -y snapcraft
+    - ./snap_build.sh
 
   artifacts:
     paths:
       - fsx*.snap
     expire_in: 50days
-    
+
 test:
   script:
     - ./configure.fsx

@@ -1,3 +1,11 @@
 bin/
 build.config
-./staging/
+
+#snap creation:
+staging/
+stage/
+snap/
+prime/
+parts/
+*.snap
+snapcraft.login

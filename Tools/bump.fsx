@@ -101,7 +101,7 @@ let fullUnstableVersion,newFullStableVersion = Bump true
 GitCommit fullUnstableVersion newFullStableVersion
 GitTag newFullStableVersion
 
-Console.WriteLine (sprintf "Version bumped to %s, release binaries now and press key when you finish."
+Console.WriteLine (sprintf "Version bumped to %s, release binaries now (via ./snap_release.sh on another tab) and press a key here when you finish."
                            (newFullStableVersion.ToString()))
 Console.Read() |> ignore
 
