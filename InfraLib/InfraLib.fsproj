@@ -46,10 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="MiscTools.fs" />
-    <Compile Include="ProcessTools.fs" />
-    <Compile Include="UnixTools.fs" />
-    <Compile Include="NetTools.fs" />
+    <Compile Include="Misc.fs" />
+    <Compile Include="Process.fs" />
+    <Compile Include="Unix.fs" />
+    <Compile Include="Network.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

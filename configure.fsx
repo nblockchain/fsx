@@ -4,14 +4,14 @@ open System
 open System.IO
 
 #r "System.Configuration"
-#load "InfraLib/MiscTools.fs"
-#load "InfraLib/ProcessTools.fs"
+#load "InfraLib/Misc.fs"
+#load "InfraLib/Process.fs"
 open FSX.Infrastructure
-open ProcessTools
+open Process
 
 Console.Write "checking for F# compiler... "
 let fsharpCompiler = "fsharpc"
-let fsharpcWhich = ProcessTools.Execute({ Command = "which"; Arguments = fsharpCompiler }, Echo.Off)
+let fsharpcWhich = Process.Execute({ Command = "which"; Arguments = fsharpCompiler }, Echo.Off)
 if (fsharpcWhich.ExitCode <> 0) then
     Console.Error.WriteLine("not found")
     Console.Error.WriteLine(sprintf "configuration failed, please install \"%s\"" fsharpCompiler)
@@ -41,7 +41,7 @@ let rec private GatherOrGetDefaultPrefix(args: string list, previousIsPrefixArg:
         else
             failwith (sprintf "argument not recognized: %s" head)
 
-let prefix = DirectoryInfo(GatherOrGetDefaultPrefix(MiscTools.FsxArguments(), false, None))
+let prefix = DirectoryInfo(GatherOrGetDefaultPrefix(Misc.FsxArguments(), false, None))
 
 if not (prefix.Exists) then
     let warning = sprintf "WARNING: prefix doesn't exist: %s" prefix.FullName
@@ -64,22 +64,22 @@ let GetRepoInfo()=
             else
                 GetBranchFromGitBranch(tail)
 
-    let gitWhich = ProcessTools.Execute({ Command = "which"; Arguments = "git" }, Echo.Off)
+    let gitWhich = Process.Execute({ Command = "which"; Arguments = "git" }, Echo.Off)
     if (gitWhich.ExitCode <> 0) then
         String.Empty
     else
-        let gitLog = ProcessTools.Execute({ Command = "git"; Arguments = "log --oneline" }, Echo.Off)
+        let gitLog = Process.Execute({ Command = "git"; Arguments = "log --oneline" }, Echo.Off)
         if (gitLog.ExitCode <> 0) then
             String.Empty
         else
-            let gitBranch = ProcessTools.Execute({ Command = "git"; Arguments = "branch" }, Echo.Off)
+            let gitBranch = Process.Execute({ Command = "git"; Arguments = "branch" }, Echo.Off)
             if (gitBranch.ExitCode <> 0) then
                 failwith "Unexpected git behaviour, as `git log` succeeded but `git branch` didn't"
             else
                 let branchesOutput = gitBranch.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries) |> List.ofSeq
                 let branch = GetBranchFromGitBranch(branchesOutput)
                 let gitLogCmd = { Command = "git"; Arguments = "log --no-color --first-parent -n1 --pretty=format:%h" }
-                let gitLastCommit = ProcessTools.Execute(gitLogCmd, Echo.Off)
+                let gitLastCommit = Process.Execute(gitLogCmd, Echo.Off)
                 if (gitLastCommit.ExitCode <> 0) then
                     failwith "Unexpected git behaviour, as `git log` succeeded before but not now"
 

@@ -11,7 +11,7 @@ open System.Security
 open System.Linq
 open System.Security.Cryptography
 
-module MiscTools =
+module Misc =
 
     let private FileMatchesIfArgumentIsAPath(argument: string, file: FileInfo) =
         try

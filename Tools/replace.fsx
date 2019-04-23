@@ -5,7 +5,7 @@ open System.IO
 
 #r "System.Configuration"
 open System.Configuration
-#load "../InfraLib/MiscTools.fs"
+#load "../InfraLib/Misc.fs"
 
 open FSX.Infrastructure
 
@@ -26,7 +26,7 @@ let rec ReplaceInDir (dir: DirectoryInfo) (oldString: string) (newString: string
         if subFolder.Name <> ".git" then
             ReplaceInDir subFolder oldString newString
 
-let args = MiscTools.FsxArguments()
+let args = Misc.FsxArguments()
 let note = "NOTE: by default, some kind of files/folders will be excluded, e.g.: .git, *.dll, *.png, ..."
 if args.Length > 2 then
     Console.Error.WriteLine "Can only pass two arguments: replace.fsx oldstring newstring"

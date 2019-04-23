@@ -10,15 +10,15 @@ open System.Security.Cryptography
 let NUMBER_OF_LINES_OF_BUFFER_TO_SHOW_IN_NOTIFICATION = 20
 
 #r "System.Configuration"
-#load "../InfraLib/MiscTools.fs"
-#load "../InfraLib/ProcessTools.fs"
-#load "../InfraLib/UnixTools.fs"
-#load "../InfraLib/NetTools.fs"
+#load "../InfraLib/Misc.fs"
+#load "../InfraLib/Process.fs"
+#load "../InfraLib/Unix.fs"
+#load "../InfraLib/Network.fs"
 open FSX.Infrastructure
 
-open ProcessTools
+open Process
 
-let arguments = MiscTools.FsxArguments()
+let arguments = Misc.FsxArguments()
 let argCount = arguments.Length
 if (argCount = 0) then
     Console.Error.WriteLine ("This script expects command (and optionally arguments)")
@@ -33,7 +33,7 @@ if (String.IsNullOrWhiteSpace(home)) then
     failwith ("This script assumes that $HOME is defined properly")
 
 let homeLog = Path.Combine(home, "log")
-ProcessTools.SafeExecute({ Command = "mkdir"; Arguments = sprintf "-p %s" homeLog }, Echo.Off)
+Process.SafeExecute({ Command = "mkdir"; Arguments = sprintf "-p %s" homeLog }, Echo.Off)
 let command = arguments.First()
 let argumentsOfCommand = String.Join(" ", List.skip 1 arguments)
 
@@ -55,7 +55,7 @@ let fullCommand = String.Format("{0} {1} 1>{2} 2>{3}",
                                 logForStdOut,
                                 logForStdErr)
 
-let procResult = UnixTools.ExecuteBashCommand(fullCommand, Echo.Off)
+let procResult = Unix.ExecuteBashCommand(fullCommand, Echo.Off)
 
 if (procResult.ExitCode = 0) then
     let stdErrLog = new FileInfo(logForStdErr)
@@ -76,14 +76,14 @@ else
         (Environment.NewLine, lines.Skip(skip)) |> String.Join
 
     try
-        NetTools.SlackNotify(String.Format("Error running '{0} {1}':{2}{3}",
+        Network.SlackNotify(String.Format("Error running '{0} {1}':{2}{3}",
                                            command, argumentsOfCommand,
                                            Environment.NewLine,
                                            lastLines))
     with
     | ex ->
         File.WriteAllText(logForGenericStdErr, ex.ToString())
-        NetTools.SlackNotify(String.Format("Error trying to notify problem to Slack about '{0} {1}': check {2}",
+        Network.SlackNotify(String.Format("Error trying to notify problem to Slack about '{0} {1}': check {2}",
                                            command, argumentsOfCommand,
                                            logForGenericStdErr))
 
@@ -92,5 +92,5 @@ let logForLastStdOutName = sprintf "%s.last.out.log" commandName
 let logForLastStdErrName = sprintf "%s.last.err.log" commandName
 let logForLastStdOutSymLink = Path.Combine(homeLog, logForLastStdOutName)
 let logForLastStdErrSymLink = Path.Combine(homeLog, logForLastStdErrName)
-ProcessTools.SafeExecute({ Command = "ln"; Arguments = sprintf "-fs %s %s" logForStdOut logForLastStdOutSymLink }, Echo.Off)
-ProcessTools.SafeExecute({ Command = "ln"; Arguments = sprintf "-fs %s %s" logForStdErr logForLastStdErrSymLink }, Echo.Off)
+Process.SafeExecute({ Command = "ln"; Arguments = sprintf "-fs %s %s" logForStdOut logForLastStdOutSymLink }, Echo.Off)
+Process.SafeExecute({ Command = "ln"; Arguments = sprintf "-fs %s %s" logForStdErr logForLastStdErrSymLink }, Echo.Off)

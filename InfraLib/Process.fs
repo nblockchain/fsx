@@ -11,9 +11,9 @@ open System.Linq
 open System.Text
 open System.Security.Cryptography
 
-open MiscTools
+open Misc
 
-module ProcessTools =
+module Process =
 
     type QueuedLock() =
         let innerLock = new Object()
@@ -300,7 +300,7 @@ module ProcessTools =
         paths.Any(fun path -> File.Exists(Path.Combine(path, command)))
 
     let CommandWorksInShell (command: string): bool =
-        if (MiscTools.GuessPlatform() = MiscTools.Platform.Windows) then
+        if (Misc.GuessPlatform() = Misc.Platform.Windows) then
             let exists = File.Exists(command) || IsFileInWindowsPath(command)
             if (exists && HasWindowsExecutableExtension(command)) then
                 true

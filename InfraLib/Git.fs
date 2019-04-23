@@ -4,9 +4,9 @@ namespace FSX.Infrastructure
 open System
 open System.Linq
 
-open ProcessTools
+open Process
 
-module GitTools =
+module Git =
 
     let private gitCommand = "git"
 
@@ -21,13 +21,13 @@ module GitTools =
                 GetBranchFromGitBranch(tail)
 
     let private CheckGitIsInstalled(): unit =
-        if not (ProcessTools.CommandWorksInShell gitCommand) then
+        if not (Process.CommandWorksInShell gitCommand) then
             Console.Error.WriteLine "Could not continue, install 'git' first"
             Environment.Exit 1
 
     let GetCurrentBranch() =
         CheckGitIsInstalled()
-        let gitBranch = ProcessTools.Execute({ Command = gitCommand; Arguments = "branch" }, Echo.Off)
+        let gitBranch = Process.Execute({ Command = gitCommand; Arguments = "branch" }, Echo.Off)
         if (gitBranch.ExitCode <> 0) then
             failwith "Unexpected git behaviour, `git branch` didn't succeed"
 
@@ -37,7 +37,7 @@ module GitTools =
     let GetLastCommit() =
         CheckGitIsInstalled()
         let gitLogCmd = { Command = gitCommand; Arguments = "log --no-color --first-parent -n1 --pretty=format:%h" }
-        let gitLastCommit = ProcessTools.Execute(gitLogCmd, Echo.Off)
+        let gitLastCommit = Process.Execute(gitLogCmd, Echo.Off)
         if (gitLastCommit.ExitCode <> 0) then
             failwith "Unexpected git behaviour, as `git log` succeeded before but not now"
 
@@ -54,15 +54,15 @@ module GitTools =
 
     let private AddRemote (remoteName: string) (remoteUrl: string) =
         let gitRemoteAdd = { Command = gitCommand; Arguments = sprintf "remote add %s %s" remoteName remoteUrl }
-        ProcessTools.SafeExecute(gitRemoteAdd, Echo.Off) |> ignore
+        Process.SafeExecute(gitRemoteAdd, Echo.Off) |> ignore
 
     let private RemoveRemote (remoteName: string) =
         let gitRemoteRemove = { Command = gitCommand; Arguments = sprintf "remote remove %s" remoteName }
-        ProcessTools.SafeExecute(gitRemoteRemove, Echo.Off) |> ignore
+        Process.SafeExecute(gitRemoteRemove, Echo.Off) |> ignore
 
     let private FetchAll() =
         let gitFetchAll = { Command = gitCommand; Arguments = "fetch --all" }
-        ProcessTools.SafeExecute(gitFetchAll, Echo.Off) |> ignore
+        Process.SafeExecute(gitFetchAll, Echo.Off) |> ignore
 
     let private GetNumberOfCommitsBehindAndAheadFromRemoteBranch(repoUrl: string) (branchName: string): int*int =
         CheckGitIsInstalled()
@@ -70,7 +70,7 @@ module GitTools =
         let lastCommit = GetLastCommit()
 
         let gitShowRemotes = { Command = gitCommand; Arguments = "remote -v" }
-        let remoteLines = ProcessTools.SafeExecute(gitShowRemotes, Echo.Off)
+        let remoteLines = Process.SafeExecute(gitShowRemotes, Echo.Off)
                                       .Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
         let remoteFound = remoteLines.FirstOrDefault(fun line -> line.Contains("\t" + repoUrl + " "))
         let remote,cleanRemoteLater =
@@ -83,7 +83,7 @@ module GitTools =
                 randomNameForRemoteToBeDeletedLater,true
 
         let gitRevListCmd = { Command = gitCommand; Arguments = sprintf "rev-list --left-right --count %s/%s...%s" remote branchName lastCommit }
-        let gitCommitDivergence = ProcessTools.SafeExecute(gitRevListCmd, Echo.Off)
+        let gitCommitDivergence = Process.SafeExecute(gitRevListCmd, Echo.Off)
 
         let numbers = gitCommitDivergence.Output.StdOut.Split([|"\t"|], StringSplitOptions.RemoveEmptyEntries)
         let expectedNumberOfNumbers = 2
@@ -112,7 +112,7 @@ module GitTools =
         CheckGitIsInstalled()
 
         let gitLogCmd = { Command = gitCommand; Arguments = String.Format("log --skip={0} -1 --pretty=format:%b", number) }
-        let gitLastNCommit = ProcessTools.SafeExecute(gitLogCmd, Echo.Off)
+        let gitLastNCommit = Process.SafeExecute(gitLogCmd, Echo.Off)
         gitLastNCommit.Output.StdOut
 
 

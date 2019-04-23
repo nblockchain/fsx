@@ -10,9 +10,9 @@ open System.Text
 open System.Linq
 open System.Security.Cryptography
 
-open ProcessTools
+open Process
 
-module NetTools =
+module Network =
 
     let DownloadString (uri: Uri) =
         use webClient = new WebClient()
@@ -49,7 +49,7 @@ module NetTools =
         else
             Console.WriteLine ("File '{0}' not found, going to start download...", resultFile.Name)
             let wgetArgs = sprintf "--output-document=%s %s" (Path.GetFileName(uri.LocalPath)) (uri.ToString())
-            ProcessTools.SafeExecute({ Command = "wget"; Arguments = wgetArgs }, Echo.All) |> ignore
+            Process.SafeExecute({ Command = "wget"; Arguments = wgetArgs }, Echo.All) |> ignore
         resultFile
 
     (** TODO: add tests and simplify the below functions related to IsMonoTlsProblem **)
@@ -91,7 +91,7 @@ module NetTools =
   at System.Threading.Tasks.Task.ThrowIfExceptional (Boolean includeTaskCanceledExceptions) <0x7fdc4949d920 + 0x00037> in <filename unknown>:0 
   at System.Threading.Tasks.Task.Wait (Int32 millisecondsTimeout, CancellationToken cancellationToken) <0x7fdc4949ed90 + 0x000c7> in <filename unknown>:0 
   at System.Threading.Tasks.Task.Wait () <0x7fdc4949ec80 + 0x00028> in <filename unknown>:0 
-  at FSI_0005.Gatecoin.Infrastructure.NetTools.DownloadFile (System.Uri uri) <0x4112f840 + 0x00166> in <filename unknown>:0 
+  at FSI_0005.Gatecoin.Infrastructure.Network.DownloadFile (System.Uri uri) <0x4112f840 + 0x00166> in <filename unknown>:0 
   at <StartupCode$FSI_0006>.$FSI_0006.main@ () <0x41122e40 + 0x00327> in <filename unknown>:0 
   at (wrapper managed-to-native) System.Reflection.MonoMethod:InternalInvoke (System.Reflection.MonoMethod,object,object[],System.Exception&)
   at System.Reflection.MonoMethod.Invoke (System.Object obj, BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) <0x7fdc495ab9e0 + 0x000a1> in <filename unknown>:0 
@@ -142,7 +142,7 @@ module NetTools =
                     Console.Error.WriteLine("Falling back to certificate-less safe download")
                     DownloadFileIgnoringSslCertificates(uri)
 
-        if not (sha256sum = MiscTools.CalculateSHA256(resultFile)) then
+        if not (sha256sum = Misc.CalculateSHA256(resultFile)) then
             failwith(sprintf
                 "%s: SHA256 hash doesn't match, beware possible previous unfinished download, or M.I.T.M.A.: Man In The Middle Attack"
                 resultFile.FullName)
@@ -160,7 +160,7 @@ module NetTools =
                     Console.Error.WriteLine("Falling back to certificate-less safe download")
                     DownloadFileIgnoringSslCertificates(uri)
 
-        if not (md5sum = MiscTools.CalculateMD5(resultFile)) then
+        if not (md5sum = Misc.CalculateMD5(resultFile)) then
             failwith(sprintf
                 "%s: MD5 hash doesn't match, beware possible previous unfinished download, or M.I.T.M.A.: Man In The Middle Attack"
                 resultFile.FullName)
@@ -212,7 +212,7 @@ module NetTools =
                     false
 
     let private IsIpv4AddressPrivate (address: IPAddress) =
-        let ipParts = MiscTools.SimpleStringSplit (address.ToString(), ".")
+        let ipParts = Misc.SimpleStringSplit (address.ToString(), ".")
 
         let secondPart = Int32.Parse(ipParts.[1])
         if (ipParts.[0] = "10") then

@@ -8,13 +8,13 @@ open System.Linq
 open System.Net.Sockets
 open System.Security.Cryptography
 
-open ProcessTools
+open Process
 
-module UnixTools =
+module Unix =
 
     let AbortIfNotDistroAndVersion(distro: string, version: string) =
-        let procResult = ProcessTools.SafeExecute({ Command = "lsb_release"; Arguments = "-a" }, Echo.Off)
-        let tsvMap = MiscTools.TsvParse(procResult.Output.StdOut)
+        let procResult = Process.SafeExecute({ Command = "lsb_release"; Arguments = "-a" }, Echo.Off)
+        let tsvMap = Misc.TsvParse(procResult.Output.StdOut)
         let thisDistro = tsvMap.TryFind("Distributor ID:")
 
         let err = ("Invalid OS/distro, this script is prepared for {0} {1} only", distro, version)
@@ -36,7 +36,7 @@ module UnixTools =
 
     // NOTE: System.Diagnostics.Process.GetProcesses[ByName](...) only returns the ones running under the current user
     let RunningProcessesFromAllUsers() =
-        let procResult = ProcessTools.Execute({ Command = "ps"; Arguments = "aux"}, Echo.Off)
+        let procResult = Process.Execute({ Command = "ps"; Arguments = "aux"}, Echo.Off)
         let procs = List.ofSeq(procResult.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries))
         let processes = match procs with
                         | headerRow::processRows -> processRows
@@ -64,22 +64,22 @@ module UnixTools =
 
     let mutable firstTimeSudoIsRun = true
     let private SudoInternal (command: string, safe: bool): Option<int> =
-        if not (ProcessTools.CommandWorksInShell "id") then
+        if not (Process.CommandWorksInShell "id") then
             Console.Error.WriteLine ("'id' unix command is needed for this script to work")
             Environment.Exit(2)
 
-        let idOutput = ProcessTools.Execute({ Command = "id"; Arguments = "-u" }, Echo.Off).Output.StdOut
+        let idOutput = Process.Execute({ Command = "id"; Arguments = "-u" }, Echo.Off).Output.StdOut
         let alreadySudo = (idOutput.Trim() = "0")
 
-        if (alreadySudo && (not (MiscTools.IsRunningInGitLab()))) then
+        if (alreadySudo && (not (Misc.IsRunningInGitLab()))) then
             Console.Error.WriteLine ("Error: sudo privileges detected. Please don't run this directly with sudo or with the root user.")
             Environment.Exit(3)
 
-        if ((not (alreadySudo)) && (not (ProcessTools.CommandWorksInShell "sudo"))) then
+        if ((not (alreadySudo)) && (not (Process.CommandWorksInShell "sudo"))) then
             failwith "'sudo' unix command is needed for this script to work"
 
         if ((not (alreadySudo)) && firstTimeSudoIsRun) then
-            ProcessTools.SafeExecute({ Command = "sudo"; Arguments = "-k" }, Echo.All) |> ignore
+            Process.SafeExecute({ Command = "sudo"; Arguments = "-k" }, Echo.All) |> ignore
 
         if (not (alreadySudo)) then
             Console.WriteLine("Attempting sudo for '{0}'", command)
@@ -100,10 +100,10 @@ module UnixTools =
         let result =
             let cmd = { Command = commandToExecute; Arguments = argsToPass }
             if (safe) then
-                ProcessTools.SafeExecute(cmd, Echo.All) |> ignore
+                Process.SafeExecute(cmd, Echo.All) |> ignore
                 None
             else
-                Some(ProcessTools.Execute(cmd, Echo.All).ExitCode)
+                Some(Process.Execute(cmd, Echo.All).ExitCode)
 
         if (not (alreadySudo)) then
             firstTimeSudoIsRun <- false
@@ -132,7 +132,7 @@ module UnixTools =
                 try
                     Sudo("killall " + processName)
                 with
-                | ProcessTools.ProcessFailed(_) -> () //might fail if the process is gone already, it's fine
+                | Process.ProcessFailed(_) -> () //might fail if the process is gone already, it's fine
                 System.Threading.Thread.Sleep(TimeSpan.FromSeconds(float 1))
             else
                 let dashNine = String.Format("You might consider using 'killall -9 {0}' manually, but this is kind of dangerous." +
@@ -154,22 +154,22 @@ module UnixTools =
 
     let ExecuteBashCommand (commandWithArguments: string, echo: Echo) =
         let args = ArgsForBash(commandWithArguments)
-        ProcessTools.Execute({ Command = "bash"; Arguments = args }, echo)
+        Process.Execute({ Command = "bash"; Arguments = args }, echo)
 
     let SafeExecuteBashCommand (commandWithArguments: string, echo: Echo) =
         let args = ArgsForBash(commandWithArguments)
-        ProcessTools.SafeExecute({ Command = "bash"; Arguments = args }, echo)
+        Process.SafeExecute({ Command = "bash"; Arguments = args }, echo)
 
     type AptPackage =
     | Missing
     | ExistingVersion of string
     let IsAptPackageInstalled(packageName: string): AptPackage =
-        if not (ProcessTools.CommandWorksInShell "dpkg") then
+        if not (Process.CommandWorksInShell "dpkg") then
             Console.Error.WriteLine ("This script is only for debian-based distros, aborting.")
             Environment.Exit(3)
 
         let cmd = { Command = "dpkg"; Arguments = String.Format("-s {0}", packageName) }
-        let procResult = ProcessTools.Execute(cmd, Echo.Off)
+        let procResult = Process.Execute(cmd, Echo.Off)
         if not (procResult.ExitCode = 0) then
             AptPackage.Missing
         else
@@ -185,7 +185,7 @@ module UnixTools =
             Sudo(String.Format("apt -y install {0}", packageName)) |> ignore
 
     let InstallDebPackage(package: FileInfo)=
-        if not (ProcessTools.CommandWorksInShell "dpkg") then
+        if not (Process.CommandWorksInShell "dpkg") then
             Console.Error.WriteLine ("This script is only for debian-based distros, aborting.")
             Environment.Exit(3)
 
@@ -194,7 +194,7 @@ module UnixTools =
 
     let OctalPermissions (fileOrDir: FileSystemInfo): int =
         let cmd = { Command = "stat"; Arguments = String.Format("-c \"%a\" {0}", fileOrDir.FullName) }
-        let output = ProcessTools.SafeExecute(cmd, Echo.Off).Output.StdOut
+        let output = Process.SafeExecute(cmd, Echo.Off).Output.StdOut
         Int32.Parse(output.Trim())
 
     type Server =
@@ -214,13 +214,13 @@ module UnixTools =
             | ThisServer -> File.ReadLines(usersFile)
             | RemoteServer(address) ->
                 let cmd = { Command = "ssh"; Arguments = String.Format("-t {0} cat /etc/passwd", address) }
-                let output = ProcessTools.Execute(cmd, Echo.Off).Output.StdOut
+                let output = Process.Execute(cmd, Echo.Off).Output.StdOut
                 output.Split([| Environment.NewLine |], StringSplitOptions.RemoveEmptyEntries) |> Seq.ofArray
         GrabTheFirstStringBeforeTheFirstColon(lines)
 
     let GetGroupsInTheSystem () =
         let cmd = { Command = "getent"; Arguments = "group" }
-        let output = ProcessTools.SafeExecute(cmd, Echo.Off).Output.StdOut
+        let output = Process.SafeExecute(cmd, Echo.Off).Output.StdOut
         let lines = output.Split([| Environment.NewLine |], StringSplitOptions.RemoveEmptyEntries)
         GrabTheFirstStringBeforeTheFirstColon(lines)
 
@@ -245,11 +245,11 @@ module UnixTools =
             | ThisServer -> Sudo(addUserCommand)
             | RemoteServer(address) ->
                 let cmd = { Command = "ssh"; Arguments = String.Format("-t {0} 'sudo {1}'", address, addUserCommand) }
-                ProcessTools.SafeExecute(cmd, Echo.All) |> ignore
+                Process.SafeExecute(cmd, Echo.All) |> ignore
 
     let SudoFileExists (path: string): bool =
         let cmd = { Command = "sudo"; Arguments = String.Format("stat -c \"\" {0}", path) }
-        let exitCode = ProcessTools.Execute(cmd, Echo.Off).ExitCode
+        let exitCode = Process.Execute(cmd, Echo.Off).ExitCode
         (exitCode = 0)
 
     let AddRemoteServerFingerprintsToLocalKnownHostsFile(server: string, username: string) =
@@ -274,7 +274,7 @@ module UnixTools =
 
     let GetOwner(fileOrDirectory: FileSystemInfo): string =
         let cmd = { Command = "stat"; Arguments = String.Format("-c \"%U\" {0}", fileOrDirectory.FullName) }
-        let output = ProcessTools.SafeExecute(cmd, Echo.Off).Output.StdOut
+        let output = Process.SafeExecute(cmd, Echo.Off).Output.StdOut
         output.Trim()
 
     let ChangeOwner (fileOrDirectory: FileSystemInfo, newOwner: string, recursively: bool): unit =
@@ -316,7 +316,7 @@ module UnixTools =
         | Server.ThisServer -> Sudo(String.Format(command, username))
         | Server.RemoteServer(address) ->
             let cmd = { Command = "ssh"; Arguments = String.Format("-t {0} sudo {1}", address, command) }
-            ProcessTools.SafeExecute(cmd, Echo.All) |> ignore
+            Process.SafeExecute(cmd, Echo.All) |> ignore
 
     let EnableShellForUser(username: string, server: Server) =
         ChangeShellForUser(username, "/bin/bash", server)
@@ -326,7 +326,7 @@ module UnixTools =
 
     let WhoAmI(): string =
         let cmd = { Command = "whoami"; Arguments = String.Empty }
-        let whoAmIoutput = ProcessTools.SafeExecute(cmd, Echo.Off).Output.StdOut
+        let whoAmIoutput = Process.SafeExecute(cmd, Echo.Off).Output.StdOut
         whoAmIoutput.Trim()
 
     let SetupPasswordLessLogin(host: string, user: string) =
@@ -366,7 +366,7 @@ module UnixTools =
         let cmd = { Command = "ssh"; Arguments = String.Format("-t {0} '{1}'",
                                                                host,
                                                                String.Join(" && ", firstCommandsInBackupNode)) }
-        ProcessTools.SafeExecute(cmd, Echo.All) |> ignore
+        Process.SafeExecute(cmd, Echo.All) |> ignore
 
     let private NeedsSudo(user: string): bool =
         if (WhoAmI() = user) then
@@ -374,7 +374,7 @@ module UnixTools =
         else
             true
 
-    // TODO: split this in two overloads, the one without requireSudo should not be in UnixTools
+    // TODO: split this in two overloads, the one without requireSudo should not be in Unix
     let CopyFileIfNewer (source: FileInfo, dest: DirectoryInfo, requireSudo: bool) =
         let destFile = new FileInfo(Path.Combine(dest.FullName, source.Name))
         let copyFile =
@@ -389,7 +389,7 @@ module UnixTools =
                 source.CopyTo(destFile.FullName, true) |> ignore
         copyFile,destFile
 
-    // TODO: split this in two overloads, the one without requireSudo should not be in UnixTools
+    // TODO: split this in two overloads, the one without requireSudo should not be in Unix
     let MoveFileIfNewer (source: FileInfo, dest: FileInfo, requireSudo: bool): bool =
         let destAlreadyExists = dest.Exists
         let moveFile =
@@ -436,9 +436,9 @@ module UnixTools =
                     let sshArguments = String.Format("-o BatchMode=yes {0} \'{1}'", host, getAddressFromSshClientInSshSession)
                     if (needsSudo) then
                         let cmd = { Command = "sudo"; Arguments = String.Format("runuser -l {0} -c \"ssh {1}\"", user, sshArguments) }
-                        ProcessTools.Execute(cmd, Echo.Off)
+                        Process.Execute(cmd, Echo.Off)
                     else
-                        ProcessTools.Execute({ Command = "ssh"; Arguments = sshArguments }, Echo.Off)
+                        Process.Execute({ Command = "ssh"; Arguments = sshArguments }, Echo.Off)
 
                 finally
                     if (needsSudo) then
@@ -457,9 +457,9 @@ module UnixTools =
 
         if (needsSudo) then
             let cmd = { Command = "sudo"; Arguments = String.Format("crontab -u {0} -l", username) }
-            ProcessTools.Execute(cmd, Echo.OutputOnly) |> ignore
+            Process.Execute(cmd, Echo.OutputOnly) |> ignore
         else
-            ProcessTools.Execute({ Command = "crontab"; Arguments = "-l" }, Echo.OutputOnly) |> ignore
+            Process.Execute({ Command = "crontab"; Arguments = "-l" }, Echo.OutputOnly) |> ignore
 
     let private ConvertCommandToCronJob (command: string, args: string, minutes: int): string =
         String.Format("*/{0} * * * * {1} {2}", minutes.ToString(), command, args)
@@ -538,7 +538,7 @@ module UnixTools =
             | RemoteServer(address) ->
                 { Command = "ssh"; Arguments = String.Format("{0}@{1} \"{2}\"", currentUser, address, listCommand) }
 
-        let procResult = ProcessTools.Execute(finalListCommand, Echo.Off)
+        let procResult = Process.Execute(finalListCommand, Echo.Off)
         let curatedOutput =
             if not (procResult.ExitCode = 0) then
                 String.Empty
@@ -578,7 +578,7 @@ module UnixTools =
                                                 tempFile,
                                                 address,
                                                 tempFile)
-                    ProcessTools.SafeExecute({ Command = "sudo"; Arguments = cmdArgs }, Echo.All) |> ignore
+                    Process.SafeExecute({ Command = "sudo"; Arguments = cmdArgs }, Echo.All) |> ignore
                 finally
                     if (shellWasTweaked) then
                         DisableShellForUser(username, Server.ThisServer)
@@ -589,7 +589,7 @@ module UnixTools =
                                             address,
                                             command,
                                             tempFile)
-                ProcessTools.SafeExecute({ Command = "ssh"; Arguments = sshArgs }, Echo.All) |> ignore
+                Process.SafeExecute({ Command = "ssh"; Arguments = sshArgs }, Echo.All) |> ignore
 
         finally
             File.Delete(tempFile)
@@ -600,4 +600,4 @@ module UnixTools =
                 { Command = "sudo"; Arguments = String.Format("crontab -u {0} -r", username) }
             else
                 { Command = "crontab"; Arguments = "-r" }
-        ProcessTools.Execute(cmd, Echo.Off) |> ignore
+        Process.Execute(cmd, Echo.Off) |> ignore

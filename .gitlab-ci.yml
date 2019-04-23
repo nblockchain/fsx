@@ -35,4 +35,4 @@ test:
     - make
     - make install
     - ./test.fsx
-    - ./testProcessToolsConcurrency.fsx
+    - ./testProcessConcurrency.fsx

@@ -3,14 +3,14 @@ open System
 open System.IO
 
 #r "System.Configuration"
-#load "InfraLib/MiscTools.fs"
-#load "InfraLib/ProcessTools.fs"
+#load "InfraLib/Misc.fs"
+#load "InfraLib/Process.fs"
 open FSX.Infrastructure
-open ProcessTools
+open Process
 
 let mutable retryCount = 0
 while (retryCount < 20) do //this is a stress test
-    let procResult = ProcessTools.Execute({ Command = "fsharpi"; Arguments = "testProcessToolsConcurrencySample.fsx" }, Echo.Off)
+    let procResult = Process.Execute({ Command = "fsharpi"; Arguments = "testProcessConcurrencySample.fsx" }, Echo.Off)
     let actual = (procResult.Output.ToString().Replace(Environment.NewLine,"-"))
     let expected = "foo-bar-baz-"
     if (actual <> expected) then

@@ -4,10 +4,10 @@ open System
 open System.IO
 
 #r "System.Configuration"
-#load "InfraLib/MiscTools.fs"
-#load "InfraLib/ProcessTools.fs"
+#load "InfraLib/Misc.fs"
+#load "InfraLib/Process.fs"
 open FSX.Infrastructure
-open ProcessTools
+open Process
 
 let rec private GatherTarget(args: string list, targetSet: Option<string>): Option<string> =
     match args with
@@ -57,7 +57,7 @@ exec mono "$TARGET_DIR/bin/$TARGET_FILE.exe" "$@"
 let JustBuild() =
     Console.WriteLine("Compiling fsx...")
     let fsxPath = Path.Combine(__SOURCE_DIRECTORY__, "fsxc.fsx")
-    let fsharpcWhich = ProcessTools.Execute({ Command = fsxPath; Arguments = fsxPath }, Echo.All)
+    let fsharpcWhich = Process.Execute({ Command = fsxPath; Arguments = fsxPath }, Echo.All)
     if (fsharpcWhich.ExitCode <> 0) then
         Environment.Exit 1
 
@@ -65,7 +65,7 @@ let JustBuild() =
                       wrapperFsxScript)
 
 
-let maybeTarget = GatherTarget(MiscTools.FsxArguments(), None)
+let maybeTarget = GatherTarget(Misc.FsxArguments(), None)
 match maybeTarget with
 | None -> JustBuild()
 | Some(target) ->
@@ -78,7 +78,7 @@ match maybeTarget with
         binInstallDir.Create()
         let finalPrefixPathOfWrapperScript = Path.Combine(binInstallDir.FullName, fsxLauncherScriptPath.Name)
         File.Copy(fsxLauncherScriptPath.FullName, finalPrefixPathOfWrapperScript, true)
-        if ((ProcessTools.Execute({ Command = "chmod"; Arguments = sprintf "ugo+x %s" finalPrefixPathOfWrapperScript }, Echo.Off)).ExitCode <> 0) then
+        if ((Process.Execute({ Command = "chmod"; Arguments = sprintf "ugo+x %s" finalPrefixPathOfWrapperScript }, Echo.Off)).ExitCode <> 0) then
             failwith "Unexpected chmod failure, please report this bug"
     else
         Console.Error.WriteLine("Unrecognized target: " + target)
