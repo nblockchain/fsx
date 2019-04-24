@@ -121,3 +121,44 @@ module Git =
             for i = 0 to (GetNumberOfCommitsAhead repo branch)-1 do
                 yield GetCommitMessageOfLastCommitNumber i
         }
+
+    let GetRepoInfo () =
+        let rec GetBranchFromGitBranch(outchunks: List<string>) =
+            match outchunks with
+            | [] -> failwith "current branch not found, unexpected output from `git branch`"
+            | head::tail ->
+                if head.StartsWith "*" then
+                    let branchName = head.Substring("* ".Length)
+                    branchName
+                else
+                    GetBranchFromGitBranch tail
+
+        let gitWhich = Process.Execute({ Command = "which"; Arguments = "git" }, Echo.Off)
+        if gitWhich.ExitCode <> 0 then
+            String.Empty
+        else
+            let gitLog = Process.Execute({ Command = "git"; Arguments = "log --oneline" }, Echo.Off)
+            if gitLog.ExitCode <> 0 then
+                String.Empty
+            else
+                let gitBranch = Process.Execute({ Command = "git"; Arguments = "branch" }, Echo.Off)
+                if gitBranch.ExitCode <> 0 then
+                    failwith "Unexpected git behaviour, as `git log` succeeded but `git branch` didn't"
+                else
+                    let branchesOutput =
+                        gitBranch.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+                            |> List.ofSeq
+                    let branch = GetBranchFromGitBranch branchesOutput
+                    let gitLogCmd = { Command = "git"
+                                      Arguments = "log --no-color --first-parent -n1 --pretty=format:%h" }
+                    let gitLastCommit = Process.Execute(gitLogCmd, Echo.Off)
+                    if gitLastCommit.ExitCode <> 0 then
+                        failwith "Unexpected git behaviour, as `git log` succeeded before but not now"
+
+                    let lines = gitLastCommit.Output.StdOut.Split([|Environment.NewLine|],
+                                                                  StringSplitOptions.RemoveEmptyEntries)
+                    if lines.Length <> 1 then
+                        failwith "Unexpected git output for special git log command"
+                    else
+                        let lastCommitSingleOutput = lines.[0]
+                        sprintf "(%s/%s)" branch lastCommitSingleOutput

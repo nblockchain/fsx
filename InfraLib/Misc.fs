@@ -428,3 +428,25 @@ module Misc =
 
     let SqlReadOnlyGroupName = "sqlreadonly"
 
+    let rec GatherOrGetDefaultPrefix(args: List<string>, previousIsPrefixArg: bool, prefixSet: Option<string>): string =
+        let GatherPrefix(newPrefix: string): Option<string> =
+            match prefixSet with
+            | None -> Some newPrefix
+            | _ -> failwith ("prefix argument duplicated")
+
+        let prefixArgWithEquals = "--prefix="
+        match args with
+        | [] ->
+            match prefixSet with
+            | None -> "/usr/local"
+            | Some prefix -> prefix
+        | head::tail ->
+            if previousIsPrefixArg then
+                GatherOrGetDefaultPrefix(tail, false, GatherPrefix head)
+            elif head = "--prefix" then
+                GatherOrGetDefaultPrefix(tail, true, prefixSet)
+            elif head.StartsWith prefixArgWithEquals then
+                GatherOrGetDefaultPrefix(tail, false, GatherPrefix(head.Substring prefixArgWithEquals.Length))
+            else
+                failwithf "argument not recognized: %s" head
+
