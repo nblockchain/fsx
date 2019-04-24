@@ -3,11 +3,8 @@ namespace FSX.Infrastructure
 
 open System
 open System.IO
-open System.Net
-open System.Net.Sockets
 open System.Reflection
 open System.Configuration
-open System.Security
 open System.Linq
 open System.Security.Cryptography
 

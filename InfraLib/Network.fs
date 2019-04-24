@@ -8,7 +8,6 @@ open System.Net.NetworkInformation
 open System.Net.Sockets
 open System.Text
 open System.Linq
-open System.Security.Cryptography
 
 open Process
 

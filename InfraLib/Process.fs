@@ -3,15 +3,10 @@ namespace FSX.Infrastructure
 
 open System
 open System.IO
-open System.Net
-open System.Net.Sockets
 open System.Diagnostics
 open System.Threading
 open System.Linq
 open System.Text
-open System.Security.Cryptography
-
-open Misc
 
 module Process =
 
@@ -216,6 +211,7 @@ module Process =
 
         { ExitCode = exitCode; Output = OutputBuffer(outputBuffer) }
 
+
     exception ProcessFailed of string
 
     let SafeExecute (procDetails: ProcessDetails, echo: Echo): ProcessResult =
@@ -280,5 +276,4 @@ module Process =
                 false
         else
             CheckIfCommandWorksInShellWithWhich(command)
-
 
