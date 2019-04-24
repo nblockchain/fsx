@@ -1,4 +1,6 @@
 bin/
+obj/
+.vs/
 build.config
 
 #snap creation:
