@@ -15,29 +15,6 @@ open Misc
 
 module Process =
 
-    type QueuedLock() =
-        let innerLock = new Object()
-        let ticketsCount = ref 0
-        let ticketToRide = ref 1
-
-        member this.Enter() =
-            let myTicket = Interlocked.Increment(ticketsCount)
-            Monitor.Enter(innerLock)
-            while (myTicket <> !ticketToRide) do
-                Monitor.Wait(innerLock) |> ignore
-
-        member this.Exit() =
-            Interlocked.Increment(ticketToRide) |> ignore
-            Monitor.PulseAll(innerLock)
-            Monitor.Exit(innerLock)
-
-        member this.ExitAndReEnter() =
-            let myNewTicket = Interlocked.Increment(ticketsCount)
-            Interlocked.Increment(ticketToRide) |> ignore
-            Monitor.PulseAll(innerLock)
-            while (myNewTicket <> !ticketToRide) do
-                Monitor.Wait(innerLock) |> ignore
-
     type Standard =
         | Output
         | Error
@@ -112,8 +89,8 @@ module Process =
         : ProcessResult =
 
         // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events?
+        let outputBufferLock = new Object()
         let mutable outputBuffer: list<OutputChunk> = []
-        let outputBufferLock = new QueuedLock()
 
         if (echo = Echo.All) then
             Console.WriteLine(sprintf "%s %s" procDetails.Command procDetails.Arguments)
@@ -151,7 +128,7 @@ module Process =
                 else //if (readCount = 0)
                     outputToReadFrom.EndOfStream
 
-            let ReadIteration(): ReaderState =
+            let ReadIteration(): bool =
 
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
@@ -168,58 +145,53 @@ module Process =
                 readTask.Wait()
                 if not (readTask.IsCompleted) then
                     failwith "Failed to read"
-                let readCount = readTask.Result
 
-                let readChar =
-                    if (readCount > bufferSize) then
-                        failwith (sprintf "StreamReader.Read() should not read more (%d) than the bufferSize (%d) if we passed the bufferSize as a parameter"
-                                     readCount bufferSize)
-                    else if (readCount < bufferSize) then
-                        None
-                    else //if (readCount = bufferSize) then
-                        if (echo <> Echo.Off) then
-                            print outChar
-                            flush()
+                let readCount = readTask.Result
+                if (readCount > bufferSize) then
+                    failwith "StreamReader.Read() should not read more than the bufferSize if we passed the bufferSize as a parameter"
+
+                if (readCount = bufferSize) then
+                    if not (echo = Echo.Off) then
+                        print outChar
+                        flush()
+
+                    lock outputBufferLock (fun _ ->
 
                         let leChar = outChar.[uniqueElementIndexInTheSingleCharBuffer]
-                        let newBuilder = new StringBuilder(leChar.ToString())
-                        let newBlock = { OutputType = std; Chunk = newBuilder }
-
+                        let newBuilder = StringBuilder(leChar.ToString())
                         match outputBuffer with
                         | [] ->
+                            let newBlock =
+                                match std with
+                                | Standard.Output ->
+                                    { OutputType = Standard.Output; Chunk = newBuilder }
+                                | Standard.Error ->
+                                    { OutputType = Standard.Error; Chunk = newBuilder }
                             outputBuffer <- [ newBlock ]
                         | head::tail ->
-                            if (head.OutputType = std) then
-                                head.Chunk.Append(outChar) |> ignore
-                            else
-                                outputBuffer <- newBlock::outputBuffer
-                        Some(leChar)
+                            match head.OutputType with
+                            | Standard.Output ->
+                                match std with
+                                | Standard.Output ->
+                                    head.Chunk.Append outChar |> ignore
+                                | Standard.Error ->
+                                    let newErrBuilder = { OutputType = Standard.Error; Chunk = newBuilder }
+                                    outputBuffer <- newErrBuilder::outputBuffer
+                            | Standard.Error ->
+                                match std with
+                                | Standard.Error ->
+                                    head.Chunk.Append outChar |> ignore
+                                | Standard.Output ->
+                                    let newOutBuilder = { OutputType = Standard.Output; Chunk = newBuilder }
+                                    outputBuffer <- newOutBuilder::outputBuffer
+                    )
 
-                let readerState =
-                    if (EndOfStream(readCount)) then
-                        End
-                    else
-                        match readChar with
-                        | Some('\n') ->
-                            Pause
-                        | Some(aChar) ->
-                            Continue
-                        | None ->
-                            failwith "readChar=None should have been EndOfStream"
-                readerState
+                let continueIterating = not(EndOfStream(readCount))
+                continueIterating
 
-            let rec Loop() =
-                match ReadIteration() with
-                | Continue ->
-                    Loop()
-                | End ->
-                    outputBufferLock.Exit()
-                | Pause ->
-                    outputBufferLock.ExitAndReEnter()
-                    Loop()
-
-            outputBufferLock.Enter()
-            Loop()
+            // this is a way to do a `do...while` loop in F#...
+            while (ReadIteration()) do
+                ignore None
 
         let outReaderThread = new Thread(new ThreadStart(fun _ ->
             ReadStandard(Standard.Output)
