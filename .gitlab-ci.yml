@@ -1,3 +1,5 @@
+image: ubuntu:18.04
+
 before_script:
   - apt-get update -qq
 
@@ -5,25 +7,17 @@ before_script:
   # https://askubuntu.com/a/1013396
   - DEBIAN_FRONTEND=noninteractive apt-get install -y fsharp
 
-build_1804:
-  image: ubuntu:18.04
-  script:
-    - ./ci-build.fsx
-
-build_1904:
-  image: ubuntu:19.04
+build:
   script:
     - ./ci-build.fsx
 
 install:
-  image: ubuntu:18.04
   script:
     - ./configure.sh
     - make
     - make install
 
 package:
-  image: ubuntu:18.04
   script:
     - apt-get install -y snapcraft
     - ./snap_build.sh
@@ -34,7 +28,6 @@ package:
     expire_in: 50days
 
 test:
-  image: ubuntu:18.04
   script:
     - ./configure.sh
     - make
