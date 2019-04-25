@@ -13,7 +13,7 @@ build:
 
 install:
   script:
-    - ./configure.fsx
+    - ./configure.sh
     - make
     - make install
 
@@ -29,7 +29,7 @@ package:
 
 test:
   script:
-    - ./configure.fsx
+    - ./configure.sh
     - make
     - make install
     - ./test.fsx
