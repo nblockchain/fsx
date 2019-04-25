@@ -3,11 +3,9 @@ image: ubuntu:18.04
 before_script:
   - apt-get update -qq
 
-  # workaround to Ubuntu messing up with deps in STABLE/LTS
-  - apt-get install -y tzdata
-
   - apt-get install -y git
-  - apt-get install -y fsharp
+  # https://askubuntu.com/a/1013396
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y fsharp
 
 build:
   script:
