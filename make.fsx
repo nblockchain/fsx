@@ -31,8 +31,9 @@ let fsxInstallDir = Path.Combine(prefix, "lib", "fsx")
 let binInstallDir = Path.Combine(prefix, "bin")
                     |> DirectoryInfo
 
-let fsxLauncherScriptPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsx"))
-let fsxBinaryPath = FileInfo(Path.Combine(__SOURCE_DIRECTORY__, "bin", "fsxc.fsx.exe"))
+let localBinFolder = Path.Combine(__SOURCE_DIRECTORY__, "bin")
+let fsxLauncherScriptPath = FileInfo(Path.Combine(localBinFolder, "fsx"))
+let fsxBinaryPath = FileInfo(Path.Combine(localBinFolder, "fsxc.fsx.exe"))
 
 let wrapperFsxScript = """#!/bin/sh
 set -e
