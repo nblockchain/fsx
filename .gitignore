@@ -2,6 +2,7 @@ bin/
 obj/
 .vs/
 build.config
+packages/
 
 #snap creation:
 staging/
