@@ -1,7 +1,6 @@
 
 namespace FSX.Infrastructure
 
-open System
 open System.Net
 open System.Collections
 open System.Collections.Generic
