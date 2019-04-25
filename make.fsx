@@ -9,6 +9,12 @@ open System.IO
 open FSX.Infrastructure
 open Process
 
+type BinaryConfig =
+    | Debug
+    | Release
+    override self.ToString() =
+        sprintf "%A" self
+
 let rec private GatherTarget(args: string list, targetSet: Option<string>): Option<string> =
     match args with
     | [] -> targetSet
@@ -33,7 +39,6 @@ let binInstallDir = Path.Combine(prefix, "bin")
 
 let localBinFolder = Path.Combine(__SOURCE_DIRECTORY__, "bin")
 let fsxLauncherScriptPath = FileInfo(Path.Combine(localBinFolder, "fsx"))
-let fsxBinaryPath = FileInfo(Path.Combine(localBinFolder, "fsxc.fsx.exe"))
 
 let wrapperFsxScript = """#!/bin/sh
 set -e
@@ -47,7 +52,7 @@ if [ $# -lt 1 ]; then
 fi
 
 DIR_OF_THIS_SCRIPT=$(dirname "$(realpath "$0")")
-FSXC_PATH="$DIR_OF_THIS_SCRIPT/../lib/fsx/fsxc.fsx.exe"
+FSXC_PATH="$DIR_OF_THIS_SCRIPT/../lib/fsx/fsxc.exe"
 mono "$FSXC_PATH" "$1"
 TARGET_DIR=$(dirname -- "$1")
 TARGET_FILE=$(basename -- "$1")
@@ -55,26 +60,31 @@ shift
 exec mono "$TARGET_DIR/bin/$TARGET_FILE.exe" "$@"
 """
 
-let JustBuild() =
+let JustBuild binaryConfig =
     Console.WriteLine("Compiling fsx...")
-    let fsxPath = Path.Combine(__SOURCE_DIRECTORY__, "fsxc.fsx")
-    let fsharpcWhich = Process.Execute({ Command = fsxPath; Arguments = fsxPath }, Echo.All)
-    if (fsharpcWhich.ExitCode <> 0) then
+    let xbuildArgs = sprintf "fsx.sln /p:Configuration=%s" (binaryConfig.ToString())
+    let xbuildProc = Process.Execute({ Command = "xbuild"; Arguments = xbuildArgs }, Echo.All)
+    if xbuildProc.ExitCode <> 0 then
         Environment.Exit 1
 
+    Directory.CreateDirectory localBinFolder |> ignore
     File.WriteAllText(fsxLauncherScriptPath.FullName,
                       wrapperFsxScript)
 
 
 let maybeTarget = GatherTarget(Misc.FsxArguments(), None)
 match maybeTarget with
-| None -> JustBuild()
+| None -> JustBuild BinaryConfig.Debug
 | Some(target) ->
     if (target = "install") then
+        let releaseConfig = BinaryConfig.Release
+        JustBuild releaseConfig
+        let fsxcBinary = FileInfo(Path.Combine("fsxc", "bin", releaseConfig.ToString(), "fsxc.exe"))
+
         Console.WriteLine("Installing fsx...")
         Console.WriteLine()
         fsxInstallDir.Create()
-        File.Copy(fsxBinaryPath.FullName, Path.Combine(fsxInstallDir.FullName, fsxBinaryPath.Name), true)
+        File.Copy(fsxcBinary.FullName, Path.Combine(fsxInstallDir.FullName, fsxcBinary.Name), true)
 
         binInstallDir.Create()
         let finalPrefixPathOfWrapperScript = Path.Combine(binInstallDir.FullName, fsxLauncherScriptPath.Name)

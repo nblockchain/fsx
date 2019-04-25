@@ -10,27 +10,44 @@ open System.Linq
 open FSX.Infrastructure
 open Process
 
+let rec FindFsxc(): FileInfo =
+    let fsxCompiler = "fsxc.exe"
+
+    let fsxcBinDir = Path.Combine(__SOURCE_DIRECTORY__, "fsxc", "bin")
+    let findFsxcExeFiles () =
+        Directory.GetFiles(fsxcBinDir, fsxCompiler, SearchOption.AllDirectories)
+    if not (Directory.Exists fsxcBinDir) || not (findFsxcExeFiles().Any()) then
+        let configureProc = Process.Execute({ Command = "./configure.sh"; Arguments = String.Empty },
+                                            Echo.All)
+        if configureProc.ExitCode <> 0 then
+            Environment.Exit 1;failwith "Unreachable"
+
+        let makeProc = Process.Execute({ Command = "make"; Arguments = String.Empty },
+                                       Echo.All)
+        if makeProc.ExitCode <> 0 then
+            Environment.Exit 1;failwith "Unreachable"
+        FindFsxc()
+
+    elif findFsxcExeFiles().Count() > 1 then
+        Console.Error.WriteLine(sprintf "More than one %s file found, please just leave one" fsxCompiler)
+        Environment.Exit 1;failwith "Unreachable"
+
+    else
+        findFsxcExeFiles().Single() |> FileInfo
+
+let fsxLocation = FindFsxc()
+
 Console.WriteLine("Checking if all .fsx scripts build")
 
-let fsxCompiler = "fsxc.fsx"
+let fsxScripts = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fsx", SearchOption.AllDirectories)
 
-let allFsxScripts = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fsx", SearchOption.AllDirectories)
-let fsxScripts = allFsxScripts.Where(fun scriptPath -> FileInfo(scriptPath).Name = fsxCompiler)
-if (fsxScripts.Count() > 1) then
-    Console.Error.WriteLine(sprintf "More than one %s file found, please just leave one" fsxCompiler)
-    Environment.Exit(1)
-if (fsxScripts.Count() = 0) then
-    Console.Error.WriteLine(sprintf "%s script not found" fsxCompiler)
-    Environment.Exit(1)
-let fsxLocation = fsxScripts.Single()
-
+Directory.SetCurrentDirectory(fsxLocation.Directory.FullName)
 let buildFsxScript (script: string) (soFar: bool): bool =
     if (script = null) then
         raise(ArgumentNullException("script"))
 
-    let currentDir = Directory.GetCurrentDirectory()
     Console.WriteLine(sprintf "Building %s" script)
-    let procResult = Process.Execute({ Command = fsxLocation; Arguments = sprintf "-k %s" script }, Echo.OutputOnly)
+    let procResult = Process.Execute({ Command = fsxLocation.FullName; Arguments = sprintf "-k %s" script }, Echo.OutputOnly)
 
     let success = match procResult.ExitCode with
                   | 0 -> true
@@ -47,7 +64,7 @@ let rec buildAll(scripts: string list) (soFar: bool): bool =
         let sofarPlusOne = buildFsxScript script soFar
         buildAll tail sofarPlusOne
 
-let scripts = List.ofArray (allFsxScripts)
+let scripts = List.ofArray fsxScripts
 let allCompile = buildAll scripts true
 
 if (allCompile) then

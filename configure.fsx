@@ -20,6 +20,16 @@ if (fsharpcWhich.ExitCode <> 0) then
 else
     Console.WriteLine("found")
 
+Console.Write "checking for xbuild... "
+let xbuildCommand = "xbuild"
+let xbuildWhich = Process.Execute({ Command = "which"; Arguments = xbuildCommand }, Echo.Off)
+if xbuildWhich.ExitCode <> 0 then
+    Console.Error.WriteLine "not found"
+    Console.Error.WriteLine(sprintf "configuration failed, please install \"%s\"" fsharpCompiler)
+    Environment.Exit 1
+else
+    Console.WriteLine "found"
+
 let prefix = DirectoryInfo(Misc.GatherOrGetDefaultPrefix(Misc.FsxArguments(), false, None))
 
 if not (prefix.Exists) then
