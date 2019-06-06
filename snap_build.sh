@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-./configure.fsx --prefix ./staging
+./configure.sh --prefix=./staging
 make
 make install
 
