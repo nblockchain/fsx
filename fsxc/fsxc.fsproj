@@ -41,17 +41,21 @@
     <Reference Include="FSharp.Core">
       <HintPath>..\InfraLib\packages\FSharp.Core.4.5.4\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="InfraLib\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="..\InfraLib\Misc.fs">
+      <Link>InfraLib\Misc.fs</Link>
+    </Compile>
+    <Compile Include="..\InfraLib\Process.fs">
+      <Link>InfraLib\Process.fs</Link>
+    </Compile>
     <Compile Include="Program.fs" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\InfraLib\InfraLib.fsproj">
-      <Project>{4634F264-784E-42DA-B5A1-FE72125DEAFC}</Project>
-      <Name>InfraLib</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(FSharpTargetsPath)" />
 </Project>

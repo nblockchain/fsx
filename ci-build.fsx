@@ -41,7 +41,6 @@ Console.WriteLine("Checking if all .fsx scripts build")
 
 let fsxScripts = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fsx", SearchOption.AllDirectories)
 
-Directory.SetCurrentDirectory(fsxLocation.Directory.FullName)
 let buildFsxScript (script: string) (soFar: bool): bool =
     if (script = null) then
         raise(ArgumentNullException("script"))
