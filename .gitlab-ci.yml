@@ -27,10 +27,18 @@ buildAndInstall-1904:
     - make
     - make install
 
-compileScripts:
+compileScripts-1804:
   image: ubuntu:18.04
   stage: compileScripts
   script:
+    - ./configure.sh && make install
+    - ./ci-build.fsx
+
+compileScripts-1904:
+  image: ubuntu:19.04
+  stage: compileScripts
+  script:
+    - ./configure.sh && make install
     - ./ci-build.fsx
 
 test:
