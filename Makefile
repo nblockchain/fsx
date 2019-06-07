@@ -1,5 +1,6 @@
 all:
-	@./make.sh
+	xbuild
 
 install:
-	@./make.sh install
+	xbuild /p:Configuration=Release
+	./install.sh
