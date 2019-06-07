@@ -1,4 +1,4 @@
-#!/usr/bin/env fsharpi
+#!/usr/bin/env fsx
 System.Console.WriteLine("foo")
 System.Console.Out.Flush()
 

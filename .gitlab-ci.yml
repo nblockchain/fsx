@@ -41,18 +41,36 @@ compileScripts-1904:
     - ./configure.sh && make install
     - ./ci-build.fsx
 
-test:
+test-1804:
   image: ubuntu:18.04
   stage: test
   script:
-    - ./configure.sh
-    - make
-    - make install
+    - ./configure.sh && make install
     - ./test.fsx
     - ./testProcessConcurrency.fsx
 
-package:
+test-1904:
+  image: ubuntu:19.04
+  stage: test
+  script:
+    - ./configure.sh && make install
+    - ./test.fsx
+    - ./testProcessConcurrency.fsx
+
+package-1804:
   image: ubuntu:18.04
+  stage: package
+  script:
+    - apt-get install -y snapcraft
+    - ./snap_build.sh
+
+  artifacts:
+    paths:
+      - fsx*.snap
+    expire_in: 50days
+
+package-1904:
+  image: ubuntu:19.04
   stage: package
   script:
     - apt-get install -y snapcraft
