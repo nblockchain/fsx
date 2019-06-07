@@ -13,17 +13,26 @@ stages:
   - test
   - package
 
-compileScripts:
-  stage: compileScripts
-  script:
-    - ./ci-build.fsx
-
 buildAndInstall:
   stage: buildAndInstall
   script:
     - ./configure.sh
     - make
     - make install
+
+compileScripts:
+  stage: compileScripts
+  script:
+    - ./ci-build.fsx
+
+test:
+  stage: test
+  script:
+    - ./configure.sh
+    - make
+    - make install
+    - ./test.fsx
+    - ./testProcessConcurrency.fsx
 
 package:
   stage: package
@@ -35,12 +44,3 @@ package:
     paths:
       - fsx*.snap
     expire_in: 50days
-
-test:
-  stage: test
-  script:
-    - ./configure.sh
-    - make
-    - make install
-    - ./test.fsx
-    - ./testProcessConcurrency.fsx
