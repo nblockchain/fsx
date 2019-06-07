@@ -1,5 +1,3 @@
-image: ubuntu:18.04
-
 before_script:
   - apt-get update -qq
 
@@ -13,7 +11,16 @@ stages:
   - test
   - package
 
-buildAndInstall:
+buildAndInstall-1804:
+  image: ubuntu:18.04
+  stage: buildAndInstall
+  script:
+    - ./configure.sh
+    - make
+    - make install
+
+buildAndInstall-1904:
+  image: ubuntu:19.04
   stage: buildAndInstall
   script:
     - ./configure.sh
@@ -21,11 +28,13 @@ buildAndInstall:
     - make install
 
 compileScripts:
+  image: ubuntu:18.04
   stage: compileScripts
   script:
     - ./ci-build.fsx
 
 test:
+  image: ubuntu:18.04
   stage: test
   script:
     - ./configure.sh
@@ -35,6 +44,7 @@ test:
     - ./testProcessConcurrency.fsx
 
 package:
+  image: ubuntu:18.04
   stage: package
   script:
     - apt-get install -y snapcraft
