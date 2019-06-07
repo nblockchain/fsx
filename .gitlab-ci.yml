@@ -7,17 +7,26 @@ before_script:
   # https://askubuntu.com/a/1013396
   - DEBIAN_FRONTEND=noninteractive apt-get install -y fsharp
 
-build:
+stages:
+  - buildAndInstall
+  - compileScripts
+  - test
+  - package
+
+compileScripts:
+  stage: compileScripts
   script:
     - ./ci-build.fsx
 
-install:
+buildAndInstall:
+  stage: buildAndInstall
   script:
     - ./configure.sh
     - make
     - make install
 
 package:
+  stage: package
   script:
     - apt-get install -y snapcraft
     - ./snap_build.sh
@@ -28,6 +37,7 @@ package:
     expire_in: 50days
 
 test:
+  stage: test
   script:
     - ./configure.sh
     - make
