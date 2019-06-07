@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-./fsicheck.sh configure
-
 if ! which fsharpc >/dev/null 2>&1; then
     echo "checking for F# compiler... not found"
     exit 1
