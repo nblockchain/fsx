@@ -388,14 +388,21 @@ module Misc =
         not (String.IsNullOrEmpty(gitlabUserEmail))
 
     let GetCurrentVersion(dir: DirectoryInfo): Version =
-        let assemblyVersionFileName = "AssemblyInfo.fs"
-        let assemblyVersionFsFile =
+        let defaultAssemblyVersionFileName = "AssemblyInfo.fs"
+        let assemblyVersionFsFiles =
             (Directory.EnumerateFiles (dir.FullName,
-                                       assemblyVersionFileName,
-                                       SearchOption.AllDirectories)).SingleOrDefault ()
+                                       defaultAssemblyVersionFileName,
+                                       SearchOption.AllDirectories))
+        let assemblyVersionFsFile =
+            if assemblyVersionFsFiles.Count() = 1 then
+                assemblyVersionFsFiles.Single()
+            else
+                (Directory.EnumerateFiles (dir.FullName,
+                                           "Common" + defaultAssemblyVersionFileName,
+                                           SearchOption.AllDirectories)).SingleOrDefault()
+
         if assemblyVersionFsFile = null then
-            Console.Error.WriteLine (sprintf "%s not found in any subfolder (or found too many), cannot extract version number"
-                                             assemblyVersionFileName)
+            Console.Error.WriteLine ("Canonical AssemblyInfo not found in any subfolder (or found too many), cannot extract version number")
             Environment.Exit 1
 
         let assemblyVersionAttribute = "AssemblyVersion"
