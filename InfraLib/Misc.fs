@@ -442,7 +442,11 @@ module Misc =
         match args with
         | [] ->
             match prefixSet with
-            | None -> "/usr/local"
+            | None ->
+                match GuessPlatform() with
+                | Platform.Windows ->
+                    Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
+                | _ -> "/usr/local"
             | Some prefix -> prefix
         | head::tail ->
             if previousIsPrefixArg then
