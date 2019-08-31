@@ -128,7 +128,7 @@ module Git =
             | [] -> failwith "current branch not found, unexpected output from `git branch`"
             | head::tail ->
                 if head.StartsWith "*" then
-                    let branchName = head.Substring("* ".Length)
+                    let branchName = head.Substring("* ".Length).Trim()
                     branchName
                 else
                     GetBranchFromGitBranch tail
