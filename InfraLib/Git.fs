@@ -133,8 +133,14 @@ module Git =
                 else
                     GetBranchFromGitBranch tail
 
-        let gitWhich = Process.Execute({ Command = "which"; Arguments = "git" }, Echo.Off)
-        if gitWhich.ExitCode <> 0 then
+        let gitCheckCommand =
+            match Misc.GuessPlatform() with
+            | Misc.Platform.Windows ->
+                { Command = "git"; Arguments = "--version" }
+            | _ ->
+                { Command = "which"; Arguments = "git" }
+        let gitCheck = Process.Execute(gitCheckCommand, Echo.Off)
+        if gitCheck.ExitCode <> 0 then
             String.Empty
         else
             let gitLog = Process.Execute({ Command = "git"; Arguments = "log --oneline" }, Echo.Off)
