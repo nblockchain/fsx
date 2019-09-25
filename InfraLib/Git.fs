@@ -20,8 +20,18 @@ module Git =
             else
                 GetBranchFromGitBranch(tail)
 
+    let private IsGitInstalled(): bool =
+        let gitCheckCommand =
+            match Misc.GuessPlatform() with
+            | Misc.Platform.Windows ->
+                { Command = "git"; Arguments = "--version" }
+            | _ ->
+                { Command = "which"; Arguments = "git" }
+        let gitCheck = Process.Execute(gitCheckCommand, Echo.Off)
+        gitCheck.ExitCode = 0
+
     let private CheckGitIsInstalled(): unit =
-        if not (Process.CommandWorksInShell gitCommand) then
+        if not (IsGitInstalled()) then
             Console.Error.WriteLine "Could not continue, install 'git' first"
             Environment.Exit 1
 
@@ -123,14 +133,7 @@ module Git =
         }
 
     let GetRepoInfo () =
-        let gitCheckCommand =
-            match Misc.GuessPlatform() with
-            | Misc.Platform.Windows ->
-                { Command = "git"; Arguments = "--version" }
-            | _ ->
-                { Command = "which"; Arguments = "git" }
-        let gitCheck = Process.Execute(gitCheckCommand, Echo.Off)
-        if gitCheck.ExitCode <> 0 then
+        if not (IsGitInstalled()) then
             String.Empty
         else
             let gitLog = Process.Execute({ Command = "git"; Arguments = "log --oneline" }, Echo.Off)
