@@ -31,7 +31,7 @@ module Git =
         if (gitBranch.ExitCode <> 0) then
             failwith "Unexpected git behaviour, `git branch` didn't succeed"
 
-        let branchesOutput = gitBranch.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries) |> List.ofSeq
+        let branchesOutput = Misc.CrossPlatformStringSplitInLines gitBranch.Output.StdOut
         GetBranchFromGitBranch(branchesOutput)
 
     let GetLastCommit() =
@@ -41,7 +41,7 @@ module Git =
         if (gitLastCommit.ExitCode <> 0) then
             failwith "Unexpected git behaviour, as `git log` succeeded before but not now"
 
-        let lines = gitLastCommit.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+        let lines = Misc.CrossPlatformStringSplitInLines gitLastCommit.Output.StdOut
         if (lines.Length <> 1) then
             failwith "Unexpected git output for special git log command"
         lines.[0]
@@ -71,7 +71,7 @@ module Git =
 
         let gitShowRemotes = { Command = gitCommand; Arguments = "remote -v" }
         let remoteLines = Process.SafeExecute(gitShowRemotes, Echo.Off)
-                                      .Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+                                      .Output.StdOut |> Misc.CrossPlatformStringSplitInLines
         let remoteFound = remoteLines.FirstOrDefault(fun line -> line.Contains("\t" + repoUrl + " "))
         let remote,cleanRemoteLater =
             if (remoteFound <> null) then
@@ -145,8 +145,7 @@ module Git =
                 if gitLastCommit.ExitCode <> 0 then
                     failwith "Unexpected git behaviour, as `git log` succeeded before but not now"
 
-                let lines = gitLastCommit.Output.StdOut.Split([|Environment.NewLine|],
-                                                              StringSplitOptions.RemoveEmptyEntries)
+                let lines = Misc.CrossPlatformStringSplitInLines gitLastCommit.Output.StdOut
                 if lines.Length <> 1 then
                     failwith "Unexpected git output for special git log command"
                 else
