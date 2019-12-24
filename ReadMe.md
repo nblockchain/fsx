@@ -14,7 +14,7 @@ These are the main annoyances when working with F# scripting. Granted, F#+FSI is
 To the above three questions we could even follow-up with new ones:
 * Couldn't we make FSI only compile what's changed, and reuse binaries from a previous run, to speed this up?
 * Couldn't we run our script without FSI given that FSI eats a lot of memory (for REPL features, which scripts don't need)?
-* Couldn't we have a CI approach that takes care of our scripts in a similar way as we do with C# code?
+* Couldn't we have a CI approach that takes care of our scripts in a similar way as we do with (msbuild-ed) C#/F# code?
 
 FSX answers all of these latter questions with a categorical YES!
 
@@ -26,7 +26,7 @@ The creation of FSX was inspired by several facts:
   * If your version of Mono is not too old, but your version of F# is not too new (e.g. what happens exactly with Ubuntu 19.04), then FSI might not work at all. More info: https://github.com/fsharp/fsharp/issues/740 .
 * FSI stands for F Sharp **Interactive**, which means that it's not really suited for scripting but more for debugging:
   * It doesn't treat warnings as errors by default (you would need to remember to use the flag --warnaserror when calling fsharpi, which is not handy).
-  * Because of the previous above about warnings, it can even cancel the advantage of the promise of "statically-compiled scripts" altogether, because what should be a compilation error could be translated to a runtime error when using currified arguments, due to FSI defaulting to "interactive" needs. (More info: https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it )
+  * Because of the previous point above about warnings, it can even cancel the advantage of the promise of "statically-compiled scripts" altogether, because what should be a compilation error could be translated to a runtime error when using currified arguments, due to FSI defaulting to "interactive" needs. (More info: https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it )
   * AFAIK there's no way to use flags in a shebang (so can't use `#!/usr/bin/env fsharpi --warnaserror` as the flag gets ignored). Note that using fsx in shebang, however, will treat warnings as errors.
   * It can consume a lot of memory, just compare it this way:
 
