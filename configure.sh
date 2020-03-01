@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
+if ! which make >/dev/null 2>&1; then
+    echo "checking for make... not found"
+    exit 1
+else
+    echo "checking for make... found"
+fi
+
 if ! which fsharpc >/dev/null 2>&1; then
     echo "checking for F# compiler... not found"
     exit 1
