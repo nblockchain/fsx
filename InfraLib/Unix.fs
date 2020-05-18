@@ -190,10 +190,12 @@ module Unix =
         if procResult.ExitCode = 0 then
             Console.WriteLine(sprintf "Downloaded %s" packageName)
         elif (procResult.Output.StdErr.Contains "E: Can't select candidate version from package") then
+            InstallAptPackageIfNotAlreadyInstalled "aptitude"
+
             Console.WriteLine()
             Console.WriteLine()
             Console.WriteLine(sprintf "Virtual package '%s' found, provided by:" packageName)
-            InstallAptPackageIfNotAlreadyInstalled "aptitude"
+
             let aptitudeShowProc = Process.SafeExecute({ Command = "aptitude"; Arguments = sprintf "show %s" packageName },
                                                        Echo.Off)
             let lines = aptitudeShowProc.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
