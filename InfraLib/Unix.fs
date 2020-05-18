@@ -192,15 +192,14 @@ module Unix =
         elif (procResult.Output.StdErr.Contains "E: Can't select candidate version from package") then
             InstallAptPackageIfNotAlreadyInstalled "aptitude"
 
-            Console.WriteLine()
-            Console.WriteLine()
-            Console.WriteLine(sprintf "Virtual package '%s' found, provided by:" packageName)
-
             let aptitudeShowProc = Process.SafeExecute({ Command = "aptitude"; Arguments = sprintf "show %s" packageName },
                                                        Echo.Off)
             let lines = aptitudeShowProc.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
             for line in lines do
                 if line.StartsWith "Provided by:" then
+                    Console.WriteLine()
+                    Console.WriteLine()
+                    Console.WriteLine(sprintf "Virtual package '%s' found, provided by:" packageName)
                     Console.WriteLine(line.Substring("Provided by:".Length))
                     Console.Write "Choose the package from the list above: "
                     let pkg = Console.ReadLine()
