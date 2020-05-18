@@ -69,14 +69,15 @@ package-1804:
       - fsx*.snap
     expire_in: 50days
 
-package-2004:
-  image: ubuntu:20.04
-  stage: package
-  script:
-    - apt-get install -y snapcraft
-    - ./snap_build.sh
-
-  artifacts:
-    paths:
-      - fsx*.snap
-    expire_in: 50days
+# FIXME: bring up this build issue in the snapcraft forum
+#package-2004:
+#  image: ubuntu:20.04
+#  stage: package
+#  script:
+#    - apt-get install -y snapcraft
+#    - ./snap_build.sh
+#
+#  artifacts:
+#    paths:
+#      - fsx*.snap
+#    expire_in: 50days
