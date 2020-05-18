@@ -19,8 +19,8 @@ buildAndInstall-1804:
     - make
     - make install
 
-buildAndInstall-1904:
-  image: ubuntu:19.04
+buildAndInstall-2004:
+  image: ubuntu:20.04
   stage: buildAndInstall
   script:
     - ./configure.sh
@@ -34,8 +34,8 @@ compileScripts-1804:
     - ./configure.sh && make install
     - ./ci-build.fsx
 
-compileScripts-1904:
-  image: ubuntu:19.04
+compileScripts-2004:
+  image: ubuntu:20.04
   stage: compileScripts
   script:
     - ./configure.sh && make install
@@ -49,8 +49,8 @@ test-1804:
     - ./test.fsx
     - ./testProcessConcurrency.fsx
 
-test-1904:
-  image: ubuntu:19.04
+test-2004:
+  image: ubuntu:20.04
   stage: test
   script:
     - ./configure.sh && make install
@@ -69,8 +69,8 @@ package-1804:
       - fsx*.snap
     expire_in: 50days
 
-package-1904:
-  image: ubuntu:19.04
+package-2004:
+  image: ubuntu:20.04
   stage: package
   script:
     - apt-get install -y snapcraft
