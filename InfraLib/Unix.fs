@@ -182,6 +182,43 @@ module Unix =
             Console.WriteLine("Installing {0}...", packageName)
             Sudo(String.Format("apt -y install {0}", packageName)) |> ignore
 
+    let rec DownloadAptPackage (packageName: string) =
+        Console.WriteLine()
+        Console.WriteLine(sprintf "Downloading %s..."  packageName)
+        let procResult = Process.Execute({ Command = "apt"; Arguments = sprintf "download %s" packageName },
+                                         Echo.OutputOnly)
+        if procResult.ExitCode = 0 then
+            Console.WriteLine(sprintf "Downloaded %s" packageName)
+        elif (procResult.Output.StdErr.Contains "E: Can't select candidate version from package") then
+            Console.WriteLine()
+            Console.WriteLine()
+            Console.WriteLine(sprintf "Virtual package '%s' found, provided by:" packageName)
+            InstallAptPackageIfNotAlreadyInstalled "aptitude"
+            let aptitudeShowProc = Process.SafeExecute({ Command = "aptitude"; Arguments = sprintf "show %s" packageName },
+                                                       Echo.Off)
+            let lines = aptitudeShowProc.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+            for line in lines do
+                if line.StartsWith "Provided by:" then
+                    Console.WriteLine(line.Substring("Provided by:".Length))
+                    Console.Write "Choose the package from the list above: "
+                    let pkg = Console.ReadLine()
+                    DownloadAptPackage pkg
+        else
+            failwith "The 'apt download' command ended with error"
+
+    let DownloadAptPackageRecursively (packageName: string) =
+        InstallAptPackageIfNotAlreadyInstalled "apt-rdepends"
+        let aptRdependsProc = Process.SafeExecute({ Command = "apt-rdepends"; Arguments = packageName },
+                                                  Echo.Off)
+        let lines = aptRdependsProc.Output.StdOut.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+        for line in lines do
+            if not (line.Trim().Contains("Depends:")) then
+                DownloadAptPackage(line.Trim())
+
+    let DownloadAptPackagesRecursively (packages: seq<string>) =
+        for pkg in packages do
+            DownloadAptPackageRecursively pkg
+
     let InstallDebPackage(package: FileInfo)=
         if not (Process.CommandWorksInShell "dpkg") then
             Console.Error.WriteLine ("This script is only for debian-based distros, aborting.")
