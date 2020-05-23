@@ -1,9 +1,9 @@
 before_script:
-  - apt-get update -qq
+  - apt update -qq
 
   - apt install -y git make
   # https://askubuntu.com/a/1013396
-  - DEBIAN_FRONTEND=noninteractive apt-get install -y fsharp
+  - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
 
 stages:
   - buildAndInstall
@@ -61,7 +61,7 @@ package-1804:
   image: ubuntu:18.04
   stage: package
   script:
-    - apt-get install -y snapcraft
+    - apt install -y snapcraft
     - ./snap_build.sh
 
   artifacts:
@@ -74,7 +74,7 @@ package-1804:
 #  image: ubuntu:20.04
 #  stage: package
 #  script:
-#    - apt-get install -y snapcraft
+#    - apt install -y snapcraft
 #    - ./snap_build.sh
 #
 #  artifacts:
