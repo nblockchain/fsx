@@ -57,27 +57,22 @@ test-2004:
     - ./test.fsx
     - ./testProcessConcurrency.fsx
 
-package-1804:
-  image: ubuntu:18.04
+package:
+  image: ubuntu:20.04
   stage: package
+
+  variables:
+    # Fixes:
+    # "Cannot connect to the Docker daemon. Is the docker daemon running on this host?"
+    DOCKER_HOST: tcp://docker:2375
+  services:
+    # To support docker-in-docker
+    - docker:dind
+
   script:
-    - apt install -y snapcraft
     - ./snap_build.sh
 
   artifacts:
     paths:
       - fsx*.snap
     expire_in: 50days
-
-# FIXME: bring up this build issue in the snapcraft forum
-#package-2004:
-#  image: ubuntu:20.04
-#  stage: package
-#  script:
-#    - apt install -y snapcraft
-#    - ./snap_build.sh
-#
-#  artifacts:
-#    paths:
-#      - fsx*.snap
-#    expire_in: 50days
