@@ -1,9 +1,6 @@
 before_script:
   - apt update -qq
-
   - apt install -y git make
-  # https://askubuntu.com/a/1013396
-  - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
 
 stages:
   - buildAndInstall
@@ -15,6 +12,7 @@ buildAndInstall-1804:
   image: ubuntu:18.04
   stage: buildAndInstall
   script:
+    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
     - ./configure.sh
     - make
     - make install
@@ -23,6 +21,7 @@ buildAndInstall-2004:
   image: ubuntu:20.04
   stage: buildAndInstall
   script:
+    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
     - ./configure.sh
     - make
     - make install
@@ -31,6 +30,7 @@ compileScripts-1804:
   image: ubuntu:18.04
   stage: compileScripts
   script:
+    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
     - ./configure.sh && make install
     - ./ci-build.fsx
 
@@ -38,6 +38,7 @@ compileScripts-2004:
   image: ubuntu:20.04
   stage: compileScripts
   script:
+    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
     - ./configure.sh && make install
     - ./ci-build.fsx
 
@@ -45,6 +46,7 @@ test-1804:
   image: ubuntu:18.04
   stage: test
   script:
+    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
     - ./configure.sh && make install
     - ./test.fsx
     - ./testProcessConcurrency.fsx
@@ -53,31 +55,27 @@ test-2004:
   image: ubuntu:20.04
   stage: test
   script:
+    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
     - ./configure.sh && make install
     - ./test.fsx
     - ./testProcessConcurrency.fsx
 
-package-1804:
-  image: ubuntu:18.04
+package:
+  image: ubuntu:20.04
   stage: package
+
+  variables:
+    # Fixes:
+    # "Cannot connect to the Docker daemon. Is the docker daemon running on this host?"
+    DOCKER_HOST: tcp://docker:2375
+  services:
+    # To support docker-in-docker
+    - docker:dind
+
   script:
-    - apt install -y snapcraft
     - ./snap_build.sh
 
   artifacts:
     paths:
       - fsx*.snap
     expire_in: 50days
-
-# FIXME: bring up this build issue in the snapcraft forum
-#package-2004:
-#  image: ubuntu:20.04
-#  stage: package
-#  script:
-#    - apt install -y snapcraft
-#    - ./snap_build.sh
-#
-#  artifacts:
-#    paths:
-#      - fsx*.snap
-#    expire_in: 50days

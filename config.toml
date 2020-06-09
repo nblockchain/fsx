@@ -1,0 +1,6 @@
+# Required to run DinD
+# See https://docs.gitlab.com/runner/executors/docker.html#use-docker-in-docker-with-privileged-mode
+[[runners]]
+  executor = "docker"
+  [runners.docker]
+    privileged = true
