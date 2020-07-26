@@ -5,3 +5,4 @@ set -euxo pipefail
 ./test/testTsv.fsx
 ./test/testVersion.fsx
 ./test/testProcessConcurrency.fsx
+./test/testFsBuild.fsx

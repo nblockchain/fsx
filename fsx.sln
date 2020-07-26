@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{8E1108BE-590F-4C6D-8496-A8AAEB8594D8}"
 	ProjectSection(SolutionItems) = preProject
 		Tools\bump.fsx = Tools\bump.fsx
+		Tools\fsBuild.fsx = Tools\fsBuild.fsx
 		Tools\replace.fsx = Tools\replace.fsx
 		Tools\safeRun.fsx = Tools\safeRun.fsx
 	EndProjectSection
@@ -22,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{848BC281-2
 		test\testProcessConcurrencySample.fsx = test\testProcessConcurrencySample.fsx
 		test\testTsv.fsx = test\testTsv.fsx
 		test\testVersion.fsx = test\testVersion.fsx
+		test\testFsBuild.fsx = test\testFsBuild.fsx
 	EndProjectSection
 EndProject
 Global
