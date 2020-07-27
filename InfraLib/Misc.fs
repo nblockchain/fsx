@@ -5,10 +5,177 @@ open System
 open System.IO
 open System.Reflection
 open System.Configuration
+open System.Text
+open System.Text.RegularExpressions
 open System.Linq
 open System.Security.Cryptography
 
 module Misc =
+
+    type private Subversion (innerVersionOpt: Option<uint64>, alphanumericSuffixOpt: Option<string>) =
+        do
+            if innerVersionOpt.IsNone && alphanumericSuffixOpt.IsNone then
+                raise <| FormatException "can't have both None for Subversion"
+        member val private InnerVersion = innerVersionOpt
+        member val private AlphanumericSuffix = alphanumericSuffixOpt
+        interface IComparable with
+            member this.CompareTo other =
+                match other with
+                | :? Subversion as otherVersion ->
+                    match innerVersionOpt, otherVersion.InnerVersion with
+                    | Some x, None -> 1
+                    | None, Some y -> -1
+                    | Some x, Some y when x > y ->
+                        1
+                    | Some x, Some y when x < y ->
+                        -1
+                    | _ ->
+                        match alphanumericSuffixOpt, otherVersion.AlphanumericSuffix with
+                        | None, None -> 0
+
+                        // it's the other way around on purpose (because 1.0 > 1.0-rc1)
+                        | None, _ -> 1
+                        | _, None -> -1
+
+                        | _ ->
+                            compare alphanumericSuffixOpt otherVersion.AlphanumericSuffix
+                | _ ->
+                    failwith "Cannot compare with a different type than Subversion"
+
+        override __.GetHashCode() =
+            innerVersionOpt.GetHashCode() + alphanumericSuffixOpt.GetHashCode()
+        override self.Equals other =
+            match (self :> IComparable).CompareTo other with
+            | 0 -> true
+            | _ -> false
+        override __.ToString() =
+            let res = StringBuilder()
+            match innerVersionOpt with
+            | None ->
+                ()
+            | Some innerVersion ->
+                res.Append (innerVersion.ToString()) |> ignore
+            match alphanumericSuffixOpt with
+            | Some alphanumericSuffix ->
+                res.Append alphanumericSuffix |> ignore
+            | None ->
+                ()
+            res.ToString()
+
+        // isPrimary is meant for major & minor, false when it's for patch or build
+        static member Parse (isPrimary: bool) (subVersion: string) =
+            if String.IsNullOrWhiteSpace subVersion then
+                raise <| FormatException "should not be null or whitespace"
+            if not (Char.IsDigit subVersion.[0]) then
+                if isPrimary then
+                    raise <| FormatException (sprintf "first character should at least be a digit (parsing '%s') for a primary Subversion" subVersion)
+                else
+                    Subversion(None, Some subVersion)
+            else
+                match UInt64.TryParse subVersion with
+                | false, _ ->
+                    let firstNumberStr = Regex.Match(subVersion, @"\d+").Value
+                    let firstNumber = UInt64.Parse firstNumberStr
+                    let rest = subVersion.Substring firstNumberStr.Length
+                    Subversion (Some firstNumber, Some rest)
+                | true, noAlphaNumericSuffix ->
+                    Subversion (Some noAlphaNumericSuffix, None)
+
+    type SpecVersion private(major: Subversion, minor: Subversion, patchOpt: Option<Subversion>, buildOpt: Option<Subversion>) =
+
+        member val private Major = major
+        member val private Minor = minor
+        member val private Patch = patchOpt
+        member val private Build = buildOpt
+
+        interface IComparable with
+            member __.CompareTo other =
+                match other with
+                | :? SpecVersion as otherVersion ->
+                    if major > otherVersion.Major then
+                        1
+                    elif major < otherVersion.Major then
+                        -1
+                    else
+                        if minor > otherVersion.Minor then
+                            1
+                        elif minor < otherVersion.Minor then
+                            -1
+                        else
+                            match patchOpt, otherVersion.Patch with
+                            | Some _, None ->
+                                1
+                            | None, Some _ ->
+                                -1
+                            | None, None ->
+                                0
+                            | Some x, Some y ->
+                                let res = compare x y
+                                if res <> 0 then
+                                    res
+                                else
+                                    match buildOpt, otherVersion.Build with
+                                    | Some _, None ->
+                                        1
+                                    | None, Some _ ->
+                                        -1
+                                    | None, None ->
+                                        0
+                                    | Some a, Some b ->
+                                        compare a b
+                | _ ->
+                    failwith "Cannot compare with a different type than SpecVersion"
+
+        override __.GetHashCode() =
+            major.GetHashCode() + minor.GetHashCode() + patchOpt.GetHashCode() + buildOpt.GetHashCode()
+        override self.Equals other =
+            match (self :> IComparable).CompareTo other with
+            | 0 -> true
+            | _ -> false
+        override __.ToString() =
+            let res = StringBuilder()
+            res.Append (major.ToString()) |> ignore
+            res.Append "." |> ignore
+            res.Append (minor.ToString()) |> ignore
+            match patchOpt with
+            | None -> ()
+            | Some patch ->
+                res.Append "." |> ignore
+                res.Append (patch.ToString()) |> ignore
+                match buildOpt with
+                | None -> ()
+                | Some build ->
+                    res.Append "." |> ignore
+                    res.Append (build.ToString()) |> ignore
+            res.ToString()
+
+        static member Parse (version: string) =
+            if version.Length < 3 then
+                raise <| FormatException()
+            let elements = version.Split([|'.'|], StringSplitOptions.None)
+            if elements.Length < 2 then
+                raise <| FormatException()
+            if elements.Any(fun elt -> String.IsNullOrWhiteSpace elt) then
+                raise <| FormatException()
+
+            try
+                let major = Subversion.Parse true elements.[0]
+                let minor = Subversion.Parse true elements.[1]
+                let patch =
+                    if elements.Length > 2 then
+                        Subversion.Parse false elements.[2] |> Some
+                    else
+                        None
+                let build =
+                    if elements.Length > 3 then
+                        Subversion.Parse false elements.[3] |> Some
+                    else
+                        None
+                SpecVersion(major, minor, patch, build)
+            with
+            | :? FormatException as ex ->
+                raise <| FormatException (sprintf "problem parsing a subcomponent (parsing '%s'), see innerException"
+                                                  version, ex)
 
     let private FileMatchesIfArgumentIsAPath(argument: string, file: FileInfo) =
         try
