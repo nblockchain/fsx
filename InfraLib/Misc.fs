@@ -22,7 +22,7 @@ module Misc =
         with
         | _ -> false
 
-    // this below is crazy but is to avoid # char being ignored in Uri.LocalPat h property, see https://stackoverflow.com/a/41203269
+    // this below is crazy but is to avoid # char being ignored in Uri.LocalPath property, see https://stackoverflow.com/a/41203269
     let private currentExeUri = Uri(Uri.EscapeUriString(Assembly.GetEntryAssembly().CodeBase))
     let private currentExe =
         FileInfo(sprintf "%s%s"
