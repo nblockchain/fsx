@@ -311,56 +311,13 @@ module Misc =
                     key, value
             ] |> Map.ofSeq
 
-    let private TestSymmetricTsvSimple(): unit =
-        let simpleTsv = "A:\t1\nB:\t2"
-        let map = TsvParseImplementation(simpleTsv, DEFAULT_SEPARATORS_ACCEPTED_IN_TSV_PARSER)
-        if not (map.Count = 2) then
-            failwith("Should have count 2 but had " + map.Count.ToString())
-        if not (map.Item("A:") = "1") then
-            failwith("A should map to 1")
-
-    let private TestTsvAsymmetricVertical(): unit =
-        let simpleTsv = "A:\t1\nB:\t2\nC:\t3"
-        let map = TsvParseImplementation(simpleTsv, DEFAULT_SEPARATORS_ACCEPTED_IN_TSV_PARSER)
-        if not (map.Count = 3) then
-            failwith("Vertical test: Should have count 3 but had " + map.Count.ToString())
-        if not (map.Item("C:") = "3") then
-            failwith("Vertical test: C should map to 3")
-
-    let private TestTsvAsymmetricHorizontal(): unit =
-        let simpleTsv = "A\tB\tC\n1\t2\t3"
-        let map = TsvParseImplementation(simpleTsv, DEFAULT_SEPARATORS_ACCEPTED_IN_TSV_PARSER)
-        if not (map.Count = 3) then
-            failwith("Horizontal test: Should have count 3 but had " + map.Count.ToString())
-        if not (map.Item("C") = "3") then
-            failwith("Horizontal test: C should map to 3")
-
-    let private TestTsvHoles(): unit =
-        let simpleTsv = "A\tB\tC\n1\t\t3"
-        let map = TsvParseImplementation(simpleTsv, DEFAULT_SEPARATORS_ACCEPTED_IN_TSV_PARSER)
-        if not (map.Count = 3) then
-            failwith("Holes test: Should have count 3 but had " + map.Count.ToString())
-        if not (map.Item("B") = String.Empty) then
-            failwith("Holes test: B should map to String.Empty")
-
-    let private TestTsvParse(): unit =
-        try
-           TestSymmetricTsvSimple()
-           TestTsvAsymmetricVertical()
-           TestTsvAsymmetricHorizontal()
-           TestTsvHoles()
-        with
-        | ex -> raise(new Exception("Tests failed", ex))
-
     let TsvParseWithSeparator(tsv: string, sep: string): Map<string,string> =
-        TestTsvParse()
         try
             TsvParseImplementation(tsv, [|sep|])
         with
         | ex -> raise(new Exception("TSV failed, input: " + tsv, ex))
 
     let TsvParse(tsv: string): Map<string,string> =
-        TestTsvParse()
         try
             TsvParseImplementation(tsv, DEFAULT_SEPARATORS_ACCEPTED_IN_TSV_PARSER)
         with

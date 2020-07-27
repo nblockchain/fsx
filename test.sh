@@ -2,4 +2,5 @@
 set -euxo pipefail
 
 ./test/test.fsx
+./test/testTsv.fsx
 ./test/testProcessConcurrency.fsx

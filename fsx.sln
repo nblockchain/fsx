@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{848BC281-2
 		test\test.fsx = test\test.fsx
 		test\testProcessConcurrency.fsx = test\testProcessConcurrency.fsx
 		test\testProcessConcurrencySample.fsx = test\testProcessConcurrencySample.fsx
+		test\testTsv.fsx = test\testTsv.fsx
 	EndProjectSection
 EndProject
 Global
