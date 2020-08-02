@@ -8,53 +8,78 @@ stages:
   - test
   - package
 
-build&install-1804:
+build&install-1804stockmono:
   image: ubuntu:18.04
   stage: build&install
   script:
-    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
+    - ./scripts/install_mono.sh
     - ./configure.sh
     - make
     - make install
 
-build&install-2004:
+build&install-2004stockmono:
   image: ubuntu:20.04
   stage: build&install
   script:
-    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
+    - ./scripts/install_mono.sh
     - ./configure.sh
     - make
     - make install
 
-compileScripts-1804:
+build&install-2004newmono:
+  image: ubuntu:20.04
+  stage: build&install
+  script:
+    - ./scripts/install_mono_from_microsoft_deb_packages.sh
+    - ./configure.sh
+    - make
+    - make install
+
+compileScripts-1804stockmono:
   image: ubuntu:18.04
   stage: compileScripts
   script:
-    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
+    - ./scripts/install_mono.sh
     - ./configure.sh && make install
     - ./ci-build.fsx
 
-compileScripts-2004:
+compileScripts-2004stockmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
-    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
+    - ./scripts/install_mono.sh
     - ./configure.sh && make install
     - ./ci-build.fsx
 
-test-1804:
+compileScripts-2004newmono:
+  image: ubuntu:20.04
+  stage: compileScripts
+  script:
+    - ./scripts/install_mono_from_microsoft_deb_packages.sh
+    - ./configure.sh && make install
+    - ./ci-build.fsx
+
+test-1804stockmono:
   image: ubuntu:18.04
   stage: test
   script:
-    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
+    - ./scripts/install_mono.sh
     - ./configure.sh && make install
     - ./test.sh
 
-test-2004:
+test-2004stockmono:
   image: ubuntu:20.04
   stage: test
   script:
-    - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
+    - ./scripts/install_mono.sh
+    - ./configure.sh && make install
+    - ./test.sh
+
+test-2004newmono:
+  image: ubuntu:20.04
+  stage: test
+  script:
+    - ./scripts/install_mono_from_microsoft_deb_packages.sh
     - ./configure.sh && make install
     - ./test.sh
 
