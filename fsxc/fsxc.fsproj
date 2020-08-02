@@ -58,4 +58,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(FSharpTargetsPath)" />
+  <Target Name="AfterBuild">
+    <Copy SourceFiles="/usr/lib/mono/fsharp/FSharp.Core.dll"
+          DestinationFolder="$(OutputPath)"
+          ContinueOnError="true"
+          Condition="Exists('/usr/lib/mono/fsharp/FSharp.Core.dll')"
+     />
+  </Target>
 </Project>

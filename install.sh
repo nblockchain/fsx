@@ -13,6 +13,6 @@ BIN_INSTALL_DIR="$Prefix/bin"
 mkdir -p $FSX_INSTALL_DIR
 mkdir -p $BIN_INSTALL_DIR
 
-cp -v ./fsxc/bin/Release/fsxc.exe $FSX_INSTALL_DIR
+cp -v ./fsxc/bin/Release/* $FSX_INSTALL_DIR
 cp -v ./launcher.sh "$BIN_INSTALL_DIR/fsx"
 chmod ugo+x "$BIN_INSTALL_DIR/fsx"
