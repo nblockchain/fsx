@@ -3,23 +3,23 @@ before_script:
   - apt install -y git make
 
 stages:
-  - buildAndInstall
+  - build&install
   - compileScripts
   - test
   - package
 
-buildAndInstall-1804:
+build&install-1804:
   image: ubuntu:18.04
-  stage: buildAndInstall
+  stage: build&install
   script:
     - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
     - ./configure.sh
     - make
     - make install
 
-buildAndInstall-2004:
+build&install-2004:
   image: ubuntu:20.04
-  stage: buildAndInstall
+  stage: build&install
   script:
     - DEBIAN_FRONTEND=noninteractive apt install -y fsharp
     - ./configure.sh
