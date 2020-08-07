@@ -3,14 +3,14 @@ before_script:
   - apt install -y git make
 
 stages:
-  - build&install
+  - buildAndInstall
   - compileScripts
   - test
   - package
 
 build&install-1804stockmono:
   image: ubuntu:18.04
-  stage: build&install
+  stage: buildAndInstall
   script:
     - ./scripts/install_mono.sh
     - ./configure.sh
@@ -19,7 +19,7 @@ build&install-1804stockmono:
 
 build&install-2004stockmono:
   image: ubuntu:20.04
-  stage: build&install
+  stage: buildAndInstall
   script:
     - ./scripts/install_mono.sh
     - ./configure.sh
@@ -28,14 +28,14 @@ build&install-2004stockmono:
 
 build&install-2004newmono:
   image: ubuntu:20.04
-  stage: build&install
+  stage: buildAndInstall
   script:
     - ./scripts/install_mono_from_microsoft_deb_packages.sh
     - ./configure.sh
     - make
     - make install
 
-compileScripts-1804stockmono:
+buildScripts-1804stockmono:
   image: ubuntu:18.04
   stage: compileScripts
   script:
@@ -43,7 +43,7 @@ compileScripts-1804stockmono:
     - ./configure.sh && make install
     - ./ci-build.fsx
 
-compileScripts-2004stockmono:
+buildScripts-2004stockmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
@@ -51,7 +51,7 @@ compileScripts-2004stockmono:
     - ./configure.sh && make install
     - ./ci-build.fsx
 
-compileScripts-2004newmono:
+buildScripts-2004newmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
