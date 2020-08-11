@@ -92,30 +92,60 @@ let GetLastCommits (count: UInt32) =
 
     getLastCommits List.empty 0u count
 
+let remotes = GetRemotes()
+if remotes.Length < 1 then
+    Console.Error.WriteLine "No remotes found, please add one first."
+    Environment.Exit 5
+
 let args = Misc.FsxArguments()
-if args.Length < 1 || args.Length > 2 then
-    Console.Error.WriteLine "Usage: gitpush.fsx <remotename> [numberOfCommits(optional)]"
+if args.Length > 2 then
+    Console.Error.WriteLine "Usage: gitpush.fsx [remoteName(optional)] [numberOfCommits(optional)]"
     Environment.Exit 1
 
-let maybeNumberOfCommits =
+let maybeRemote, maybeNumberOfCommits =
     if args.Length = 2 then
         match UInt32.TryParse args.[1] with
         | true, 0u ->
             Console.Error.WriteLine "Second argument should be an integer higher than zero"
             Environment.Exit 2
             failwith "Unreachable"
-        | true, num -> Some num
+        | true, num ->
+            let numberOfCommits = Some num
+            let remote = Some args.[0]
+            remote, numberOfCommits
         | _ ->
             Console.Error.WriteLine "Second argument should be an integer"
             Environment.Exit 3
             failwith "Unreachable"
-    else
-        None
+    elif args.Length = 0 then
+        None, None
+    else // if args.Length = 1 then
+        match UInt32.TryParse args.[0] with
+        | true, 0u ->
+            Console.Error.WriteLine "Argument for the number of commitsshould be an integer higher than zero"
+            Environment.Exit 2
+            failwith "Unreachable"
+        | true, num ->
+            let numberOfCommits = Some num
+            let remote = None
+            remote, numberOfCommits
+        | _ ->
+            let numberOfCommits = None
+            let remote = Some (args.[0])
+            remote, numberOfCommits
 
-let remote = args.[0]
-if not (GetRemotes().Any(fun currentRemote -> currentRemote = remote)) then
-    Console.Error.WriteLine (sprintf "Remote '%s' not found" remote)
-    Environment.Exit 4
+let remote =
+    match maybeRemote with
+    | Some remoteProvided ->
+        if not (remotes.Any(fun currentRemote -> currentRemote = remoteProvided)) then
+            Console.Error.WriteLine (sprintf "Remote '%s' not found" remoteProvided)
+            Environment.Exit 4
+        remoteProvided
+    | None ->
+        if remotes.Length > 1 then
+            Console.Error.WriteLine "Usage: gitpush.fsx <remoteName> [numberOfCommits(optional)]"
+            Environment.Exit 6
+        remotes.[0]
 
 let currentBranch = Git.GetCurrentBranch()
 let commitsToBePushed =
