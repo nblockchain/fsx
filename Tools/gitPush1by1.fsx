@@ -15,7 +15,8 @@ let GitSpecificPush (remoteName: string) (commitSha: string) (remoteBranchName: 
     let gitPush =
         {
             Command = "git"
-            Arguments = sprintf "push %s %s:%s -f" remoteName commitSha remoteBranchName
+            Arguments = sprintf "push %s %s:%s --force-with-lease"
+                                remoteName commitSha remoteBranchName
         }
     Process.SafeExecute (gitPush, Echo.OutputOnly) |> ignore
 
