@@ -127,7 +127,11 @@ let commitsToBePushed =
                                              currentBranch remote)
             Environment.Exit 5
             failwith "Unreachable"
-        else
+        elif commitsToPush.Length = 1 then
+            // no need to ask for confirmation since 1 commit doesn't need to be separated from other commits
+            // (one by one doesn't apply to a length of one)
+            commitsToPush
+        else //if commitsToPush.Length > 1 then
             Console.WriteLine (sprintf "Detected a delta of %i commits between local branch '%s' and the one in remote '%s', to be pushed one by one. Press any key to continue or CTRL+C to abort."
                                        commitsToPush.Length currentBranch remote)
             Console.ReadKey true |> ignore
