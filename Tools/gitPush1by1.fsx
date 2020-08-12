@@ -19,11 +19,15 @@ let GitSpecificPush (remoteName: string) (commitSha: string) (remoteBranchName: 
         }
     Process.SafeExecute (gitPush, Echo.OutputOnly) |> ignore
 
-let GitFetchAll () =
+let GitFetch (remoteOpt: Option<string>) =
+    let remoteArg =
+        match remoteOpt with
+        | None -> "--all"
+        | Some remote -> remote
     let gitFetch =
         {
             Command = "git"
-            Arguments = "fetch --all"
+            Arguments = sprintf "fetch %s" remoteArg
         }
     Process.SafeExecute (gitFetch, Echo.OutputOnly) |> ignore
 
@@ -72,7 +76,7 @@ let FindUnpushedCommits (remoteName: string) (remoteBranch: string) =
                                 (currentSkipCount + 1u)
                                 newRemoteCommits
 
-    GitFetchAll()
+    GitFetch (Some remoteName)
     findUnpushedCommits List.empty 0u List.empty
 
 let GetLastCommits (count: UInt32) =
