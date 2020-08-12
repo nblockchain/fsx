@@ -19,11 +19,11 @@ let GitSpecificPush (remoteName: string) (commitSha: string) (remoteBranchName: 
         }
     Process.SafeExecute (gitPush, Echo.OutputOnly) |> ignore
 
-let GetLastCommitFromRemoteBranch (remoteName: string) (remoteBranch: string) =
+let GetLastNthCommitFromRemoteBranch (remoteName: string) (remoteBranch: string) (n: uint32) =
     let gitShow =
         {
             Command = "git"
-            Arguments = sprintf "show %s/%s --no-patch" remoteName remoteBranch
+            Arguments = sprintf "show %s/%s~%i --no-patch" remoteName remoteBranch n
         }
     let gitShowProc = Process.SafeExecute(gitShow, Echo.Off)
     let firstLine = (Misc.CrossPlatformStringSplitInLines gitShowProc.Output.StdOut).First()
@@ -36,19 +36,35 @@ let GetRemotes () =
     let gitRemote = Process.SafeExecute({ Command = "git"; Arguments = "remote" }, Echo.Off)
     Misc.CrossPlatformStringSplitInLines gitRemote.Output.StdOut
 
-let FindUnpushedCommits (lastCommitHashInRemote: string) =
-    let rec findUnpushedCommits commitsFoundSoFar currentSkipCount =
+let FindUnpushedCommits (remoteName: string) (remoteBranch: string) =
+    let rec findUnpushedCommits localCommitsWalkedSoFar currentSkipCount remoteCommits =
+        let rec findIntersection localCommits (remoteCommits: List<string>) =
+            match localCommits with
+            | [] -> None
+            | head::tail ->
+                if remoteCommits.Contains head then
+                    Some tail
+                else
+                    findIntersection tail remoteCommits
+
         Console.WriteLine "Walking tree..."
         let currentHash = Process.SafeExecute({ Command = "git";
                                                 Arguments = sprintf "log -1 --skip=%i --format=format:%%H"
                                                                     currentSkipCount },
                                               Echo.Off).Output.StdOut.Trim()
-        if currentHash = lastCommitHashInRemote then
-            commitsFoundSoFar
-        else
-            findUnpushedCommits (currentHash::commitsFoundSoFar) (currentSkipCount + 1)
+        let newRemoteCommits =
+            (GetLastNthCommitFromRemoteBranch remoteName remoteBranch currentSkipCount)::remoteCommits
 
-    findUnpushedCommits List.empty 0
+        let newLocalCommitsWalkedSoFar = currentHash::localCommitsWalkedSoFar
+        match findIntersection newLocalCommitsWalkedSoFar newRemoteCommits with
+        | Some theCommitsToPush ->
+            theCommitsToPush
+        | None ->
+            findUnpushedCommits newLocalCommitsWalkedSoFar
+                                (currentSkipCount + 1u)
+                                newRemoteCommits
+
+    findUnpushedCommits List.empty 0u List.empty
 
 let GetLastCommits (count: UInt32) =
     let rec getLastCommits commitsFoundSoFar currentSkipCount currentCount =
@@ -92,8 +108,7 @@ let currentBranch = Git.GetCurrentBranch()
 let commitsToBePushed =
     match maybeNumberOfCommits with
     | None ->
-        let lastCommitHashOfCurrentBranchInRemote = GetLastCommitFromRemoteBranch remote currentBranch
-        let commitsToPush = FindUnpushedCommits lastCommitHashOfCurrentBranchInRemote
+        let commitsToPush = FindUnpushedCommits remote currentBranch
         if commitsToPush.Length = 0 then
             Console.Error.WriteLine (sprintf "Current branch '%s' in remote '%s' is already up to date. Force push by specifying number of commits as 2nd argument?"
                                              currentBranch remote)
