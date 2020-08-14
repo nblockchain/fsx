@@ -10,6 +10,21 @@ open System.Text
 
 module Process =
 
+    // https://stackoverflow.com/a/961904/544947
+    type internal QueuedLock() =
+        let innerLock = Object()
+        let ticketsCount = ref 0
+        let ticketToRide = ref 1
+        member __.Enter () =
+            let myTicket = Interlocked.Increment ticketsCount
+            Monitor.Enter innerLock
+            while myTicket <> Volatile.Read ticketToRide do
+                Monitor.Wait innerLock |> ignore
+        member __.Exit () =
+            Interlocked.Increment ticketToRide |> ignore
+            Monitor.PulseAll innerLock
+            Monitor.Exit innerLock
+
     type Standard =
         | Output
         | Error
@@ -84,8 +99,8 @@ module Process =
         : ProcessResult =
 
         // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events?
-        let outputBufferLock = new Object()
         let mutable outputBuffer: list<OutputChunk> = []
+        let queuedLock = QueuedLock()
 
         if (echo = Echo.All) then
             Console.WriteLine(sprintf "%s %s" procDetails.Command procDetails.Arguments)
@@ -123,8 +138,7 @@ module Process =
                 else //if (readCount = 0)
                     outputToReadFrom.EndOfStream
 
-            let ReadIteration(): bool =
-
+            let rec ReadIterationInner (): bool =
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
                 // it to 1 makes it slow but then the order is only relying (in theory) on how the
@@ -150,8 +164,7 @@ module Process =
                         print outChar
                         flush()
 
-                    lock outputBufferLock (fun _ ->
-
+                    let append () =
                         let leChar = outChar.[uniqueElementIndexInTheSingleCharBuffer]
                         let newBuilder = StringBuilder(leChar.ToString())
                         match outputBuffer with
@@ -179,10 +192,22 @@ module Process =
                                 | Standard.Output ->
                                     let newOutBuilder = { OutputType = Standard.Output; Chunk = newBuilder }
                                     outputBuffer <- newOutBuilder::outputBuffer
-                    )
 
-                let continueIterating = not(EndOfStream(readCount))
-                continueIterating
+                    append ()
+
+                if EndOfStream readCount then
+                    false
+                elif outChar.Single() = '\n' then
+                    true
+                else
+                    ReadIterationInner ()
+
+            let ReadIteration(): bool =
+                try
+                    queuedLock.Enter()
+                    ReadIterationInner ()
+                finally
+                    queuedLock.Exit()
 
             // this is a way to do a `do...while` loop in F#...
             while (ReadIteration()) do
