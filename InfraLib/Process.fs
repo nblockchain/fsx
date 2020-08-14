@@ -197,8 +197,6 @@ module Process =
 
                 if EndOfStream readCount then
                     false
-                elif outChar.Single() = '\n' then
-                    true
                 else
                     ReadIterationInner ()
 
