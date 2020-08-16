@@ -28,7 +28,7 @@ let netStandardSampleFolder =
     |> DirectoryInfo
 let netStandardProjectName = "GWallet.Backend.NetStandard"
 let netStandardProjectFolder =
-    Path.Combine(netStandardSampleFolder.FullName, "src", netStandardProjectName)
+    Path.Combine(netStandardSampleFolder.FullName, netStandardProjectName)
     |> DirectoryInfo
 let netStandardProject =
     Path.Combine(netStandardProjectFolder.FullName, sprintf "%s.fsproj" netStandardProjectName)
