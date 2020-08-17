@@ -10,6 +10,7 @@ open System.Security.Cryptography
 let NUMBER_OF_LINES_OF_BUFFER_TO_SHOW_IN_NOTIFICATION = 20
 
 #r "System.Configuration"
+open System.Configuration
 #load "../InfraLib/Misc.fs"
 #load "../InfraLib/Process.fs"
 #load "../InfraLib/Unix.fs"

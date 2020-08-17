@@ -5,6 +5,7 @@ open System.IO
 open System.Linq
 
 #r "System.Configuration"
+open System.Configuration
 #load "InfraLib/Misc.fs"
 #load "InfraLib/Process.fs"
 open FSX.Infrastructure
