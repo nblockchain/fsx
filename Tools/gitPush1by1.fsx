@@ -124,7 +124,7 @@ let maybeRemote, maybeNumberOfCommits =
     else // if args.Length = 1 then
         match UInt32.TryParse args.[0] with
         | true, 0u ->
-            Console.Error.WriteLine "Argument for the number of commitsshould be an integer higher than zero"
+            Console.Error.WriteLine "Argument for the number of commits should be an integer higher than zero"
             Environment.Exit 2
             failwith "Unreachable"
         | true, num ->
