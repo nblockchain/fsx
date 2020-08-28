@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{8E1108BE
 		Tools\bump.fsx = Tools\bump.fsx
 		Tools\replace.fsx = Tools\replace.fsx
 		Tools\safeRun.fsx = Tools\safeRun.fsx
+		Tools\gitPush1by1.fsx = Tools\gitPush1by1.fsx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{848BC281-2B17-47DC-B24E-9BD27B013D02}"
