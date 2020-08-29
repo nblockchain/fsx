@@ -76,7 +76,27 @@ let FindOrGenerateNugetPackages (): seq<FileInfo> =
                 yield FileInfo (sprintf "%s.%s.nupkg" packageName nugetVersion)
         }
     else
-        rootDir.EnumerateFiles("*.nupkg", SearchOption.AllDirectories)
+        let FindNugetPackages() =
+            rootDir.Refresh()
+            rootDir.EnumerateFiles("*.nupkg", SearchOption.AllDirectories)
+
+        if not (FindNugetPackages().Any()) then
+            if args.Length < 1 then
+                Console.Error.WriteLine "Usage: nugetPush.fsx [baseVersion] <nugetApiKey>"
+                Environment.Exit 1
+            let baseVersion = args.First()
+            let nugetVersion = GetIdealNugetVersion baseVersion
+
+            let dotnetPackCmd =
+                {
+                    Command = "dotnet"
+                    Arguments = sprintf "pack -c Release -p:Version=%s"
+                                        nugetVersion
+                }
+            Process.SafeExecute (dotnetPackCmd, Echo.All) |> ignore
+
+        FindNugetPackages()
+
 
 let NugetUpload (packageFile: FileInfo) (nugetApiKey: string) =
 
