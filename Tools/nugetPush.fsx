@@ -9,6 +9,7 @@ open System.Configuration
 #load "../InfraLib/Misc.fs"
 #load "../InfraLib/Process.fs"
 #load "../InfraLib/Network.fs"
+#load "../InfraLib/Git.fs"
 open FSX.Infrastructure
 open Process
 
@@ -18,15 +19,13 @@ if args.Length > 2 then
     Environment.Exit 1
 
 // this is a translation of doing this in unix:
-// 0.1.0-date`date +%Y%m%d-%H%M`.git-`echo $GITHUB_SHA | cut -c 1-7`
+// 0.1.0-date`date +%Y%m%d-%H%M`.git-`git rev-parse --short=7 HEAD`
 let GetIdealNugetVersion (initialVersion: string) =
     let dateSegment = sprintf "date%s" (DateTime.UtcNow.ToString "yyyyMMdd-hhmm")
-    let githubEnvVarNameForGitHash = "GITHUB_SHA"
-    let gitHash = Environment.GetEnvironmentVariable githubEnvVarNameForGitHash
+
+    let gitHash = Git.GetLastCommit()
     if null = gitHash then
-        //TODO: in this case we should just launch a git command
-        Console.Error.WriteLine (sprintf "Environment variable %s not found, not running under GitHubActions?"
-                                         githubEnvVarNameForGitHash)
+        Console.Error.WriteLine "Not in a git repository?"
         Environment.Exit 2
 
     let gitHashDefaultShortLength = 7
@@ -120,8 +119,19 @@ if args.Length < 1 then
     Environment.Exit 0
 let nugetApiKey = args.Last()
 
-let githubRef = Environment.GetEnvironmentVariable "GITHUB_REF"
-if githubRef <> "refs/heads/master" then
+let IsMasterBranch(): bool =
+    let githubRef = Environment.GetEnvironmentVariable "GITHUB_REF"
+    if null <> githubRef then
+        githubRef = "master" || githubRef = "refs/heads/master"
+    else
+        // https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+        let gitlabRef = Environment.GetEnvironmentVariable "CI_COMMIT_REF_NAME"
+        if null <> gitlabRef then
+            gitlabRef = "master" || gitlabRef = "refs/heads/master"
+        else
+            Git.GetCurrentBranch() = "master"
+
+if not (IsMasterBranch()) then
     Console.WriteLine "Branch different than master, skipping upload..."
     Environment.Exit 0
 
