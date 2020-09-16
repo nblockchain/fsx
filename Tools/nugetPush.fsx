@@ -13,12 +13,18 @@ open System.Configuration
 open FSX.Infrastructure
 open Process
 
-let args = Misc.FsxArguments()
-if args.Length > 2 then
-    Console.Error.WriteLine "Usage: nugetPush.fsx [baseVersion] <nugetApiKey>"
+let PrintUsage() =
+    Console.Error.WriteLine "Usage: nugetPush.fsx [--output-version] [baseVersion] <nugetApiKey>"
     Environment.Exit 1
 
-// this is a translation of doing this in unix:
+let args = Misc.FsxArguments()
+if args.Length > 3 then
+    PrintUsage ()
+if args.Length > 2 && args.[0] <> "--output-version" then
+    PrintUsage ()
+
+
+// this is a translation of doing this in unix (assuming initialVersion="0.1.0"):
 // 0.1.0-date`date +%Y%m%d-%H%M`.git-`git rev-parse --short=7 HEAD`
 let GetIdealNugetVersion (initialVersion: string) =
     let dateSegment = sprintf "date%s" (DateTime.UtcNow.ToString "yyyyMMdd-hhmm")
@@ -108,6 +114,13 @@ let NugetUpload (packageFile: FileInfo) (nugetApiKey: string) =
         }
     Process.SafeExecute (nugetPushCmd, Echo.All) |> ignore
 
+if args.Length > 0 && args.[0] = "--output-version" then
+    if args.Length < 2 then
+        Console.Error.WriteLine "When using --output-version, pass the base version as the second argument"
+        Environment.Exit 4
+    let baseVersion = args.[1]
+    Console.WriteLine (GetIdealNugetVersion baseVersion)
+    Environment.Exit 0
 
 let nugetPkgs = FindOrGenerateNugetPackages () |> List.ofSeq
 if not (nugetPkgs.Any()) then
