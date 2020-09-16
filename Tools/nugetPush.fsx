@@ -25,7 +25,7 @@ if args.Length > 2 && args.[0] <> "--output-version" then
 
 
 // this is a translation of doing this in unix (assuming initialVersion="0.1.0"):
-// 0.1.0-date`date +%Y%m%d-%H%M`.git-`git rev-parse --short=7 HEAD`
+// 0.1.0--date`date +%Y%m%d-%H%M`.git-`git rev-parse --short=7 HEAD`
 let GetIdealNugetVersion (initialVersion: string) =
     let dateSegment = sprintf "date%s" (DateTime.UtcNow.ToString "yyyyMMdd-hhmm")
 
@@ -37,7 +37,7 @@ let GetIdealNugetVersion (initialVersion: string) =
     let gitHashDefaultShortLength = 7
     let gitShortHash = gitHash.Substring(0, gitHashDefaultShortLength)
     let gitSegment = sprintf "git-%s" gitShortHash
-    let finalVersion = sprintf "%s.0-%s.%s"
+    let finalVersion = sprintf "%s.0--%s.%s"
                                initialVersion dateSegment gitSegment
     finalVersion
 
