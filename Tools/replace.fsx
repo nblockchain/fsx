@@ -9,6 +9,10 @@ open System.Configuration
 
 open FSX.Infrastructure
 
+// FIXME: should not change BOMness of file, to avoid needless diffs, e.g. using the below func:
+// HasBom(bytes: IReadOnlyList<byte>)=
+//    bytes.Count>2 && bytes.[0]=0xEF && bytes.[1]=0xBB && bytes.[2]=0xBF
+
 let rec ReplaceInDir (dir: DirectoryInfo) (oldString: string) (newString: string) =
     let ReplaceInFile (file: FileInfo) (oldString: string) (newString: string) =
         let oldText = File.ReadAllText file.FullName
