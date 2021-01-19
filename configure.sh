@@ -15,11 +15,20 @@ else
     echo "checking for F# compiler... found"
 fi
 
-if ! which xbuild >/dev/null 2>&1; then
-    echo "checking for xbuild... not found"
-    exit 1
+BUILDTOOL=invalid
+if ! which msbuild >/dev/null 2>&1; then
+    echo "checking for msbuild... not found"
+
+    if ! which xbuild >/dev/null 2>&1; then
+        echo "checking for xbuild... not found"
+        exit 1
+    else
+        echo "checking for xbuild... found"
+        BUILDTOOL=xbuild
+    fi
 else
-    echo "checking for xbuild... found"
+    echo "checking for msbuild... found"
+    BUILDTOOL=msbuild
 fi
 
 DESCRIPTION="tarball"
@@ -45,7 +54,7 @@ esac
 done
 
 source version.config
-echo "Prefix=$PREFIX" > build.config
+echo -e "BuildTool=$BUILDTOOL\nPrefix=$PREFIX" > build.config
 
 echo
 echo -e "\tConfiguration summary for fsx $Version ($DESCRIPTION)"

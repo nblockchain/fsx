@@ -1,6 +1,5 @@
 all:
-	xbuild
+	./build.sh
 
 install:
-	xbuild /p:Configuration=Release
 	./install.sh
