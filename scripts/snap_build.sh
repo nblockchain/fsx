@@ -8,7 +8,7 @@ apt update -y
 apt install lsb-release docker.io -y
 
 # Install snap and snapcraft
-./snap_install_as_docker.sh
+./scripts/snap_install_as_docker.sh
 
 # Build repo from source inside snappy container
 docker exec snappy ./configure.sh --prefix=./staging

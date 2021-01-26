@@ -1,5 +1,5 @@
 all:
-	./build.sh
+	./scripts/build.sh
 
 install:
-	./install.sh
+	./scripts/install.sh

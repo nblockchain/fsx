@@ -12,7 +12,8 @@ build&install-1804stockmono:
   image: ubuntu:18.04
   stage: buildAndInstall
   script:
-    - ./scripts/install_mono.sh
+    - ./scripts/CI/install_mono.sh
+
     - ./configure.sh
     - make
     - make install
@@ -21,7 +22,8 @@ build&install-2004stockmono:
   image: ubuntu:20.04
   stage: buildAndInstall
   script:
-    - ./scripts/install_mono.sh
+    - ./scripts/CI/install_mono.sh
+
     - ./configure.sh
     - make
     - make install
@@ -30,7 +32,8 @@ build&install-2004newmono:
   image: ubuntu:20.04
   stage: buildAndInstall
   script:
-    - ./scripts/install_mono_from_microsoft_deb_packages.sh
+    - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
+
     - ./configure.sh
     - make
     - make install
@@ -39,7 +42,8 @@ buildScripts-1804stockmono:
   image: ubuntu:18.04
   stage: compileScripts
   script:
-    - ./scripts/install_mono.sh
+    - ./scripts/CI/install_mono.sh
+
     - ./configure.sh && make install
     - ./ci-build.fsx
 
@@ -47,7 +51,8 @@ buildScripts-2004stockmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
-    - ./scripts/install_mono.sh
+    - ./scripts/CI/install_mono.sh
+
     - ./configure.sh && make install
     - ./ci-build.fsx
 
@@ -55,7 +60,8 @@ buildScripts-2004newmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
-    - ./scripts/install_mono_from_microsoft_deb_packages.sh
+    - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
+
     - ./configure.sh && make install
     - ./ci-build.fsx
 
@@ -63,25 +69,28 @@ test-1804stockmono:
   image: ubuntu:18.04
   stage: test
   script:
-    - ./scripts/install_mono.sh
+    - ./scripts/CI/install_mono.sh
+
     - ./configure.sh && make install
-    - ./test.sh
+    - ./scripts/test.sh
 
 test-2004stockmono:
   image: ubuntu:20.04
   stage: test
   script:
-    - ./scripts/install_mono.sh
+    - ./scripts/CI/install_mono.sh
+
     - ./configure.sh && make install
-    - ./test.sh
+    - ./scripts/test.sh
 
 test-2004newmono:
   image: ubuntu:20.04
   stage: test
   script:
-    - ./scripts/install_mono_from_microsoft_deb_packages.sh
+    - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
+
     - ./configure.sh && make install
-    - ./test.sh
+    - ./scripts/test.sh
 
 package:
   image: ubuntu:20.04
@@ -96,7 +105,7 @@ package:
     - docker:dind
 
   script:
-    - ./snap_build.sh
+    - ./scripts/snap_build.sh
 
   artifacts:
     paths:

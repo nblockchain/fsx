@@ -13,4 +13,4 @@ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BF
 echo "deb https://download.mono-project.com/repo/ubuntu stable-$UBUNTU_CODENAME main" | tee /etc/apt/sources.list.d/mono-official-stable.list
 apt update
 
-./scripts/install_mono.sh
+./scripts/CI/install_mono.sh
