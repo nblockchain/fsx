@@ -3,6 +3,7 @@
 open System
 open System.IO
 open System.Linq
+open System.Threading
 #r "System.Configuration"
 open System.Configuration
 #load "../InfraLib/Misc.fs"
@@ -173,4 +174,5 @@ let commitsToBePushed =
         GetLastCommits numberOfCommits
 
 for commit in commitsToBePushed do
+    Thread.Sleep (TimeSpan.FromSeconds 5.0)
     GitSpecificPush remote commit currentBranch
