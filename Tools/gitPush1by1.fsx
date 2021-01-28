@@ -173,6 +173,8 @@ let commitsToBePushed =
     | Some numberOfCommits ->
         GetLastCommits numberOfCommits
 
+let numberOfCommitsToPush = commitsToBePushed.Length
 for commit in commitsToBePushed do
-    Thread.Sleep (TimeSpan.FromSeconds 5.0)
     GitSpecificPush remote commit currentBranch
+    if numberOfCommitsToPush > 1 then
+        Thread.Sleep (TimeSpan.FromSeconds 5.0)
