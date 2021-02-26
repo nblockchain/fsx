@@ -159,12 +159,15 @@ module Process =
                 if (readCount > bufferSize) then
                     failwith "StreamReader.Read() should not read more than the bufferSize if we passed the bufferSize as a parameter"
 
-                if (readCount = bufferSize) then
+                let append () =
+                    if readCount <> bufferSize then
+                        failwithf "Cannot append if readCount<>bufferSize (%i <> %i)" readCount bufferSize
+
                     if not (echo = Echo.Off) then
                         print outChar
                         flush()
 
-                    let append () =
+                    let appendInternal () =
                         let leChar = outChar.[uniqueElementIndexInTheSingleCharBuffer]
                         let newBuilder = StringBuilder(leChar.ToString())
                         match outputBuffer with
@@ -193,11 +196,18 @@ module Process =
                                     let newOutBuilder = { OutputType = Standard.Output; Chunk = newBuilder }
                                     outputBuffer <- newOutBuilder::outputBuffer
 
-                    append ()
+                    appendInternal ()
+
+                let appended =
+                    if readCount = bufferSize then
+                        append()
+                        true
+                    else
+                        false
 
                 if EndOfStream readCount then
                     false
-                elif outChar.Single() = '\n' then
+                elif (not appended) || (appended && outChar.Single() = '\n') then
                     true
                 else
                     ReadIterationInner ()
