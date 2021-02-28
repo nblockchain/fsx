@@ -114,6 +114,8 @@ module Process =
         proc.StartInfo <- startInfo
 
         let ReadStandard(std: Standard) =
+            let bufferSize = 1
+            let uniqueElementIndexInTheSingleCharBuffer = bufferSize - 1
 
             let print =
                 match std with
@@ -138,14 +140,12 @@ module Process =
                 else //if (readCount = 0)
                     outputToReadFrom.EndOfStream
 
-            let rec ReadIterationInner (): bool =
+            let awaitReadTask (): int*array<char> =
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
                 // it to 1 makes it slow but then the order is only relying (in theory) on how the
                 // streams come and how fast the .NET IO processes them
                 let outChar = [|'x'|] // 'x' is a dummy value that will get replaced
-                let bufferSize = 1
-                let uniqueElementIndexInTheSingleCharBuffer = bufferSize - 1
 
                 if not (outChar.Length = bufferSize) then
                     failwith "Buffer Size must equal current buffer size"
@@ -158,7 +158,9 @@ module Process =
                 let readCount = readTask.Result
                 if (readCount > bufferSize) then
                     failwith "StreamReader.Read() should not read more than the bufferSize if we passed the bufferSize as a parameter"
+                readCount, outChar
 
+            let rec appendIterationInner (readCount: int, outChar: array<char>) : bool = //bool means: continue iterating?
                 let append () =
                     if readCount <> bufferSize then
                         failwithf "Cannot append if readCount<>bufferSize (%i <> %i)" readCount bufferSize
@@ -202,20 +204,24 @@ module Process =
                     if readCount = bufferSize then
                         append()
                         true
-                    else
+                    elif readCount > bufferSize then
+                        failwith "unexpected readcount higher than bufferSize"
+                    else // readCount < bufferSize
                         false
 
-                if EndOfStream readCount then
+                if readCount < 0 then
                     false
                 elif (not appended) || (appended && outChar.Single() = '\n') then
                     true
                 else
-                    ReadIterationInner ()
+                    let readCount,outChar = awaitReadTask ()
+                    appendIterationInner (readCount, outChar)
 
             let ReadIteration(): bool =
+                let readCount,outChar = awaitReadTask ()
                 try
                     queuedLock.Enter()
-                    ReadIterationInner ()
+                    appendIterationInner (readCount, outChar)
                 finally
                     queuedLock.Exit()
 
