@@ -47,10 +47,6 @@ let GetLastNthCommitFromRemoteBranch (remoteName: string) (remoteBranch: string)
     let commitHash = firstLine.Split([|" "|], StringSplitOptions.None).[1]
     commitHash
 
-let GetRemotes () =
-    let gitRemote = Process.SafeExecute({ Command = "git"; Arguments = "remote" }, Echo.Off)
-    Misc.CrossPlatformStringSplitInLines gitRemote.Output.StdOut
-
 let FindUnpushedCommits (remoteName: string) (remoteBranch: string) =
     let rec findUnpushedCommits localCommitsWalkedSoFar currentSkipCount remoteCommits =
         let rec findIntersection localCommits (remoteCommits: List<string>) =
@@ -95,8 +91,8 @@ let GetLastCommits (count: UInt32) =
 
     getLastCommits List.empty 0u count
 
-let remotes = GetRemotes()
-if remotes.Length < 1 then
+let remotes = Git.GetRemotes()
+if not (remotes.Any ()) then
     Console.Error.WriteLine "No remotes found, please add one first."
     Environment.Exit 5
 
@@ -137,18 +133,20 @@ let maybeRemote, maybeNumberOfCommits =
             let remote = Some (args.[0])
             remote, numberOfCommits
 
-let remote =
+let remote,remoteUrl =
     match maybeRemote with
     | Some remoteProvided ->
-        if not (remotes.Any(fun currentRemote -> currentRemote = remoteProvided)) then
+        match Seq.tryFind (fun (currentRemote, _) -> currentRemote = remoteProvided) remotes with
+        | None ->
             Console.Error.WriteLine (sprintf "Remote '%s' not found" remoteProvided)
             Environment.Exit 4
-        remoteProvided
+            failwith "unreachable"
+        | Some remote -> remote
     | None ->
-        if remotes.Length > 1 then
+        if remotes.Count () > 1 then
             Console.Error.WriteLine "Usage: gitpush.fsx <remoteName> [numberOfCommits(optional)]"
             Environment.Exit 6
-        remotes.[0]
+        remotes.ElementAt 0
 
 let currentBranch = Git.GetCurrentBranch()
 let commitsToBePushed =
@@ -176,5 +174,7 @@ let commitsToBePushed =
 let numberOfCommitsToPush = commitsToBePushed.Length
 for commit in commitsToBePushed do
     GitSpecificPush remote commit currentBranch
-    if numberOfCommitsToPush > 1 then
-        Thread.Sleep (TimeSpan.FromSeconds 5.0)
+
+if numberOfCommitsToPush > 1 && remoteUrl.Contains "gitlab" then
+    Console.WriteLine "NOTE: if you have issues with pipelines being canceled, visit https://gitlab.com/yourUserNameOrOrgName/yourRepoName/-/settings/ci_cd"
+    Console.WriteLine "then click 'Expand' on 'General Pipelines', and uncheck 'Auto-cancel redundant pipelines'"

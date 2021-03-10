@@ -5,6 +5,7 @@ open System
 open System.Linq
 
 open Process
+open Misc
 
 module Git =
 
@@ -70,23 +71,32 @@ module Git =
         let gitRemoteRemove = { Command = gitCommand; Arguments = sprintf "remote remove %s" remoteName }
         Process.SafeExecute(gitRemoteRemove, Echo.Off) |> ignore
 
+    let private GetRemotesInternal () =
+        let gitShowRemotes = { Command = gitCommand; Arguments = "remote -v" }
+        Process.SafeExecute (gitShowRemotes, Echo.Off)
+
     let private FetchAll() =
         let gitFetchAll = { Command = gitCommand; Arguments = "fetch --all" }
         Process.SafeExecute(gitFetchAll, Echo.Off) |> ignore
+
+    let GetRemotes() =
+        let remoteLines = GetRemotesInternal().Output.StdOut |> Misc.TsvParse
+        seq {
+            for KeyValue(remoteName, remoteUrl) in remoteLines do
+                yield (remoteName, remoteUrl)
+        }
 
     let private GetNumberOfCommitsBehindAndAheadFromRemoteBranch(repoUrl: string) (branchName: string): int*int =
         CheckGitIsInstalled()
 
         let lastCommit = GetLastCommit()
-
-        let gitShowRemotes = { Command = gitCommand; Arguments = "remote -v" }
-        let remoteLines = Process.SafeExecute(gitShowRemotes, Echo.Off)
-                                      .Output.StdOut |> Misc.CrossPlatformStringSplitInLines
-        let remoteFound = remoteLines.FirstOrDefault(fun line -> line.Contains("\t" + repoUrl + " "))
+        let remotes = GetRemotes()
+        let maybeRemoteFound = Seq.tryFind (fun (_, remoteUrl: string) -> remoteUrl.Contains repoUrl) remotes
         let remote,cleanRemoteLater =
-            if (remoteFound <> null) then
-                remoteFound.Substring(0, remoteFound.IndexOf("\t")),false
-            else
+            match maybeRemoteFound with
+            | Some (remoteName, _) ->
+                remoteName, false
+            | None ->
                 let randomNameForRemoteToBeDeletedLater = GenerateRandomShortNameWithLettersButNoNumbers()
                 AddRemote randomNameForRemoteToBeDeletedLater repoUrl
                 FetchAll()
