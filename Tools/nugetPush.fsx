@@ -176,20 +176,36 @@ if args.Length < 1 then
     Environment.Exit 0
 let nugetApiKey = args.Last()
 
-let IsMasterBranch(): bool =
+let GetCurrentRef(): string =
     let githubRef = Environment.GetEnvironmentVariable "GITHUB_REF"
-    if null <> githubRef then
-        githubRef = "master" || githubRef = "refs/heads/master"
-    else
-        // https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
-        let gitlabRef = Environment.GetEnvironmentVariable "CI_COMMIT_REF_NAME"
-        if null <> gitlabRef then
-            gitlabRef = "master" || gitlabRef = "refs/heads/master"
-        else
-            Git.GetCurrentBranch() = "master"
+    // https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+    let gitlabRef = Environment.GetEnvironmentVariable "CI_COMMIT_REF_NAME"
 
-if not (IsMasterBranch()) then
-    Console.WriteLine "Branch different than master, skipping upload..."
+    if githubRef <> null then
+        githubRef
+    elif gitlabRef <> null then
+        gitlabRef
+    else
+        Git.GetCurrentBranch()
+
+let IsMasterBranch(): bool =
+    let branch = GetCurrentRef()
+    branch = "master" || branch = "refs/heads/master"
+
+let IsDefaultRefToPush(): bool =
+    let defaultRefToPushOpt = Environment.GetEnvironmentVariable "DEFAULT_REF_TO_NUGET_PUSH" |> Option.ofObj
+    match defaultRefToPushOpt with
+    | Some defaultRefToPush ->
+        if (defaultRefToPush.StartsWith "*") && (defaultRefToPush.EndsWith "*") then
+            let defaultRefWithoutWildCard =
+                defaultRefToPush.Substring(1, defaultRefToPush.Count() - 2)
+            GetCurrentRef().Contains defaultRefWithoutWildCard
+        else
+            GetCurrentRef() = defaultRefToPush
+    | None -> IsMasterBranch()
+
+if not (IsDefaultRefToPush()) then
+    Console.WriteLine "Branch is not default branch to push, skipping upload..."
     Environment.Exit 0
 
 for nugetPkg in nugetPkgs do
