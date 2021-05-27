@@ -36,13 +36,11 @@ let rootDir =
 // 0.1.0--date`date +%Y%m%d-%H%M`.git-`git rev-parse --short=7 HEAD`
 let GetIdealNugetVersion (inputVersion: string) =
     let initialVersion =
-        let dotsCount =
-            inputVersion
-            |> Seq.filter ((=) '.')
-            |> Seq.length
+        let versionSplit =
+            inputVersion.Split '.'
 
-        if dotsCount < 3 then
-            inputVersion + ".0"
+        if versionSplit.Length = 4 && versionSplit.[3] = "0" then
+            String.Join(".", versionSplit.Take 3)
         else
             inputVersion
 
