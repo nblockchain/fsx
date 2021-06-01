@@ -288,7 +288,7 @@ module Misc =
         elements.[0], elements.[1]
 
     let private TsvParseImplementation (tsv: string, seps: string array): Map<string,string> =
-        let rows = SimpleStringSplit(tsv, Environment.NewLine)
+        let rows = CrossPlatformStringSplitInLines tsv
         let rowCount = rows.Length
         if (rowCount < 2) then
             failwith (sprintf "Row count has to be at least 2 for this TSV parser, got %d" rowCount)
