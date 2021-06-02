@@ -3,7 +3,7 @@ name: macOS
 on:
   push:
     branches:
-      - 'experiments/githubActionsCI'
+      - experiments/githubActionsCI
 
 jobs:
   macOS_test:

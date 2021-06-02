@@ -3,7 +3,7 @@ name: windows
 on:
   push:
     branches:
-      - 'experiments/githubActionsCI'
+      - experiments/githubActionsCI
 
 jobs:
   windows_test:
