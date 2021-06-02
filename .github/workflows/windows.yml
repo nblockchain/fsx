@@ -1,6 +1,9 @@
 name: windows
 
-on: [push]
+on:
+  push:
+    branches:
+      - '**'
 
 jobs:
   windows_test:
