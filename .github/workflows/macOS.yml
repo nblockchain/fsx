@@ -1,0 +1,11 @@
+name: macOS
+
+on: [push]
+
+jobs:
+  macOS_build:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Run a one-line script
+      run: dotnet fsi ./test/test.fsx
