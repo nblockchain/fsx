@@ -3,7 +3,7 @@ name: windows
 on: [push]
 
 jobs:
-  windows_build:
+  windows_test:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
