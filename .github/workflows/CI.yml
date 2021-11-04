@@ -1,0 +1,13 @@
+name: CI
+
+on: [push]
+
+jobs:
+  macOS:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
