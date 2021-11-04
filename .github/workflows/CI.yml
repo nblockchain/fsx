@@ -11,3 +11,7 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+    - name: install
+      run: make install
+    - name: run tests
+      run: ./scripts/test.sh
