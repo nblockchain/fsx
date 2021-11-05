@@ -26,6 +26,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{848BC281-2
 		test\testTsv.fsx = test\testTsv.fsx
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{DBAE02AB-5972-403C-B18B-ED1DFE362054}"
+	ProjectSection(SolutionItems) = preProject
+		configure.sh = configure.sh
+		Makefile = Makefile
+		scripts\install.sh = scripts\install.sh
+		scripts\build.sh = scripts\build.sh
+		scripts\launcher.sh = scripts\launcher.sh
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
