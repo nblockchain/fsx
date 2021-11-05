@@ -4,8 +4,8 @@ before_script:
 
 stages:
   - buildAndInstall
-  - compileScripts
   - test
+  - compileScripts
   - package
 
 build&install-1804stockmono:
@@ -45,6 +45,7 @@ buildScripts-1804stockmono:
     - ./scripts/CI/install_mono.sh
 
     - ./configure.sh && make install
+    - ./scripts/test.sh
     - ./ci-build.fsx
 
 buildScripts-2004stockmono:
@@ -54,6 +55,7 @@ buildScripts-2004stockmono:
     - ./scripts/CI/install_mono.sh
 
     - ./configure.sh && make install
+    - ./scripts/test.sh
     - ./ci-build.fsx
 
 buildScripts-2004newmono:
@@ -63,6 +65,7 @@ buildScripts-2004newmono:
     - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
 
     - ./configure.sh && make install
+    - ./scripts/test.sh
     - ./ci-build.fsx
 
 test-1804stockmono:
