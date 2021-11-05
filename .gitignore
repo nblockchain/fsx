@@ -12,3 +12,6 @@ prime/
 parts/
 *.snap
 snapcraft.login
+
+#macOS
+.DS_Store
