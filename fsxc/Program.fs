@@ -180,8 +180,12 @@ module Program =
                         else
                             yield fileInfo.LastWriteTime
                     | PreProcessorAction.Ref ref ->
-                        // FIXME: can refs be added to a dll? instead of a normal BCL ref such as "System.Configuration"
-                        ()
+                        let fileInfo = FileInfo <| Path.Combine (script.Directory.FullName, ref)
+                        if not fileInfo.Exists then
+                            // must be a BCL lib (e.g. #r "System.Xml.Linq.dll")
+                            ()
+                        else
+                            yield fileInfo.LastWriteTime
                     | _ ->
                         ()
                 | _ ->
@@ -232,7 +236,12 @@ module Program =
                             let file = FileInfo(Path.Combine(origScript.Directory.FullName, fileName))
                             yield CompilerInput.SourceFile(file)
                         | PreProcessorAction.Ref(refName) ->
-                            yield CompilerInput.Ref(refName)
+                            let maybeFile = FileInfo(Path.Combine(origScript.Directory.FullName, refName))
+                            if maybeFile.Exists then
+                                yield CompilerInput.Ref maybeFile.FullName
+                            else
+                                // must be a BCL lib (e.g. #r "System.Xml.Linq.dll")
+                                yield CompilerInput.Ref refName
 
                 let backupFile = FileInfo(getBackupFileName origScript)
                 File.Copy(origScript.FullName, backupFile.FullName)
