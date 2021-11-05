@@ -9,7 +9,7 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-DIR_OF_THIS_SCRIPT=$(dirname "$(realpath "$0")")
+DIR_OF_THIS_SCRIPT=$(cd `dirname $0` && pwd)
 FSXC_PATH="$DIR_OF_THIS_SCRIPT/../lib/fsx/fsxc.exe"
 
 FIRST_ARGS=""
