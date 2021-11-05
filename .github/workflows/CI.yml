@@ -31,6 +31,6 @@ jobs:
     - name: build in DEBUG mode
       run: make
     - name: install
-      run: make install
+      run: sudo make install
     - name: run tests
       run: ./scripts/test.sh
