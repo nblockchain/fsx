@@ -15,3 +15,22 @@ jobs:
       run: make install
     - name: run tests
       run: ./scripts/test.sh
+
+  linux:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: check mono version
+      run: mono --version
+    - name: install dependencies
+      run: sudo apt install --yes fsharp
+    - name: check mono version
+      run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+    - name: install
+      run: make install
+    - name: run tests
+      run: ./scripts/test.sh
