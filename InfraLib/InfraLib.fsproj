@@ -55,40 +55,11 @@
     <Compile Include="Git.fs" />
     <Compile Include="Taiga.fs" />
   </ItemGroup>
-  <PropertyGroup>
-    <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
-  </PropertyGroup>
-  <Choose>
-    <When Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets')">
-      <PropertyGroup>
-        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <Choose>
-        <When Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets')">
-          <PropertyGroup>
-            <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
-          </PropertyGroup>
-        </When>
-        <Otherwise>
-          <Choose>
-            <When Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')">
-              <PropertyGroup>
-                <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
-              </PropertyGroup>
-            </When>
-            <Otherwise>
-              <PropertyGroup>
-                <FSharpTargetsPath></FSharpTargetsPath>
-              </PropertyGroup>
-            </Otherwise>
-          </Choose>
-        </Otherwise>
-      </Choose>
-    </Otherwise>
-  </Choose>
+  <Import Project="..\CommonBuildProps.proj" />
   <Import Condition="'$(FSharpTargetsPath)' != ''" Project="$(FSharpTargetsPath)" />
+  <Target Name="BeforeBuild">
+    <Message Condition="'$(FSharpTargetsPath)' == ''" Importance="High" Text="F# SDK path was not found!" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
