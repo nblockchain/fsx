@@ -10,7 +10,7 @@ open FSX.Infrastructure
 open Process
 
 let mutable retryCount = 0
-while (retryCount < 20) do //this is a stress test
+while (retryCount < 2000) do //this is a stress test
     let procResult = Process.Execute({ Command = "fsharpi"; Arguments = "test/testProcessConcurrencySample.fsx" }, Echo.Off)
     let actual = (procResult.Output.ToString().Replace(Environment.NewLine,"-"))
     let expected = "foo-bar-baz-"
