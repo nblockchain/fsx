@@ -61,7 +61,7 @@ module Program =
             let maybeFlag: Option<Flag> =
                 if arg = "-f" || arg = "--force" then
                     Some Force
-                else if arg = "-k" || arg = "--check" then
+                elif arg = "-k" || arg = "--check" then
                     Some OnlyCheck
                 elif arg = "-v" || arg = "--verbose" then
                     Some Verbose
@@ -75,7 +75,7 @@ module Program =
                 | None ->
                     if not (arg.EndsWith ".fsx") then
                         failwithf "Argument not recognized: %s. Only commands, or scripts ending with .fsx allowed" arg
-                    else if (finalArgs.MaybeScript.IsSome) then
+                    elif finalArgs.MaybeScript.IsSome then
                         failwith "Only one .fsx script allowed"
                     else
                         {
