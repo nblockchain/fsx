@@ -11,5 +11,8 @@ mkdir ./test/lib
 cd ./test/ && fsharpc test.fs --target:library --out:lib/test2.dll && cd ..
 ./test/testRefLibOutsideCurrentFolder.fsx
 
+./test/testRefNugetLib1.sh
+./test/testRefNugetLib2.fsx
+
 ./test/testTsv.fsx
 ./test/testProcessConcurrency.fsx
