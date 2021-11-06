@@ -8,17 +8,7 @@ stages:
   - compileScripts
   - package
 
-build&install-1804stockmono:
-  image: ubuntu:18.04
-  stage: buildAndInstall
-  script:
-    - ./scripts/CI/install_mono.sh
-
-    - ./configure.sh
-    - make
-    - make install
-
-build&install-2004stockmono:
+build&install-stockmono:
   image: ubuntu:20.04
   stage: buildAndInstall
   script:
@@ -28,7 +18,7 @@ build&install-2004stockmono:
     - make
     - make install
 
-build&install-2004newmono:
+build&install-newmono:
   image: ubuntu:20.04
   stage: buildAndInstall
   script:
@@ -38,17 +28,7 @@ build&install-2004newmono:
     - make
     - make install
 
-buildScripts-1804stockmono:
-  image: ubuntu:18.04
-  stage: compileScripts
-  script:
-    - ./scripts/CI/install_mono.sh
-
-    - ./configure.sh && make install
-    - ./scripts/test.sh
-    - ./ci-build.fsx
-
-buildScripts-2004stockmono:
+buildScripts-stockmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
@@ -58,7 +38,7 @@ buildScripts-2004stockmono:
     - ./scripts/test.sh
     - ./ci-build.fsx
 
-buildScripts-2004newmono:
+buildScripts-newmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
@@ -68,16 +48,7 @@ buildScripts-2004newmono:
     - ./scripts/test.sh
     - ./ci-build.fsx
 
-test-1804stockmono:
-  image: ubuntu:18.04
-  stage: test
-  script:
-    - ./scripts/CI/install_mono.sh
-
-    - ./configure.sh && make install
-    - ./scripts/test.sh
-
-test-2004stockmono:
+test-stockmono:
   image: ubuntu:20.04
   stage: test
   script:
@@ -86,7 +57,7 @@ test-2004stockmono:
     - ./configure.sh && make install
     - ./scripts/test.sh
 
-test-2004newmono:
+test-newmono:
   image: ubuntu:20.04
   stage: test
   script:
