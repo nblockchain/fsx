@@ -3,6 +3,7 @@ obj/
 .vs/
 build.config
 packages/
+.nuget/
 
 #snap creation:
 staging/

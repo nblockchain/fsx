@@ -1,6 +1,6 @@
 before_script:
   - apt update -qq
-  - apt install -y git make
+  - apt install -y git make curl
 
 stages:
   - buildAndInstall
