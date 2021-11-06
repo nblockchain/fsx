@@ -121,7 +121,8 @@ module Program =
     type CompilerInput =
         | SourceFile of FileInfo
         | Script of FsxScript
-        | Ref of string
+        | BclRef of string
+        | CustomRef of string
 
     let GetBinFolderForAScript(script: FileInfo) =
         DirectoryInfo(Path.Combine(script.Directory.FullName, "bin"))
@@ -238,10 +239,10 @@ module Program =
                         | PreProcessorAction.Ref(refName) ->
                             let maybeFile = FileInfo(Path.Combine(origScript.Directory.FullName, refName))
                             if maybeFile.Exists then
-                                yield CompilerInput.Ref maybeFile.FullName
+                                yield CompilerInput.CustomRef maybeFile.FullName
                             else
                                 // must be a BCL lib (e.g. #r "System.Xml.Linq.dll")
-                                yield CompilerInput.Ref refName
+                                yield CompilerInput.BclRef refName
 
                 let backupFile = FileInfo(getBackupFileName origScript)
                 File.Copy(origScript.FullName, backupFile.FullName)
@@ -263,7 +264,9 @@ module Program =
             seq {
                 for flag in flags do
                     match flag with
-                    | CompilerInput.Ref refName -> yield sprintf "--reference:%s" refName
+                    | CompilerInput.BclRef refName
+                    | CompilerInput.CustomRef refName
+                        -> yield sprintf "--reference:%s" refName
                     | _ -> ()
             }
 
@@ -304,7 +307,13 @@ module Program =
 
         let success =
             match exitCode with
-            | 0 -> true
+            | 0 ->
+                for compilerInput in compilerInputs do
+                    match compilerInput with
+                    | CompilerInput.CustomRef refFullPath ->
+                        File.Copy(refFullPath, Path.Combine(binFolder.FullName, Path.GetFileName refFullPath), true)
+                    | _ -> ()
+                true
             | _ -> false
 
         if not success then
