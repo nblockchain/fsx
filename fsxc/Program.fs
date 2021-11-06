@@ -150,7 +150,7 @@ module Program =
             else
                 failwithf "Unrecognized preprocessor line: %s" line
 
-        let readLine (line: string) (origScript: FileInfo): LineAction =
+        let readLine (line: string): LineAction =
             if line.StartsWith "#" then
                 LineAction.PreProcessorAction(readPreprocessorLine line)
             else
@@ -160,7 +160,7 @@ module Program =
         let lines = contents.Split([| Environment.NewLine |], StringSplitOptions.None)
         seq {
             for line in lines do
-                yield line,(readLine line origScript)
+                yield line,(readLine line)
         } |> List.ofSeq
 
     let GetParsedContentsAndOldestLastWriteTimeFromScriptOrItsDependencies (script: FileInfo)
