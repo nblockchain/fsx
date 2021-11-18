@@ -2,6 +2,7 @@
 
 open System
 open System.IO
+open System.Text
 
 #r "System.Configuration"
 open System.Configuration
@@ -9,16 +10,16 @@ open System.Configuration
 
 open FSX.Infrastructure
 
-// FIXME: should not change BOMness of file, to avoid needless diffs, e.g. using the below func:
-// HasBom(bytes: IReadOnlyList<byte>)=
-//    bytes.Count>2 && bytes.[0]=0xEF && bytes.[1]=0xBB && bytes.[2]=0xBF
-
 let rec ReplaceInDir (dir: DirectoryInfo) (oldString: string) (newString: string) =
     let ReplaceInFile (file: FileInfo) (oldString: string) (newString: string) =
+        let HasUtf8Bom (file: FileInfo) =
+            let fileContentInBytes = File.ReadAllBytes file.FullName
+            fileContentInBytes.Length > 2 && fileContentInBytes.[..2] = [|0xEFuy; 0xBBuy; 0xBFuy|]
+
         let oldText = File.ReadAllText file.FullName
         let newText = oldText.Replace(oldString, newString)
         if newText <> oldText then
-            File.WriteAllText(file.FullName, newText)
+            File.WriteAllText(file.FullName, newText, UTF8Encoding(HasUtf8Bom file))
 
     for file in dir.GetFiles() do
         if (file.Extension.ToLower() <> "dll") &&
