@@ -22,9 +22,9 @@ let rec ReplaceInDir (dir: DirectoryInfo) (oldString: string) (newString: string
             File.WriteAllText(file.FullName, newText, UTF8Encoding(HasUtf8Bom file))
 
     for file in dir.GetFiles() do
-        if (file.Extension.ToLower() <> "dll") &&
-           (file.Extension.ToLower() <> "exe") &&
-           (file.Extension.ToLower() <> "png") then
+        if file.Extension.ToLower() <> ".dll" &&
+           file.Extension.ToLower() <> ".exe" &&
+           file.Extension.ToLower() <> ".png" then
             ReplaceInFile file oldString newString
 
     for subFolder in dir.GetDirectories() do
