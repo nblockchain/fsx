@@ -15,6 +15,32 @@ jobs:
       run: make install
     - name: run tests
       run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
+    - name: run tests
+      run: ./scripts/test.sh
 
   linux:
     runs-on: ubuntu-20.04
