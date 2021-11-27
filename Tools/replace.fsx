@@ -11,10 +11,14 @@ open System.Configuration
 open FSX.Infrastructure
 
 let ReplaceInFile (file: FileInfo) (oldString: string) (newString: string) =
+    let hasUtf8Bom (file: FileInfo) =
+        let fileContentInBytes = File.ReadAllBytes file.FullName
+        fileContentInBytes.Length > 2 && fileContentInBytes.[..2] = [|0xEFuy; 0xBBuy; 0xBFuy|]
+
     let oldText = File.ReadAllText file.FullName
     let newText = oldText.Replace(oldString, newString)
     if newText <> oldText then
-        File.WriteAllText(file.FullName, newText)
+        File.WriteAllText(file.FullName, newText, UTF8Encoding(hasUtf8Bom file))
 
 let rec ReplaceInDir (dir: DirectoryInfo) (oldString: string) (newString: string) =
     for file in dir.GetFiles() do
