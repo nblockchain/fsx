@@ -19,7 +19,7 @@ open FSX.Infrastructure
 
 open Process
 
-let arguments = Misc.FsxArguments()
+let arguments = Misc.FsxOnlyArguments()
 let argCount = arguments.Length
 if (argCount = 0) then
     Console.Error.WriteLine ("This script expects command (and optionally arguments)")

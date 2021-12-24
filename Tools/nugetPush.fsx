@@ -17,7 +17,7 @@ let PrintUsage() =
     Console.Error.WriteLine "Usage: nugetPush.fsx [--output-version] [baseVersion] <nugetApiKey>"
     Environment.Exit 1
 
-let args = Misc.FsxArguments()
+let args = Misc.FsxOnlyArguments()
 if args.Length > 3 then
     PrintUsage ()
 if args.Length > 2 && args.[0] <> "--output-version" then

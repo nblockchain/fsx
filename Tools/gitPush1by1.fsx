@@ -96,7 +96,7 @@ if not (remotes.Any ()) then
     Console.Error.WriteLine "No remotes found, please add one first."
     Environment.Exit 5
 
-let args = Misc.FsxArguments()
+let args = Misc.FsxOnlyArguments()
 if args.Length > 2 then
     Console.Error.WriteLine "Usage: gitpush.fsx [remoteName(optional)] [numberOfCommits(optional)]"
     Environment.Exit 1
