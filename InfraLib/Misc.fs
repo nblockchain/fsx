@@ -29,42 +29,42 @@ module Misc =
                          (Uri.UnescapeDataString(currentExeUri.PathAndQuery))
                          (Uri.UnescapeDataString(currentExeUri.Fragment)))
 
-    let rec private FsxArgumentsInternalFsx(args: string list) =
+    let rec private FsxOnlyArgumentsInternalFsx(args: string list) =
         match args with
         | [] -> []
         | head::tail ->
             if FileMatchesIfArgumentIsAPath(head, currentExe) then
                 tail
             else
-                FsxArgumentsInternalFsx(tail)
+                FsxOnlyArgumentsInternalFsx(tail)
 
-    let rec private FsxArgumentsInternalFsi(args: string list, fsxFileFound: bool) =
+    let rec private FsxOnlyArgumentsInternalFsi(args: string list, fsxFileFound: bool) =
         match args with
         | [] -> []
         | head::tail ->
             match fsxFileFound with
             | false ->
                 if ExtensionMatchesIfArgumentIsAPath(head, "fsx") then
-                    FsxArgumentsInternalFsi(tail, true)
+                    FsxOnlyArgumentsInternalFsi(tail, true)
                 else
-                    FsxArgumentsInternalFsi(tail, false)
+                    FsxOnlyArgumentsInternalFsi(tail, false)
             | true ->
                 if (head.Equals("--")) then
                     tail
                 else
                     args
 
-    let FsxArguments() =
+    let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
 
         let isFsi = String.Equals(currentExe.Name, "fsi.exe", StringComparison.OrdinalIgnoreCase)
         if (isFsi) then
             // XXX: deprecate in favor of fsi.CommandLineArgs? see https://docs.microsoft.com/en-us/dotnet/articles/fsharp/tutorials/fsharp-interactive/
-            FsxArgumentsInternalFsi(cmdLineArgs, false)
+            FsxOnlyArgumentsInternalFsi(cmdLineArgs, false)
 
         // below for #!/usr/bin/fsx shebang
         else
-            FsxArgumentsInternalFsx(cmdLineArgs)
+            FsxOnlyArgumentsInternalFsx(cmdLineArgs)
 
     type private SupportedCheckSumAlgorithm =
         MD5 | SHA256

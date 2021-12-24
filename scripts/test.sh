@@ -14,5 +14,7 @@ cd ./test/ && fsharpc test.fs --target:library --out:lib/test2.dll && cd ..
 ./test/testRefNugetLib1.sh
 ./test/testRefNugetLib2.fsx
 
+./test/testFsiCommandLineArgs.fsx one 2 three
+
 ./test/testTsv.fsx
 ./test/testProcessConcurrency.fsx

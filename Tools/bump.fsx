@@ -23,13 +23,13 @@ let Bump(toStable: bool): Version*Version =
         failwith "sanity check failed, post-bump should happen in a stable version"
 
     let newFullVersion,newVersion =
-        if Misc.FsxArguments().Length > 0 then
-            if Misc.FsxArguments().Length > 1 then
+        if Misc.FsxOnlyArguments().Length > 0 then
+            if Misc.FsxOnlyArguments().Length > 1 then
                 Console.Error.WriteLine "Only one argument supported, not more"
                 Environment.Exit 1
                 failwith "Unreachable"
             else
-                let full = Version(Misc.FsxArguments().Head)
+                let full = Version(Misc.FsxOnlyArguments().Head)
                 full,full.MinorRevision
         else
             let newVersion = androidVersion + 1s
