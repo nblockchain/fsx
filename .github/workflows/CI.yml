@@ -34,3 +34,10 @@ jobs:
       run: sudo make install
     - name: run tests
       run: ./scripts/test.sh
+
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: call msbuild
+      run: .\make.bat
