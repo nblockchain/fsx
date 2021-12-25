@@ -3,6 +3,12 @@
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(FSharpTargetsPath)' == '' OR (!(Exists('$(FSharpTargetsPath)')))">
+    <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools\Microsoft.FSharp.Targets</FSharpTargetsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(FSharpTargetsPath)' == '' OR (!(Exists('$(FSharpTargetsPath)')))">
+    <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v16.0\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(FSharpTargetsPath)' == '' OR (!(Exists('$(FSharpTargetsPath)')))">
     <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(FSharpTargetsPath)' == '' OR (!(Exists('$(FSharpTargetsPath)')))">
