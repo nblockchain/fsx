@@ -39,5 +39,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
-    - name: call msbuild
+    - name: configure
+      run: .\configure.bat
+    - name: make
       run: .\make.bat

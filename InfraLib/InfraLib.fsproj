@@ -47,7 +47,10 @@
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Properties\AssemblyInfo.fs" />
+    <Compile Include="..\fsxc\Properties\CommonAssemblyInfo.fs">
+      <Link>Properties\CommonAssemblyInfo.fs</Link>
+    </Compile>
     <Compile Include="Misc.fs" />
     <Compile Include="Process.fs" />
     <Compile Include="Unix.fs" />

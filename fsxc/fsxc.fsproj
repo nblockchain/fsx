@@ -41,7 +41,8 @@
     <Folder Include="InfraLib\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Properties\AssemblyInfo.fs" />
+    <Compile Include="Properties\CommonAssemblyInfo.fs" />
     <Compile Include="..\InfraLib\Misc.fs">
       <Link>InfraLib\Misc.fs</Link>
     </Compile>
