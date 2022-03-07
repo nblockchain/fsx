@@ -36,7 +36,7 @@ jobs:
       run: ./scripts/test.sh
 
   windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
     - name: call msbuild
