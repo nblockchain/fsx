@@ -53,21 +53,12 @@ Which is a huge difference in memory footprint.
 
 ### Installation
 
-There are two ways to install fsx; the old-fashioned way by cloning and compiling it yourself:
+The old-fashioned way by cloning and compiling it yourself:
 
 ```
 ./configure.sh --prefix=/usr/local
 make
 sudo make install
-```
-
-Or simply by installing the snap package. You can grab it from the artifacts of our CI build by clicking on the icon on the right-top corner in the following page:
-https://gitlab.com/knocte/fsx/pipelines?ref=master
-
-After downloading and decompressing the artifacts, you have to use the command line:
-
-```
-snap install --dangerous --classic fsx*.snap
 ```
 
 ### Usage
