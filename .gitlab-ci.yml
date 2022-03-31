@@ -6,6 +6,7 @@ stages:
   - buildAndInstall
   - test
   - compileScripts
+  - sanitycheck
   - package
 
 build&install-stockmono:
@@ -65,6 +66,15 @@ test-newmono:
 
     - ./configure.sh && make install
     - ./scripts/test.sh
+
+style:
+  image: ubuntu:20.04
+  stage: sanitycheck
+  script:
+    - ./scripts/CI/install_dotnet_sdk_from_microsoft_deb_packages.sh
+
+    - dotnet tool update --global fantomless-tool --version 4.7.996
+    - $HOME/.dotnet/tools/fantomless --recurse --check .
 
 #
 # NOTE: snap package generation has been disabled because its Docker-in-Docker approach started failing
