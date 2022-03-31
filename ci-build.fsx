@@ -6,32 +6,59 @@ open System.Linq
 
 #r "System.Configuration"
 open System.Configuration
+
 #load "InfraLib/Misc.fs"
 #load "InfraLib/Process.fs"
+
 open FSX.Infrastructure
 open Process
 
-let rec FindFsxc(): FileInfo =
+let rec FindFsxc() : FileInfo =
     let fsxCompiler = "fsxc.exe"
 
     let fsxcBinDir = Path.Combine(__SOURCE_DIRECTORY__, "fsxc", "bin")
-    let findFsxcExeFiles () =
-        Directory.GetFiles(fsxcBinDir, fsxCompiler, SearchOption.AllDirectories)
-    if not (Directory.Exists fsxcBinDir) || not (findFsxcExeFiles().Any()) then
-        let configureProc = Process.Execute({ Command = "./configure.sh"; Arguments = String.Empty },
-                                            Echo.All)
-        if configureProc.ExitCode <> 0 then
-            Environment.Exit 1;failwith "Unreachable"
 
-        let makeProc = Process.Execute({ Command = "make"; Arguments = String.Empty },
-                                       Echo.All)
+    let findFsxcExeFiles() =
+        Directory.GetFiles(fsxcBinDir, fsxCompiler, SearchOption.AllDirectories)
+
+    if not(Directory.Exists fsxcBinDir) || not(findFsxcExeFiles().Any()) then
+        let configureProc =
+            Process.Execute(
+                {
+                    Command = "./configure.sh"
+                    Arguments = String.Empty
+                },
+                Echo.All
+            )
+
+        if configureProc.ExitCode <> 0 then
+            Environment.Exit 1
+            failwith "Unreachable"
+
+        let makeProc =
+            Process.Execute(
+                {
+                    Command = "make"
+                    Arguments = String.Empty
+                },
+                Echo.All
+            )
+
         if makeProc.ExitCode <> 0 then
-            Environment.Exit 1;failwith "Unreachable"
+            Environment.Exit 1
+            failwith "Unreachable"
+
         FindFsxc()
 
     elif findFsxcExeFiles().Count() > 1 then
-        Console.Error.WriteLine(sprintf "More than one %s file found, please just leave one" fsxCompiler)
-        Environment.Exit 1;failwith "Unreachable"
+        Console.Error.WriteLine(
+            sprintf
+                "More than one %s file found, please just leave one"
+                fsxCompiler
+        )
+
+        Environment.Exit 1
+        failwith "Unreachable"
 
     else
         findFsxcExeFiles().Single() |> FileInfo
@@ -40,34 +67,48 @@ let fsxLocation = FindFsxc()
 
 Console.WriteLine("Checking if all .fsx scripts build")
 
-let fsxScripts = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.fsx", SearchOption.AllDirectories)
+let fsxScripts =
+    Directory.GetFiles(
+        Directory.GetCurrentDirectory(),
+        "*.fsx",
+        SearchOption.AllDirectories
+    )
 
-let buildFsxScript (script: string) (soFar: bool): bool =
+let buildFsxScript (script: string) (soFar: bool) : bool =
     if (script = null) then
-        raise(ArgumentNullException("script"))
+        raise <| ArgumentNullException("script")
 
     Console.WriteLine(sprintf "Building %s" script)
-    let procResult = Process.Execute({ Command = fsxLocation.FullName; Arguments = sprintf "-k %s" script }, Echo.OutputOnly)
 
-    let success = match procResult.ExitCode with
-                  | 0 -> true
-                  | _ -> false
+    let procResult =
+        Process.Execute(
+            {
+                Command = fsxLocation.FullName
+                Arguments = sprintf "-k %s" script
+            },
+            Echo.OutputOnly
+        )
+
+    let success =
+        match procResult.ExitCode with
+        | 0 -> true
+        | _ -> false
 
     Console.WriteLine()
 
     (success && soFar)
 
-let rec buildAll(scripts: string list) (soFar: bool): bool =
+let rec buildAll (scripts: list<string>) (soFar: bool) : bool =
     match scripts with
     | [] -> soFar
-    | script::tail ->
+    | script :: tail ->
         let sofarPlusOne = buildFsxScript script soFar
         buildAll tail sofarPlusOne
 
 let scripts = List.ofArray fsxScripts
 let allCompile = buildAll scripts true
 
-if (allCompile) then
+if allCompile then
     Console.WriteLine("Success")
     Environment.Exit(0)
 else
