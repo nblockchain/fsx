@@ -96,7 +96,7 @@ module Misc =
             use md5 = MD5.Create()
             md5.ComputeHash(stream)
         | SupportedCheckSumAlgorithm.SHA256 ->
-            use sha256 = new SHA256Managed()
+            use sha256 = SHA256.Create()
             sha256.ComputeHash(stream)
 
     let private CalculateSum(algo: SupportedCheckSumAlgorithm, file: FileInfo) =
