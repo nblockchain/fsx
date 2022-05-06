@@ -692,7 +692,7 @@ module Misc =
 
     let rec GatherOrGetDefaultPrefix
         (
-            args: List<string>,
+            args: seq<string>,
             previousIsPrefixArg: bool,
             prefixSet: Option<string>
         ) : string =
@@ -703,8 +703,8 @@ module Misc =
 
         let prefixArgWithEquals = "--prefix="
 
-        match args with
-        | [] ->
+        match Seq.tryHead args with
+        | None ->
             match prefixSet with
             | None ->
                 match GuessPlatform() with
@@ -713,7 +713,8 @@ module Misc =
                         Environment.SpecialFolder.ProgramFiles
                 | _ -> "/usr/local"
             | Some prefix -> prefix
-        | head :: tail ->
+        | Some head ->
+            let tail = Seq.tail args
             if previousIsPrefixArg then
                 GatherOrGetDefaultPrefix(tail, false, GatherPrefix head)
             elif head = "--prefix" then
