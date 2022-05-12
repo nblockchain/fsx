@@ -125,7 +125,7 @@ module Process =
 
         // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events?
         let mutable outputBuffer: list<OutputChunk> = []
-        let queuedLock = QueuedLock()
+        use semaphore = new SemaphoreSlim 0
 
         if (echo = Echo.All) then
             Console.WriteLine(
@@ -245,9 +245,10 @@ module Process =
 
             let ReadIteration() : Async<bool> =
                 async {
-                    queuedLock.Enter()
+                    do! Async.AwaitTask (semaphore.WaitAsync())
                     let! res = ReadIterationInner()
-                    queuedLock.Exit()
+                    semaphore.Release()
+                    |> ignore
                     return res
                 }
 
