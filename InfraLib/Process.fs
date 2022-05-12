@@ -125,7 +125,7 @@ module Process =
 
         // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events?
         let mutable outputBuffer: list<OutputChunk> = []
-        use semaphore = new SemaphoreSlim 1
+        use semaphore = new SemaphoreSlim(1, 1)
 
         if (echo = Echo.All) then
             Console.WriteLine(
