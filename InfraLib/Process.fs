@@ -143,7 +143,7 @@ module Process =
         use proc = new System.Diagnostics.Process()
         proc.StartInfo <- startInfo
 
-        let ReadStandard(std: Standard) =
+        let rec ReadStandard(std: Standard): Async<unit> =
 
             let print =
                 match std with
@@ -168,7 +168,7 @@ module Process =
                 else //if (readCount = 0)
                     outputToReadFrom.EndOfStream
 
-            let rec ReadIterationInner() : bool =
+            let rec ReadIterationInner() : Async<bool> = async {
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
                 // it to 1 makes it slow but then the order is only relying (in theory) on how the
@@ -187,12 +187,7 @@ module Process =
                         bufferSize
                     )
 
-                readTask.Wait()
-
-                if not(readTask.IsCompleted) then
-                    failwith "Failed to read"
-
-                let readCount = readTask.Result
+                let! readCount = Async.AwaitTask readTask
 
                 if (readCount > bufferSize) then
                     failwith
@@ -240,44 +235,55 @@ module Process =
                     append()
 
                 if EndOfStream readCount then
-                    false
+                    return false
                 elif outChar.Single() = '\n' then
-                    true
+                    return true
                 else
-                    ReadIterationInner()
+                    let! res = ReadIterationInner()
+                    return res
+            }
 
-            let ReadIteration() : bool =
-                try
-                    queuedLock.Enter()
-                    ReadIterationInner()
-                finally
-                    queuedLock.Exit()
+            let ReadIteration() : Async<bool> =
+                async {
+                    try
+                        queuedLock.Enter()
+                        let! res = ReadIterationInner()
+                        return res
+                    finally
+                        queuedLock.Exit()
+                }
 
-            // this is a way to do a `do...while` loop in F#...
-            while (ReadIteration()) do
-                ignore None
-
-        let outReaderThread =
-            new Thread(new ThreadStart(fun _ -> ReadStandard(Standard.Output)))
-
-        let errReaderThread =
-            new Thread(new ThreadStart(fun _ -> ReadStandard(Standard.Error)))
+            async {
+                // this is a way to do a `do...while` loop in F#...
+                let! shouldEnd = ReadIteration()
+                if shouldEnd then
+                    return ()
+                else
+                    do! ReadStandard std
+                    return ()
+            }
 
         try
             proc.Start() |> ignore
         with
         | e -> raise <| ProcessCouldNotStart(procDetails, e)
 
-        outReaderThread.Start()
-        errReaderThread.Start()
-        proc.WaitForExit()
-        let exitCode = proc.ExitCode
+        let waitForExitJob =
+            async {
+                proc.WaitForExit()
+            }
 
-        outReaderThread.Join()
-        errReaderThread.Join()
+        [
+            ReadStandard Standard.Output
+            ReadStandard Standard.Error
+            waitForExitJob
+        ]
+        |> Async.Parallel
+        |> Async.RunSynchronously
+        |> ignore
 
         {
-            ExitCode = exitCode
+            ExitCode = proc.ExitCode
             Output = OutputBuffer(outputBuffer)
         }
 
