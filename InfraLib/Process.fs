@@ -226,33 +226,16 @@ module Process =
 
                             outputBuffer <- [ newBlock ]
                         | head :: tail ->
-                            match head.OutputType with
-                            | Standard.Output ->
-                                match std with
-                                | Standard.Output ->
-                                    head.Chunk.Append outChar |> ignore
-                                | Standard.Error ->
-                                    let newErrBuilder =
-                                        {
-                                            OutputType = Standard.Error
-                                            Chunk = newBuilder
-                                        }
+                            if head.OutputType = std then
+                                head.Chunk.Append outChar |> ignore
+                            else
+                                let newBuilder =
+                                    {
+                                        OutputType = std
+                                        Chunk = newBuilder
+                                    }
 
-                                    outputBuffer <-
-                                        newErrBuilder :: outputBuffer
-                            | Standard.Error ->
-                                match std with
-                                | Standard.Error ->
-                                    head.Chunk.Append outChar |> ignore
-                                | Standard.Output ->
-                                    let newOutBuilder =
-                                        {
-                                            OutputType = Standard.Output
-                                            Chunk = newBuilder
-                                        }
-
-                                    outputBuffer <-
-                                        newOutBuilder :: outputBuffer
+                                outputBuffer <- newBuilder :: outputBuffer
 
                     append()
 
