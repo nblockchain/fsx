@@ -245,12 +245,10 @@ module Process =
 
             let ReadIteration() : Async<bool> =
                 async {
-                    try
-                        queuedLock.Enter()
-                        let! res = ReadIterationInner()
-                        return res
-                    finally
-                        queuedLock.Exit()
+                    queuedLock.Enter()
+                    let! res = ReadIterationInner()
+                    queuedLock.Exit()
+                    return res
                 }
 
             async {
