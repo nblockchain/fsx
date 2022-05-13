@@ -116,11 +116,6 @@ module Process =
                 innerException
             )
 
-    type private ReaderState =
-        | Continue // new character in the same line
-        | Pause // e.g. an EOL has arrived -> other thread can take the lock
-        | End // no more data
-
     let Execute(procDetails: ProcessDetails, echo: Echo) : ProcessResult =
 
         // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events?
@@ -240,11 +235,15 @@ module Process =
                     append()
 
                 if EndOfStream readCount then
-                    false
-                elif outChar.Single() = '\n' then
-                    true
+                    false //old ReaderState.End
                 else
-                    ReadIterationInner()
+                    if readCount <> bufferSize then
+                        true
+                    else
+                        if outChar.Single() = '\n' then
+                            true //old ReaderState.Pause
+                        else
+                            ReadIterationInner() //old ReaderState.Continue
 
             let ReadIteration() : bool =
                 try
