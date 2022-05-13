@@ -176,19 +176,24 @@ module Process =
                 if not(outChar.Length = bufferSize) then
                     failwith "Buffer Size must equal current buffer size"
 
-                let readTask =
-                    outputToReadFrom.ReadAsync(
-                        outChar,
-                        uniqueElementIndexInTheSingleCharBuffer,
-                        bufferSize
-                    )
 
-                readTask.Wait()
 
-                if not(readTask.IsCompleted) then
-                    failwith "Failed to read"
+                let readCount =
+                    if outputToReadFrom.Peek() <> -1 then
+                        let readTask =
+                            outputToReadFrom.ReadAsync(
+                                outChar,
+                                uniqueElementIndexInTheSingleCharBuffer,
+                                bufferSize
+                            )
 
-                let readCount = readTask.Result
+                        readTask.Wait()
+
+                        if not(readTask.IsCompleted) then
+                            failwith "Failed to read"
+                        readTask.Result
+                    else
+                        0
 
                 if (readCount > bufferSize) then
                     failwith
