@@ -163,7 +163,8 @@ module Process =
                 else //if (readCount = 0)
                     outputToReadFrom.EndOfStream
 
-            let rec ReadIterationInner() : bool =
+            let mutable lockHeld = false
+            let rec ReadIteration() : bool =
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
                 // it to 1 makes it slow but then the order is only relying (in theory) on how the
@@ -232,25 +233,30 @@ module Process =
 
                                 outputBuffer <- newBuilder :: outputBuffer
 
+                    if not lockHeld then
+                        queuedLock.Enter()
+                        lockHeld <- true
                     append()
 
                 if EndOfStream readCount then
-                    false //old ReaderState.End
+                    if lockHeld then
+                        queuedLock.Exit()
+                        lockHeld <- false
+                    false
                 else
                     if readCount <> bufferSize then
+                        if lockHeld then
+                            queuedLock.Exit()
+                            lockHeld <- false
                         true
                     else
                         if outChar.Single() = '\n' then
-                            true //old ReaderState.Pause
+                            if lockHeld then
+                                queuedLock.Exit()
+                                lockHeld <- false
+                            true
                         else
-                            ReadIterationInner() //old ReaderState.Continue
-
-            let ReadIteration() : bool =
-                try
-                    queuedLock.Enter()
-                    ReadIterationInner()
-                finally
-                    queuedLock.Exit()
+                            ReadIteration()
 
             // this is a way to do a `do...while` loop in F#...
             while (ReadIteration()) do
