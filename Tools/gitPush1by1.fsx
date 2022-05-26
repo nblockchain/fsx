@@ -20,16 +20,23 @@ let GitSpecificPush
     (remoteName: string)
     (commitSha: string)
     (remoteBranchName: string)
+    (force: bool)
     =
+    let forceFlag =
+        if force then
+            "--force"
+        else
+            "--force-with-lease"
     let gitPush =
         {
             Command = "git"
             Arguments =
                 sprintf
-                    "push %s %s:refs/heads/%s --force-with-lease"
+                    "push %s %s:refs/heads/%s %s"
                     remoteName
                     commitSha
                     remoteBranchName
+                    forceFlag
         }
 
     Process.SafeExecute(gitPush, Echo.OutputOnly) |> ignore
@@ -155,14 +162,14 @@ if not(remotes.Any()) then
 
 let args = Misc.FsxOnlyArguments()
 
-if args.Length > 2 then
+if args.Length > 3 then
     Console.Error.WriteLine
         "Usage: gitpush.fsx [remoteName(optional)] [numberOfCommits(optional)]"
 
     Environment.Exit 1
 
-let maybeRemote, maybeNumberOfCommits =
-    if args.Length = 2 then
+let maybeRemote, maybeNumberOfCommits, force =
+    if args.Length > 1 then
         match UInt32.TryParse args.[1] with
         | true, 0u ->
             Console.Error.WriteLine
@@ -173,13 +180,22 @@ let maybeRemote, maybeNumberOfCommits =
         | true, num ->
             let numberOfCommits = Some num
             let remote = Some args.[0]
-            remote, numberOfCommits
+
+            let force =
+                if args.Length = 3 then
+                    if args.[2] = "-f" || args.[2] = "--force" then
+                        true
+                    else
+                        false
+                else
+                    false
+            remote, numberOfCommits, force
         | _ ->
             Console.Error.WriteLine "Second argument should be an integer"
             Environment.Exit 3
             failwith "Unreachable"
     elif args.Length = 0 then
-        None, None
+        None, None, false
     else // if args.Length = 1 then
         match UInt32.TryParse args.[0] with
         | true, 0u ->
@@ -191,11 +207,11 @@ let maybeRemote, maybeNumberOfCommits =
         | true, num ->
             let numberOfCommits = Some num
             let remote = None
-            remote, numberOfCommits
+            remote, numberOfCommits, false
         | _ ->
             let numberOfCommits = None
             let remote = Some(args.[0])
-            remote, numberOfCommits
+            remote, numberOfCommits, false
 
 let remote, remoteUrl =
     match maybeRemote with
@@ -260,7 +276,7 @@ let commitsToBePushed =
 let numberOfCommitsToPush = commitsToBePushed.Length
 
 for commit in commitsToBePushed do
-    GitSpecificPush remote commit currentBranch
+    GitSpecificPush remote commit currentBranch force
 
 if numberOfCommitsToPush > 1 && remoteUrl.Contains "gitlab" then
     Console.WriteLine
