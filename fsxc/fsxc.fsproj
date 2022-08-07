@@ -33,7 +33,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="FSharp.Core">
-      <HintPath>..\InfraLib\packages\FSharp.Core.4.5.4\lib\net45\FSharp.Core.dll</HintPath>
+      <HintPath>..\packages\FSharp.Core.4.5.4\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Configuration" />
   </ItemGroup>
@@ -57,6 +57,8 @@
     <Message Condition="'$(FSharpTargetsPath)' == ''" Importance="High" Text="F# SDK path was not found!" />
   </Target>
   <Target Name="AfterBuild">
+    <!-- NOTE: to simplify the build in Unix(Mac&Linux), we simply copy the system's FSharp.Core instead of
+               taking it from nuget. TODO: we should make this uniform to all platforms, maybe via dotnet restore -->
     <Copy SourceFiles="/usr/lib/mono/fsharp/FSharp.Core.dll"
           DestinationFolder="$(OutputPath)"
           ContinueOnError="true"

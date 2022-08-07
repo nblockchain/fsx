@@ -7,11 +7,19 @@ GOTO ErrorArg
 
 :Install
     "%BUILDTOOL%" fsx.sln /p:Configuration=Release || EXIT /b
+    REM TODO: ignore if it already exists?
     mkdir "%ProgramFiles%\fsx" || EXIT /b
     copy fsxc\bin\Release\*.* "%ProgramFiles%\fsx" || EXIT /b
     GOTO End
 
 :JustBuild
+    IF NOT EXIST .nuget (
+        mkdir .nuget\ || EXIT /b
+    )
+    IF NOT EXIST .nuget\nuget.exe (
+        powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe -OutFile .nuget\nuget.exe" || EXIT /b
+    )
+    .nuget\nuget.exe restore fsx.sln  || EXIT /b
     "%BUILDTOOL%" fsx.sln /p:Configuration=Debug || EXIT /b
     GOTO End
 
