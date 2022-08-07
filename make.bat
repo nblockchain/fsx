@@ -7,7 +7,7 @@ GOTO ErrorArg
 
 :Install
     "%BUILDTOOL%" fsx.sln /p:Configuration=Release || EXIT /b
-    REM TODO: ignore if it already exists
+    REM TODO: ignore if it already exists?
     mkdir "%ProgramFiles%\fsx" || EXIT /b
     copy fsxc\bin\Release\*.* "%ProgramFiles%\fsx" || EXIT /b
     GOTO End
