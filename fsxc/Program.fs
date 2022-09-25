@@ -46,7 +46,7 @@ module Program =
 
     let PrintUsage() =
         Console.WriteLine()
-        Console.WriteLine "Usage: ./fsxc.fsx  [OPTION] yourscript.fsx"
+        Console.WriteLine "Usage: fsxc.exe [OPTION] yourscript.fsx"
         Console.WriteLine()
         Console.WriteLine "Options"
 
