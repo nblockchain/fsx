@@ -73,6 +73,7 @@ style:
   script:
     - ./scripts/CI/install_dotnet_sdk_from_microsoft_deb_packages.sh
 
+    # NOTE: maintain fantomless version below in sync with .github/workflows/CI.yml
     - dotnet tool update --global fantomless-tool --version 4.7.996
     - $HOME/.dotnet/tools/fantomless --recurse --check .
 

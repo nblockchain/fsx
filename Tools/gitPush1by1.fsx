@@ -27,6 +27,7 @@ let GitSpecificPush
             "--force"
         else
             "--force-with-lease"
+
     let gitPush =
         {
             Command = "git"
@@ -189,6 +190,7 @@ let maybeRemote, maybeNumberOfCommits, force =
                         false
                 else
                     false
+
             remote, numberOfCommits, force
         | _ ->
             Console.Error.WriteLine "Second argument should be an integer"

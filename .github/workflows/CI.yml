@@ -3,6 +3,23 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+
+  style:
+    needs: [macOS, linux, windows]
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup .NET SDK 5.0.x
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: '5.0.x'
+    - name: fantomless
+      run: |
+        # NOTE: maintain fantomless version below in sync with .gitlab-ci.yml
+        dotnet tool update --global fantomless-tool --version 4.7.996
+        # path taken from https://stackoverflow.com/a/65367006/544947
+        $HOME/.dotnet/tools/fantomless --recurse --check .
+
   macOS:
     runs-on: macOS-latest
     steps:

@@ -715,6 +715,7 @@ module Misc =
             | Some prefix -> prefix
         | Some head ->
             let tail = Seq.tail args
+
             if previousIsPrefixArg then
                 GatherOrGetDefaultPrefix(tail, false, GatherPrefix head)
             elif head = "--prefix" then

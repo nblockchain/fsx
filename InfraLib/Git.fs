@@ -78,8 +78,7 @@ module Git =
 
         if (gitLastCommit.ExitCode <> 0) then
             gitLastCommit.Output.PrintToConsole()
-            failwith
-                "Unexpected git behaviour, as `git log` failed"
+            failwith "Unexpected git behaviour, as `git log` failed"
 
         let lines =
             Misc.CrossPlatformStringSplitInLines gitLastCommit.Output.StdOut
