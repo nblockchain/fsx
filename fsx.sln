@@ -37,6 +37,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{DBAE02AB
 		scripts\install.sh = scripts\install.sh
 		scripts\build.sh = scripts\build.sh
 		scripts\launcher.sh = scripts\launcher.sh
+		make.bat = make.bat
+		scripts\make.fsx = scripts\make.fsx
+		.github\workflows\CI.yml = .github\workflows\CI.yml
 	EndProjectSection
 EndProject
 Global
