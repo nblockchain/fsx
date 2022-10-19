@@ -138,9 +138,8 @@ let BuildSolution
     =
     let configOption = sprintf "/p:Configuration=%s" (binaryConfig.ToString())
     let buildArgs = sprintf "%s %s %s" solutionFileName configOption extraOptions
-    let buildProcess = Process.Execute ({ Command = buildTool; Arguments = buildArgs }, Echo.All)
-    if (buildProcess.ExitCode <> 0) then
-        buildProcess.Output.PrintToConsole()
+    let buildSuccess = ProcessExecuteInteractively buildTool buildArgs
+    if buildSuccess <> 0 then
         Console.WriteLine()
         Console.Error.WriteLine (sprintf "%s build failed ^" buildTool)
         PrintNugetVersion() |> ignore
