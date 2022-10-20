@@ -147,7 +147,7 @@ module Process =
 
             let print =
                 match std with
-                | Standard.Output -> Console.Write: array<char> -> unit
+                | Standard.Output -> Console.Write: char -> unit
                 | Standard.Error -> Console.Error.Write
 
             let flush =
@@ -160,21 +160,15 @@ module Process =
                 | Standard.Output -> proc.StandardOutput
                 | Standard.Error -> proc.StandardError
 
-            let EndOfStream(readCount: int) : bool =
-                if (readCount > 0) then
-                    false
-                else if (readCount < 0) then
-                    true
-                else //if (readCount = 0)
-                    outputToReadFrom.EndOfStream
-
             let rec ReadIterationInner() : bool =
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
                 // it to 1 makes it slow but then the order is only relying (in theory) on how the
                 // streams come and how fast the .NET IO processes them
-                let outChar = [| 'x' |] // 'x' is a dummy value that will get replaced
                 let bufferSize = 1
+
+                // 'x' is a dummy value that will get replaced
+                let outChar = Array.singleton 'x'
                 let uniqueElementIndexInTheSingleCharBuffer = bufferSize - 1
 
                 if not(outChar.Length = bufferSize) then
@@ -198,16 +192,10 @@ module Process =
                     failwith
                         "StreamReader.Read() should not read more than the bufferSize if we passed the bufferSize as a parameter"
 
-                if (readCount = bufferSize) then
-                    if not(echo = Echo.Off) then
-                        print outChar
-                        flush()
+                let singleChar =
+                    let append(charToAppend: char) =
 
-                    let append() =
-                        let leChar =
-                            outChar.[uniqueElementIndexInTheSingleCharBuffer]
-
-                        let newBuilder = StringBuilder(leChar.ToString())
+                        let newBuilder = StringBuilder(charToAppend.ToString())
 
                         match outputBuffer with
                         | [] ->
@@ -224,27 +212,41 @@ module Process =
                                         Chunk = newBuilder
                                     }
 
-                            outputBuffer <- [ newBlock ]
-                        | head :: tail ->
+                            outputBuffer <- List.singleton newBlock
+                        | head :: _tail ->
                             if head.OutputType = std then
-                                head.Chunk.Append outChar |> ignore
+                                head.Chunk.Append charToAppend |> ignore
                             else
-                                let newBuilder =
+                                let newBlock =
                                     {
                                         OutputType = std
                                         Chunk = newBuilder
                                     }
 
-                                outputBuffer <- newBuilder :: outputBuffer
+                                outputBuffer <- newBlock :: outputBuffer
 
-                    append()
+                    // meaning readCount < bufferSize (and bufferSize being 1 means readCount=0 or negative)
+                    if readCount <> bufferSize then
+                        None
+                    else
+                        let leChar =
+                            outChar.[uniqueElementIndexInTheSingleCharBuffer]
 
-                if EndOfStream readCount then
+                        if not(echo = Echo.Off) then
+                            print leChar
+                            flush()
+
+                        append leChar
+                        Some leChar
+
+                match singleChar with
+                | None when
+                    readCount < 0
+                    || (readCount = 0 && outputToReadFrom.EndOfStream)
+                    ->
                     false
-                elif outChar.Single() = '\n' then
-                    true
-                else
-                    ReadIterationInner()
+                | Some '\n' -> true
+                | _ -> ReadIterationInner()
 
             let ReadIteration() : bool =
                 try
@@ -266,7 +268,7 @@ module Process =
         try
             proc.Start() |> ignore
         with
-        | e -> raise <| ProcessCouldNotStart(procDetails, e)
+        | ex -> raise <| ProcessCouldNotStart(procDetails, ex)
 
         outReaderThread.Start()
         errReaderThread.Start()
