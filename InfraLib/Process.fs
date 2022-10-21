@@ -90,11 +90,15 @@ module Process =
         override self.ToString() =
             Filter(buffer, None).ToString()
 
-    type ProcessResult =
-        {
-            ExitCode: int
-            Output: OutputBuffer
-        }
+    type ProcessResultState =
+        // exitCode=0, no stdErr
+        | Success of output: string
+
+        // exitCode<>0
+        | Error of exitCode: int * output: OutputBuffer
+
+        // exitCode=0, some stdErr
+        | WarningsOrAmbiguous of output: OutputBuffer
 
     type ProcessDetails =
         {
@@ -104,6 +108,39 @@ module Process =
 
         override self.ToString() =
             sprintf "Command: %s. Arguments: %s." self.Command self.Arguments
+
+
+    exception ProcessSucceededWithWarnings of string
+    exception ProcessFailed of string
+
+    type ProcessResult =
+        {
+            Details: ProcessDetails
+            Result: ProcessResultState
+        }
+
+        member self.Unwrap(errMsg: string) : string =
+            match self.Result with
+            | Success output -> output
+            | Error(_, output) ->
+                output.PrintToConsole()
+                Console.WriteLine()
+                Console.Out.Flush()
+                raise <| ProcessFailed errMsg
+            | WarningsOrAmbiguous output ->
+                output.PrintToConsole()
+                Console.WriteLine()
+                Console.Out.Flush()
+                Console.Error.Flush()
+
+                raise
+                <| ProcessSucceededWithWarnings(
+                    sprintf "%s (with warnings?)" errMsg
+                )
+
+        member self.UnwrapDefault() : string =
+            self.Unwrap(sprintf "Error when running '%s'" self.Details.Command)
+
 
     type ProcessCouldNotStart
         (
@@ -282,34 +319,24 @@ module Process =
         outReaderThread.Join()
         errReaderThread.Join()
 
-        {
-            ExitCode = exitCode
-            Output = OutputBuffer(outputBuffer)
-        }
+        let output = OutputBuffer outputBuffer
 
-
-    exception ProcessFailed of string
-
-    let SafeExecute(procDetails: ProcessDetails, echo: Echo) : ProcessResult =
-        let procResult = Execute(procDetails, echo)
-
-        if not(procResult.ExitCode = 0) then
-            if (echo = Echo.Off) then
-                Console.WriteLine(procResult.Output.StdOut)
-                Console.Error.WriteLine(procResult.Output.StdErr)
-                Console.Error.WriteLine()
-
-            raise
-            <| ProcessFailed(
-                String.Format(
-                    "Command '{0}' failed with exit code {1}. Arguments supplied: '{2}'",
-                    procDetails.Command,
-                    procResult.ExitCode.ToString(),
-                    procDetails.Arguments
-                )
-            )
-
-        procResult
+        match exitCode with
+        | 0 when output.StdErr.Length = 0 ->
+            {
+                Details = procDetails
+                Result = ProcessResultState.Success output.StdOut
+            }
+        | 0 ->
+            {
+                Details = procDetails
+                Result = ProcessResultState.WarningsOrAmbiguous output
+            }
+        | _ ->
+            {
+                Details = procDetails
+                Result = ProcessResultState.Error(exitCode, output)
+            }
 
     let rec private ExceptionIsOfTypeOrIncludesAnyInnerExceptionOfType
         (
