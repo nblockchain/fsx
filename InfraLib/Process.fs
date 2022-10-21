@@ -160,7 +160,43 @@ module Process =
                 | Standard.Output -> proc.StandardOutput
                 | Standard.Error -> proc.StandardError
 
-            let rec ReadIterationInner() : bool =
+            let ReadIteration() : bool =
+                let append(charToAppend: char) : unit =
+
+                    let newBuilder = StringBuilder(charToAppend.ToString())
+
+                    match outputBuffer with
+                    | [] ->
+                        let newBlock =
+                            match std with
+                            | Standard.Output ->
+                                {
+                                    OutputType = Standard.Output
+                                    Chunk = newBuilder
+                                }
+                            | Standard.Error ->
+                                {
+                                    OutputType = Standard.Error
+                                    Chunk = newBuilder
+                                }
+
+                        outputBuffer <- List.singleton newBlock
+                    | head :: _tail ->
+                        if head.OutputType = std then
+                            head.Chunk.Append charToAppend |> ignore
+                        else
+                            let newBlock =
+                                {
+                                    OutputType = std
+                                    Chunk = newBuilder
+                                }
+
+                            outputBuffer <- newBlock :: outputBuffer
+
+                    if not(echo = Echo.Off) then
+                        print charToAppend
+                        flush()
+
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
                 // it to 1 makes it slow but then the order is only relying (in theory) on how the
@@ -193,51 +229,13 @@ module Process =
                         "StreamReader.Read() should not read more than the bufferSize if we passed the bufferSize as a parameter"
 
                 let singleChar =
-                    let append(charToAppend: char) =
-
-                        let newBuilder = StringBuilder(charToAppend.ToString())
-
-                        match outputBuffer with
-                        | [] ->
-                            let newBlock =
-                                match std with
-                                | Standard.Output ->
-                                    {
-                                        OutputType = Standard.Output
-                                        Chunk = newBuilder
-                                    }
-                                | Standard.Error ->
-                                    {
-                                        OutputType = Standard.Error
-                                        Chunk = newBuilder
-                                    }
-
-                            outputBuffer <- List.singleton newBlock
-                        | head :: _tail ->
-                            if head.OutputType = std then
-                                head.Chunk.Append charToAppend |> ignore
-                            else
-                                let newBlock =
-                                    {
-                                        OutputType = std
-                                        Chunk = newBuilder
-                                    }
-
-                                outputBuffer <- newBlock :: outputBuffer
 
                     // meaning readCount < bufferSize (and bufferSize being 1 means readCount=0 or negative)
                     if readCount <> bufferSize then
                         None
                     else
-                        let leChar =
-                            outChar.[uniqueElementIndexInTheSingleCharBuffer]
-
-                        if not(echo = Echo.Off) then
-                            print leChar
-                            flush()
-
-                        append leChar
-                        Some leChar
+                        outChar.[uniqueElementIndexInTheSingleCharBuffer]
+                        |> Some
 
                 match singleChar with
                 | None when
@@ -246,15 +244,20 @@ module Process =
                     ->
                     false
                 | None -> true
-                | Some '\n' -> true
-                | _ -> ReadIterationInner()
 
-            let ReadIteration() : bool =
-                try
-                    queuedLock.Enter()
-                    ReadIterationInner()
-                finally
-                    queuedLock.Exit()
+                // FIXME: only appending after \n was a previous approach that
+                // helped with the test "testProcessConcurrency.fsx" (it was
+                // passing in Linux, even if it sometimes failed in macOS):
+                //| Some '\n' -> ...
+
+                | Some char ->
+                    try
+                        queuedLock.Enter()
+                        append char
+                    finally
+                        queuedLock.Exit()
+
+                    true
 
             // this is a way to do a `do...while` loop in F#...
             while (ReadIteration()) do
