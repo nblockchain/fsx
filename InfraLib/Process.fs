@@ -245,6 +245,7 @@ module Process =
                     || (readCount = 0 && outputToReadFrom.EndOfStream)
                     ->
                     false
+                | None -> true
                 | Some '\n' -> true
                 | _ -> ReadIterationInner()
 
