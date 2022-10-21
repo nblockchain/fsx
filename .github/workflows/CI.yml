@@ -28,10 +28,18 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+
     - name: install
-      run: make install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
     - name: run tests
       run: ./scripts/test.sh
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./ci-build.fsx
 
   linux:
     runs-on: ubuntu-20.04
@@ -47,10 +55,18 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+
     - name: install
-      run: sudo make install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
     - name: run tests
       run: ./scripts/test.sh
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./ci-build.fsx
 
   windows:
     runs-on: windows-latest

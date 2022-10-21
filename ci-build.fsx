@@ -51,10 +51,12 @@ let rec FindFsxc() : FileInfo =
         FindFsxc()
 
     elif findFsxcExeFiles().Count() > 1 then
+
         Console.Error.WriteLine(
             sprintf
-                "More than one %s file found, please just leave one"
+                "More than one %s file found (%s), please just leave one"
                 fsxCompiler
+                (String.Join(", ", findFsxcExeFiles()))
         )
 
         Environment.Exit 1
