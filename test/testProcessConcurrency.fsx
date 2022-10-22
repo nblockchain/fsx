@@ -25,8 +25,7 @@ while (retryCount < 20) do //this is a stress test
 
     let actual =
         (procResult
-            .Output
-            .ToString()
+            .UnwrapDefault()
             .Replace(Environment.NewLine, "-"))
 
     let expected = "foo-bar-baz-"

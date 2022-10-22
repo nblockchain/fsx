@@ -414,7 +414,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                     else
                         Echo.Off
 
-                let processResult =
+                let proc =
                     Process.Execute(
                         {
                             Command = "fsharpc"
@@ -423,10 +423,15 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                         echo
                     )
 
-                if processResult.ExitCode <> 0 then
-                    processResult.Output.PrintToConsole()
+                let exitCode =
+                    match proc.Result with
+                    | Error(exitCode, output) ->
+                        output.PrintToConsole()
+                        exitCode
+                    | ProcessResultState.Success _
+                    | WarningsOrAmbiguous _ -> 0
 
-                processResult.ExitCode, exeTarget
+                exitCode, exeTarget
 
             finally
                 restoreBackups compilerInputs

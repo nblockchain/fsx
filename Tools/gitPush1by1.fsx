@@ -40,7 +40,12 @@ let GitSpecificPush
                     forceFlag
         }
 
-    Process.SafeExecute(gitPush, Echo.OutputOnly) |> ignore
+    let pushProc = Process.Execute(gitPush, Echo.OutputOnly)
+
+    match pushProc.Result with
+    | Error _ -> failwith "Push failed ^"
+    | WarningsOrAmbiguous _
+    | Success _ -> ()
 
 let GitFetch(remoteOpt: Option<string>) =
     let remoteArg =
@@ -54,7 +59,12 @@ let GitFetch(remoteOpt: Option<string>) =
             Arguments = sprintf "fetch %s" remoteArg
         }
 
-    Process.SafeExecute(gitFetch, Echo.OutputOnly) |> ignore
+    let fetchProc = Process.Execute(gitFetch, Echo.OutputOnly)
+
+    match fetchProc.Result with
+    | Error _ -> failwith "Fetch failed ^"
+    | WarningsOrAmbiguous _
+    | Success _ -> ()
 
 let GetLastNthCommitFromRemoteBranch
     (remoteName: string)
@@ -68,10 +78,10 @@ let GetLastNthCommitFromRemoteBranch
                 sprintf "show %s/%s~%i --no-patch" remoteName remoteBranch n
         }
 
-    let gitShowProc = Process.SafeExecute(gitShow, Echo.Off)
+    let gitShowProcOutput = Process.Execute(gitShow, Echo.Off).UnwrapDefault()
 
     let firstLine =
-        (Misc.CrossPlatformStringSplitInLines gitShowProc.Output.StdOut)
+        (Misc.CrossPlatformStringSplitInLines gitShowProcOutput)
             .First()
 
     // split this line: commit 938634a3e7d4dc7e6dd357927a16165120bbea68 (HEAD -> master, origin/master, origin/HEAD)
@@ -97,7 +107,7 @@ let FindUnpushedCommits (remoteName: string) (remoteBranch: string) =
 
         let currentHash =
             Process
-                .SafeExecute(
+                .Execute(
                     {
                         Command = "git"
                         Arguments =
@@ -107,7 +117,8 @@ let FindUnpushedCommits (remoteName: string) (remoteBranch: string) =
                     },
                     Echo.Off
                 )
-                .Output.StdOut.Trim()
+                .UnwrapDefault()
+                .Trim()
 
         let newRemoteCommits =
             (GetLastNthCommitFromRemoteBranch
@@ -136,7 +147,7 @@ let GetLastCommits(count: UInt32) =
         else
             let currentHash =
                 Process
-                    .SafeExecute(
+                    .Execute(
                         {
                             Command = "git"
                             Arguments =
@@ -146,7 +157,8 @@ let GetLastCommits(count: UInt32) =
                         },
                         Echo.Off
                     )
-                    .Output.StdOut.Trim()
+                    .UnwrapDefault()
+                    .Trim()
 
             getLastCommits
                 (currentHash :: commitsFoundSoFar)

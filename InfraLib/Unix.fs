@@ -11,7 +11,7 @@ module Unix =
 
     let AbortIfNotDistroAndVersion(distro: string, version: string) =
         let procResult =
-            Process.SafeExecute(
+            Process.Execute(
                 {
                     Command = "lsb_release"
                     Arguments = "-a"
@@ -19,7 +19,9 @@ module Unix =
                 Echo.Off
             )
 
-        let tsvMap = Misc.TsvParse(procResult.Output.StdOut)
+        let output = procResult.UnwrapDefault()
+
+        let tsvMap = Misc.TsvParse output
         let thisDistro = tsvMap.TryFind("Distributor ID:")
 
         let err =
@@ -62,10 +64,12 @@ module Unix =
 
         let procs =
             List.ofSeq(
-                procResult.Output.StdOut.Split(
-                    [| Environment.NewLine |],
-                    StringSplitOptions.RemoveEmptyEntries
-                )
+                procResult
+                    .UnwrapDefault()
+                    .Split(
+                        [| Environment.NewLine |],
+                        StringSplitOptions.RemoveEmptyEntries
+                    )
             )
 
         let processes =
@@ -101,7 +105,7 @@ module Unix =
 
     let mutable firstTimeSudoIsRun = true
 
-    let private SudoInternal(command: string, safe: bool) : Option<int> =
+    let private SudoInternal(command: string) =
         if not(Process.CommandWorksInShell "id") then
             Console.Error.WriteLine(
                 "'id' unix command is needed for this script to work"
@@ -118,8 +122,7 @@ module Unix =
                     },
                     Echo.Off
                 )
-                .Output
-                .StdOut
+                .UnwrapDefault()
 
         let alreadySudo = (idOutput.Trim() = "0")
 
@@ -134,13 +137,15 @@ module Unix =
             failwith "'sudo' unix command is needed for this script to work"
 
         if ((not(alreadySudo)) && firstTimeSudoIsRun) then
-            Process.SafeExecute(
-                {
-                    Command = "sudo"
-                    Arguments = "-k"
-                },
-                Echo.All
-            )
+            Process
+                .Execute(
+                    {
+                        Command = "sudo"
+                        Arguments = "-k"
+                    },
+                    Echo.All
+                )
+                .UnwrapDefault()
             |> ignore
 
         if (not(alreadySudo)) then
@@ -172,27 +177,15 @@ module Unix =
                     Arguments = argsToPass
                 }
 
-            if safe then
-                Process.SafeExecute(cmd, Echo.All) |> ignore
-                None
-            else
-                Some(Process.Execute(cmd, Echo.All).ExitCode)
+            Process.Execute(cmd, Echo.All)
 
         if (not(alreadySudo)) then
             firstTimeSudoIsRun <- false
 
         result
 
-    let UnsafeSudo(command: string) =
-        let res = SudoInternal(command, false)
-
-        if res.IsNone then
-            failwith "Abnormal None result from SudoInternal(_,false)"
-
-        res.Value
-
     let Sudo(command: string) : unit =
-        SudoInternal(command, true) |> ignore
+        (SudoInternal command).UnwrapDefault() |> ignore<string>
 
     let MAX_TIME_TO_WAIT_FOR_A_PROCESS_TO_DIE = TimeSpan.FromSeconds(float 30)
 
@@ -254,17 +247,6 @@ module Unix =
             echo
         )
 
-    let SafeExecuteBashCommand(commandWithArguments: string, echo: Echo) =
-        let args = ArgsForBash(commandWithArguments)
-
-        Process.SafeExecute(
-            {
-                Command = "bash"
-                Arguments = args
-            },
-            echo
-        )
-
     type AptPackage =
         | Missing
         | ExistingVersion of string
@@ -283,13 +265,18 @@ module Unix =
                 Arguments = String.Format("-s {0}", packageName)
             }
 
-        let procResult = Process.Execute(cmd, Echo.Off)
+        let proc = Process.Execute(cmd, Echo.Off)
 
-        if not(procResult.ExitCode = 0) then
-            AptPackage.Missing
-        else
+        match proc.Result with
+        | Error _ -> AptPackage.Missing
+        | WarningsOrAmbiguous output ->
+            output.PrintToConsole()
+            Console.WriteLine()
+            Console.Out.Flush()
+            failwith "Unexpected output from dpkg (with warnings?)"
+        | Success output ->
             let dpkgLines =
-                procResult.Output.StdOut.Split(
+                output.Split(
                     [| Environment.NewLine |],
                     StringSplitOptions.RemoveEmptyEntries
                 )
@@ -313,7 +300,7 @@ module Unix =
         Console.WriteLine()
         Console.WriteLine(sprintf "Downloading %s..." packageName)
 
-        let procResult =
+        let proc =
             Process.Execute(
                 {
                     Command = "apt"
@@ -322,50 +309,59 @@ module Unix =
                 Echo.OutputOnly
             )
 
-        if procResult.ExitCode = 0 then
-            Console.WriteLine(sprintf "Downloaded %s" packageName)
-        elif (procResult.Output.StdErr.Contains
-                  "E: Can't select candidate version from package") then
-            InstallAptPackageIfNotAlreadyInstalled "aptitude"
+        match proc.Result with
+        | Success _ -> Console.WriteLine(sprintf "Downloaded %s" packageName)
+        | WarningsOrAmbiguous output ->
+            output.PrintToConsole()
+            Console.WriteLine()
+            Console.Out.Flush()
+            failwith "Unexpected output from apt (with warnings?)"
+        | Error(_exitCode, output) ->
+            if
+                output.StdErr.Contains
+                    "E: Can't select candidate version from package" then
+                InstallAptPackageIfNotAlreadyInstalled "aptitude"
 
-            let aptitudeShowProc =
-                Process.SafeExecute(
-                    {
-                        Command = "aptitude"
-                        Arguments = sprintf "show %s" packageName
-                    },
-                    Echo.Off
-                )
-
-            let lines =
-                aptitudeShowProc.Output.StdOut.Split(
-                    [| Environment.NewLine |],
-                    StringSplitOptions.RemoveEmptyEntries
-                )
-
-            for line in lines do
-                if line.StartsWith "Provided by:" then
-                    Console.WriteLine()
-                    Console.WriteLine()
-
-                    Console.WriteLine(
-                        sprintf
-                            "Virtual package '%s' found, provided by:"
-                            packageName
+                let aptitudeShowProc =
+                    Process.Execute(
+                        {
+                            Command = "aptitude"
+                            Arguments = sprintf "show %s" packageName
+                        },
+                        Echo.Off
                     )
 
-                    Console.WriteLine(line.Substring("Provided by:".Length))
-                    Console.Write "Choose the package from the list above: "
-                    let pkg = Console.ReadLine()
-                    DownloadAptPackage pkg
-        else
-            failwith "The 'apt download' command ended with error"
+                let lines =
+                    aptitudeShowProc
+                        .UnwrapDefault()
+                        .Split(
+                            [| Environment.NewLine |],
+                            StringSplitOptions.RemoveEmptyEntries
+                        )
+
+                for line in lines do
+                    if line.StartsWith "Provided by:" then
+                        Console.WriteLine()
+                        Console.WriteLine()
+
+                        Console.WriteLine(
+                            sprintf
+                                "Virtual package '%s' found, provided by:"
+                                packageName
+                        )
+
+                        Console.WriteLine(line.Substring("Provided by:".Length))
+                        Console.Write "Choose the package from the list above: "
+                        let pkg = Console.ReadLine()
+                        DownloadAptPackage pkg
+            else
+                failwith "The 'apt download' command ended with error"
 
     let DownloadAptPackageRecursively(packageName: string) =
         InstallAptPackageIfNotAlreadyInstalled "apt-rdepends"
 
         let aptRdependsProc =
-            Process.SafeExecute(
+            Process.Execute(
                 {
                     Command = "apt-rdepends"
                     Arguments = packageName
@@ -374,10 +370,12 @@ module Unix =
             )
 
         let lines =
-            aptRdependsProc.Output.StdOut.Split(
-                [| Environment.NewLine |],
-                StringSplitOptions.RemoveEmptyEntries
-            )
+            aptRdependsProc
+                .UnwrapDefault()
+                .Split(
+                    [| Environment.NewLine |],
+                    StringSplitOptions.RemoveEmptyEntries
+                )
 
         for line in lines do
             if not(line.Trim().Contains("Depends:")) then
@@ -435,8 +433,9 @@ module Unix =
 
         let arch =
             Process
-                .SafeExecute(cmd, Echo.Off)
-                .Output.StdOut.Trim()
+                .Execute(cmd, Echo.Off)
+                .UnwrapDefault()
+                .Trim()
 
         let textToFind = sprintf "%s/binary-%s/Packages" name arch
         let uri = sprintf "%s/dists/%s/Release" url dist
@@ -477,7 +476,7 @@ module Unix =
                 Arguments = String.Format("-c \"%a\" {0}", fileOrDir.FullName)
             }
 
-        let output = Process.SafeExecute(cmd, Echo.Off).Output.StdOut
+        let output = Process.Execute(cmd, Echo.Off).UnwrapDefault()
         Int32.Parse(output.Trim())
 
     type Server =
@@ -508,7 +507,7 @@ module Unix =
                             String.Format("-t {0} cat /etc/passwd", address)
                     }
 
-                let output = Process.Execute(cmd, Echo.Off).Output.StdOut
+                let output = Process.Execute(cmd, Echo.Off).UnwrapDefault()
 
                 output.Split(
                     [| Environment.NewLine |],
@@ -525,7 +524,7 @@ module Unix =
                 Arguments = "group"
             }
 
-        let output = Process.SafeExecute(cmd, Echo.Off).Output.StdOut
+        let output = Process.Execute(cmd, Echo.Off).UnwrapDefault()
 
         let lines =
             output.Split(
@@ -579,7 +578,7 @@ module Unix =
                             )
                     }
 
-                Process.SafeExecute(cmd, Echo.All) |> ignore
+                Process.Execute(cmd, Echo.All).UnwrapDefault() |> ignore<string>
 
     let SudoFileExists(path: string) : bool =
         let cmd =
@@ -588,8 +587,15 @@ module Unix =
                 Arguments = String.Format("stat -c \"\" {0}", path)
             }
 
-        let exitCode = Process.Execute(cmd, Echo.Off).ExitCode
-        (exitCode = 0)
+        match Process.Execute(cmd, Echo.Off).Result with
+        | Success _ -> true
+        | Error _ -> false
+        | WarningsOrAmbiguous output ->
+            output.PrintToConsole()
+            Console.WriteLine()
+            Console.Out.Flush()
+            Console.Error.Flush()
+            failwith "Unexpected 'sudo' output ^ (with warnings?)"
 
     let AddRemoteServerFingerprintsToLocalKnownHostsFile
         (
@@ -643,7 +649,7 @@ module Unix =
                     String.Format("-c \"%U\" {0}", fileOrDirectory.FullName)
             }
 
-        let output = Process.SafeExecute(cmd, Echo.Off).Output.StdOut
+        let output = Process.Execute(cmd, Echo.Off).UnwrapDefault()
         output.Trim()
 
     let ChangeOwner
@@ -716,8 +722,8 @@ module Unix =
     let ShellIsEnabledForUserOnThisServer(username: string) =
         let someRandomCommandWhichShouldWork = "exit"
 
-        let exitCode =
-            UnsafeSudo(
+        let sudoProc =
+            SudoInternal(
                 String.Format(
                     "runuser -l {0} -c '{1}'",
                     username,
@@ -725,7 +731,14 @@ module Unix =
                 )
             )
 
-        (exitCode = 0)
+        match sudoProc.Result with
+        | Success _ -> true
+        | Error _ -> false
+        | WarningsOrAmbiguous output ->
+            output.PrintToConsole()
+            Console.WriteLine()
+            Console.Out.Flush()
+            failwith "Unexpected output from runuser (with warnings?)"
 
     let ChangeShellForUser(username: string, shell: string, server: Server) =
         //FIXME: should parse /etc/passwd first to see if it's needed or already done
@@ -741,7 +754,7 @@ module Unix =
                         String.Format("-t {0} sudo {1}", address, command)
                 }
 
-            Process.SafeExecute(cmd, Echo.All) |> ignore
+            Process.Execute(cmd, Echo.All).UnwrapDefault() |> ignore<string>
 
     let EnableShellForUser(username: string, server: Server) =
         ChangeShellForUser(username, "/bin/bash", server)
@@ -756,7 +769,7 @@ module Unix =
                 Arguments = String.Empty
             }
 
-        let whoAmIoutput = Process.SafeExecute(cmd, Echo.Off).Output.StdOut
+        let whoAmIoutput = Process.Execute(cmd, Echo.Off).UnwrapDefault()
         whoAmIoutput.Trim()
 
     let SetupPasswordLessLogin(host: string, user: string) =
@@ -834,7 +847,7 @@ module Unix =
                     )
             }
 
-        Process.SafeExecute(cmd, Echo.All) |> ignore
+        Process.Execute(cmd, Echo.All).UnwrapDefault() |> ignore<string>
 
     let private NeedsSudo(user: string) : bool =
         if (WhoAmI() = user) then
@@ -859,7 +872,7 @@ module Unix =
 
         if copyFile then
             if requireSudo then
-                Sudo(String.Format("cp {0} {1}", source, dest)) |> ignore
+                Sudo(String.Format("cp {0} {1}", source, dest))
             else
                 source.CopyTo(destFile.FullName, true) |> ignore
 
@@ -942,6 +955,7 @@ module Unix =
                             }
 
                         Process.Execute(cmd, Echo.Off)
+
                     else
                         Process.Execute(
                             {
@@ -955,12 +969,12 @@ module Unix =
                     if needsSudo then
                         DisableShellForUser(user, Server.ThisServer)
 
-            if not(procResult.ExitCode = 0) then
-                Console.WriteLine(procResult.Output.StdOut)
-                Console.Error.WriteLine(procResult.Output.StdErr)
+            match procResult.Result with
+            | Success output -> SshClient.Address(output.Split(' ').[0])
+            | Error(_, output)
+            | WarningsOrAmbiguous output ->
+                output.PrintToConsole()
                 SshClient.ErrorConnecting
-            else
-                SshClient.Address(procResult.Output.StdOut.Split(' ').[0])
 
 
     let ListCrontab(username: string) =
@@ -1128,13 +1142,19 @@ module Unix =
                         )
                 }
 
-        let procResult = Process.Execute(finalListCommand, Echo.Off)
+        let proc = Process.Execute(finalListCommand, Echo.Off)
 
         let curatedOutput =
-            if not(procResult.ExitCode = 0) then
-                String.Empty
-            else
-                procResult.Output.StdOut.Trim()
+            match proc.Result with
+            | Success output -> output.Trim()
+            | Error _ -> String.Empty
+            | WarningsOrAmbiguous output ->
+                output.PrintToConsole()
+                Console.WriteLine()
+                Console.Out.Flush()
+
+                failwith
+                    "Unexpected output command to list crontab (with warnings?)"
 
         let cronJobs =
             List.ofArray(
@@ -1172,7 +1192,10 @@ module Unix =
                     String.Format("cat {0} | crontab -", tempFile)
 
             match server with
-            | ThisServer -> SafeExecuteBashCommand(command, Echo.Off) |> ignore
+            | ThisServer ->
+                ExecuteBashCommand(command, Echo.Off)
+                    .UnwrapDefault()
+                |> ignore<string>
             | RemoteServer address ->
                 let shellWasTweaked =
                     if not(ShellIsEnabledForUserOnThisServer(username)) then
@@ -1192,14 +1215,17 @@ module Unix =
                             tempFile
                         )
 
-                    Process.SafeExecute(
-                        {
-                            Command = "sudo"
-                            Arguments = cmdArgs
-                        },
-                        Echo.All
-                    )
-                    |> ignore
+                    Process
+                        .Execute(
+                            {
+                                Command = "sudo"
+                                Arguments = cmdArgs
+                            },
+                            Echo.All
+                        )
+                        .UnwrapDefault()
+                    |> ignore<string>
+
                 finally
                     if shellWasTweaked then
                         DisableShellForUser(username, Server.ThisServer)
@@ -1214,14 +1240,16 @@ module Unix =
                         tempFile
                     )
 
-                Process.SafeExecute(
-                    {
-                        Command = "ssh"
-                        Arguments = sshArgs
-                    },
-                    Echo.All
-                )
-                |> ignore
+                Process
+                    .Execute(
+                        {
+                            Command = "ssh"
+                            Arguments = sshArgs
+                        },
+                        Echo.All
+                    )
+                    .UnwrapDefault()
+                |> ignore<string>
 
         finally
             File.Delete(tempFile)

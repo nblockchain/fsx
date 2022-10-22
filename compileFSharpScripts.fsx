@@ -44,9 +44,7 @@ let rec FindFsxc(nestedCall: bool) : bool * FileInfo =
                 Echo.All
             )
 
-        if configureProc.ExitCode <> 0 then
-            Environment.Exit 1
-            failwith "Unreachable"
+        configureProc.UnwrapDefault() |> ignore<string>
 
         let makeProc =
             Process.Execute(
@@ -57,9 +55,12 @@ let rec FindFsxc(nestedCall: bool) : bool * FileInfo =
                 Echo.All
             )
 
-        if makeProc.ExitCode <> 0 then
-            Environment.Exit 1
-            failwith "Unreachable"
+        match makeProc.Result with
+        | Error _ ->
+            Console.WriteLine()
+            Console.Out.Flush()
+            failwith "Compilation failed"
+        | _ -> ()
 
         Directory.SetCurrentDirectory prevCurrentDir
 
@@ -97,7 +98,7 @@ let buildFsxScript (script: string) (soFar: bool) : bool =
 
     Console.WriteLine(sprintf "Building %s" script)
 
-    let procResult =
+    let proc =
         Process.Execute(
             {
                 Command = fsxLocation.FullName
@@ -107,8 +108,13 @@ let buildFsxScript (script: string) (soFar: bool) : bool =
         )
 
     let success =
-        match procResult.ExitCode with
-        | 0 -> true
+        match proc.Result with
+        | Success _ -> true
+        | WarningsOrAmbiguous output ->
+            output.PrintToConsole()
+            Console.WriteLine()
+            Console.Out.Flush()
+            failwith "Unexpected 'fsx' output ^ (with warnings?)"
         | _ -> false
 
     Console.WriteLine()

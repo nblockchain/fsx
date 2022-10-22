@@ -385,7 +385,7 @@ module Process =
         if not(WhichCommandWorksInShell()) then
             failwith "'which' doesn't work, please install it first"
 
-        let procResult =
+        let proc =
             Execute(
                 {
                     Command = "which"
@@ -394,9 +394,15 @@ module Process =
                 Echo.Off
             )
 
-        match procResult.ExitCode with
-        | 0 -> true
-        | _ -> false
+        match proc.Result with
+        | ProcessResultState.Error _ -> false
+        | ProcessResultState.WarningsOrAmbiguous output ->
+            output.PrintToConsole()
+            Console.WriteLine()
+            Console.Out.Flush()
+            Console.Error.Flush()
+            failwith "Unexpected 'which' output ^ (with warnings?)"
+        | ProcessResultState.Success _ -> true
 
     let private HasWindowsExecutableExtension(path: string) =
         //FIXME: should do it in a case-insensitive way

@@ -43,13 +43,16 @@ if (String.IsNullOrWhiteSpace(home)) then
 
 let homeLog = Path.Combine(home, "log")
 
-Process.SafeExecute(
-    {
-        Command = "mkdir"
-        Arguments = sprintf "-p %s" homeLog
-    },
-    Echo.Off
-)
+Process
+    .Execute(
+        {
+            Command = "mkdir"
+            Arguments = sprintf "-p %s" homeLog
+        },
+        Echo.Off
+    )
+    .UnwrapDefault()
+|> ignore<string>
 
 let command = arguments.First()
 let argumentsOfCommand = String.Join(" ", List.skip 1 arguments)
@@ -75,14 +78,20 @@ let fullCommand =
         logForStdErr
     )
 
-let procResult = Unix.ExecuteBashCommand(fullCommand, Echo.Off)
+let proc = Unix.ExecuteBashCommand(fullCommand, Echo.Off)
 
-if (procResult.ExitCode = 0) then
+match proc.Result with
+| ProcessResultState.Success _ ->
     let stdErrLog = new FileInfo(logForStdErr)
 
     if (stdErrLog.Exists && stdErrLog.Length = 0L) then
         stdErrLog.Delete()
-else
+| ProcessResultState.WarningsOrAmbiguous output ->
+    output.PrintToConsole()
+    Console.WriteLine()
+    Console.Out.Flush()
+    failwith "Unexpected output ^ (with warnings?)"
+| _ ->
     let stdErrLines = File.ReadAllLines(logForStdErr)
 
     let lines =
@@ -130,18 +139,24 @@ let logForLastStdErrName = sprintf "%s.last.err.log" commandName
 let logForLastStdOutSymLink = Path.Combine(homeLog, logForLastStdOutName)
 let logForLastStdErrSymLink = Path.Combine(homeLog, logForLastStdErrName)
 
-Process.SafeExecute(
-    {
-        Command = "ln"
-        Arguments = sprintf "-fs %s %s" logForStdOut logForLastStdOutSymLink
-    },
-    Echo.Off
-)
+Process
+    .Execute(
+        {
+            Command = "ln"
+            Arguments = sprintf "-fs %s %s" logForStdOut logForLastStdOutSymLink
+        },
+        Echo.Off
+    )
+    .UnwrapDefault()
+|> ignore<string>
 
-Process.SafeExecute(
-    {
-        Command = "ln"
-        Arguments = sprintf "-fs %s %s" logForStdErr logForLastStdErrSymLink
-    },
-    Echo.Off
-)
+Process
+    .Execute(
+        {
+            Command = "ln"
+            Arguments = sprintf "-fs %s %s" logForStdErr logForLastStdErrSymLink
+        },
+        Echo.Off
+    )
+    .UnwrapDefault()
+|> ignore<string>

@@ -68,23 +68,30 @@ let RunNugetCommand (command: string) echoMode (safe: bool) =
                 Arguments = command
             }
 
+    let proc = Process.Execute(nugetCmd, echoMode)
+
     if safe then
-        Process.SafeExecute(nugetCmd, echoMode)
-    else
-        Process.Execute(nugetCmd, echoMode)
+        proc.UnwrapDefault() |> ignore<string>
+
+    proc
 
 let PrintNugetVersion() =
     if not NugetExe.Exists then
         false
     else
-        let nugetProc = RunNugetCommand String.Empty Echo.Off false
-        Console.WriteLine nugetProc.Output.StdOut
+        let nugetProc = RunNugetCommand String.Empty Echo.OutputOnly false
 
-        if nugetProc.ExitCode = 0 then
-            true
-        else
-            nugetProc.Output.PrintToConsole()
+        match nugetProc.Result with
+        | ProcessResultState.Success _ -> true
+        | ProcessResultState.WarningsOrAmbiguous _output ->
             Console.WriteLine()
+            Console.Out.Flush()
+
+            failwith
+                "nuget process succeeded but the output contained warnings ^"
+        | ProcessResultState.Error(_exitCode, _output) ->
+            Console.WriteLine()
+            Console.Out.Flush()
             failwith "nuget process' output contained errors ^"
 
 let ConfigCommandCheck
@@ -149,14 +156,8 @@ let FindBuildTool() =
                 Arguments = "-find MSBuild\\**\\Bin\\MSBuild.exe"
             }
 
-        let processResult = Process.Execute(vswhereCmd, Echo.Off)
-
-        if processResult.ExitCode <> 0 then
-            processResult.Output.PrintToConsole()
-            Console.WriteLine()
-            failwith "Some problem when calling vsWhere.exe ^"
-
-        let msbuildPath = processResult.Output.StdOut.Trim()
+        let procResult = Process.Execute(vswhereCmd, Echo.Off)
+        let msbuildPath = procResult.UnwrapDefault().Trim()
         msbuildPath
 
 
@@ -180,12 +181,14 @@ let BuildSolution
             Echo.All
         )
 
-    if (buildProcess.ExitCode <> 0) then
-        buildProcess.Output.PrintToConsole()
+    match buildProcess.Result with
+    | Error _ ->
         Console.WriteLine()
+        Console.Out.Flush()
         Console.Error.WriteLine(sprintf "%s build failed ^" buildTool)
         PrintNugetVersion() |> ignore
         Environment.Exit 1
+    | _ -> ()
 
 let JustBuild binaryConfig =
     let solFile = "fsx.sln"
