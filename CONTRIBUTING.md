@@ -9,7 +9,7 @@ comply with this policy, you can keep a fork in your github account.
 
 * For formatting/indentation, please use fantomless-tool (install it
 via `dotnet tool install -g fantomless-tool --version $version`, using
-the same $version we use, which you can find in our .CI pipelines). In
+the same $version we use, which you can find in our CI pipelines). In
 fact our CI checks that the formatting is the same as the one done by
 this tool, so we recommend you to install this in a git pre-commit hook;
 see how to do this here:
