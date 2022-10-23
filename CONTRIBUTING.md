@@ -23,3 +23,5 @@ https://github.com/nblockchain/fantomless/commit/138146e3e8fc7e8d9d8404ef9956ace
 For reference on how we like commit messages to be formatted, and other
 recommendations, please read our
 [Workflow guidelines](https://github.com/nblockchain/conventions/blob/master/WorkflowGuidelines.md).
+We even have a CI step that checks for common mistakes in commit messages,
+based on a tool called 'commitlint'.
