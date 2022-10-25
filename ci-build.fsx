@@ -13,7 +13,7 @@ open System.Configuration
 open FSX.Infrastructure
 open Process
 
-let rec FindFsxc() : FileInfo =
+let rec FindFsxc(nestedCall: bool) : FileInfo =
     let fsxCompiler = "fsxc.exe"
 
     let fsxcBinDir = Path.Combine(__SOURCE_DIRECTORY__, "fsxc", "bin")
@@ -22,6 +22,13 @@ let rec FindFsxc() : FileInfo =
         Directory.GetFiles(fsxcBinDir, fsxCompiler, SearchOption.AllDirectories)
 
     if not(Directory.Exists fsxcBinDir) || not(findFsxcExeFiles().Any()) then
+        if nestedCall then
+            Console.Error.WriteLine(
+                sprintf "'%s' compilation didn't work?" fsxCompiler
+            )
+
+            Environment.Exit 1
+
         let configureProc =
             Process.Execute(
                 {
@@ -48,7 +55,7 @@ let rec FindFsxc() : FileInfo =
             Environment.Exit 1
             failwith "Unreachable"
 
-        FindFsxc()
+        FindFsxc true
 
     elif findFsxcExeFiles().Count() > 1 then
 
@@ -65,7 +72,7 @@ let rec FindFsxc() : FileInfo =
     else
         findFsxcExeFiles().Single() |> FileInfo
 
-let fsxLocation = FindFsxc()
+let fsxLocation = FindFsxc false
 
 Console.WriteLine("Checking if all .fsx scripts build")
 
