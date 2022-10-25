@@ -80,6 +80,6 @@ before_script:
   - sudo apt install --yes fsharp
 build:
   script:
-    - ./fsx/ci-build.fsx
+    - fsharpi ./fsx/ci-build.fsx
 ```
 
