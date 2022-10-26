@@ -68,7 +68,7 @@ After installing, you can already use the `#!/usr/bin/env fsx` shebang in your s
 If you want to use fsx without having to change the shebang of all your scripts, just
 run `fsx yourscript.fsx` every time.
 
-For your CI needs, you could include fsx repository as a submodule, and then bootstrap it in your CI script, and call `ci-build.fsx`, which will find all the F# script files in your repository and try to compile them (but not run them). An example of how to do this with GitLabCI, is this `.gitlab-ci.yml` configuration file sample:
+For your CI needs, you could include fsx repository as a submodule, and then bootstrap it in your CI script, and call `compileFSharpScripts.fsx`, which will find all the F# script files in your repository and try to compile them (but not run them). An example of how to do this with GitLabCI, is this `.gitlab-ci.yml` configuration file sample:
 
 ```
 image: ubuntu:20.04
@@ -80,6 +80,6 @@ before_script:
   - sudo apt install --yes fsharp
 build:
   script:
-    - fsharpi ./fsx/ci-build.fsx
+    - fsharpi ./fsx/compileFSharpScripts.fsx
 ```
 

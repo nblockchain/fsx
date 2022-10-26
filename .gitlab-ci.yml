@@ -37,7 +37,7 @@ buildScripts-stockmono:
 
     - ./configure.sh && make install
     - ./scripts/test.sh
-    - ./ci-build.fsx
+    - ./compileFSharpScripts.fsx
 
 buildScripts-newmono:
   image: ubuntu:20.04
@@ -47,7 +47,7 @@ buildScripts-newmono:
 
     - ./configure.sh && make install
     - ./scripts/test.sh
-    - ./ci-build.fsx
+    - ./compileFSharpScripts.fsx
 
 test-stockmono:
   image: ubuntu:20.04

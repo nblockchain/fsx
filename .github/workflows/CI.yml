@@ -51,7 +51,7 @@ jobs:
     - name: run tests
       run: ./scripts/test.sh
     - name: compile this repo's .fsx scripts with fsx
-      run: ./ci-build.fsx
+      run: ./compileFSharpScripts.fsx
 
   linux:
     runs-on: ubuntu-20.04
@@ -78,7 +78,7 @@ jobs:
     - name: run tests
       run: ./scripts/test.sh
     - name: compile this repo's .fsx scripts with fsx
-      run: ./ci-build.fsx
+      run: ./compileFSharpScripts.fsx
 
   windows:
     runs-on: windows-latest
