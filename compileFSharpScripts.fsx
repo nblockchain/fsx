@@ -14,8 +14,9 @@ open FSX.Infrastructure
 open Process
 
 let fsxRootDir = __SOURCE_DIRECTORY__ |> DirectoryInfo
+let fsxTestsDir = Path.Combine(fsxRootDir.FullName, "test") |> DirectoryInfo
 
-let rec FindFsxc(nestedCall: bool) : FileInfo =
+let rec FindFsxc(nestedCall: bool) : bool * FileInfo =
     let fsxCompiler = "fsxc.exe"
 
     let fsxcBinDir = Path.Combine(__SOURCE_DIRECTORY__, "fsxc", "bin")
@@ -77,9 +78,9 @@ let rec FindFsxc(nestedCall: bool) : FileInfo =
         failwith "Unreachable"
 
     else
-        findFsxcExeFiles().Single() |> FileInfo
+        nestedCall, findFsxcExeFiles().Single() |> FileInfo
 
-let fsxLocation = FindFsxc false
+let compilationWasNeeded, fsxLocation = FindFsxc false
 
 Console.WriteLine("Checking if all .fsx scripts build")
 
@@ -118,8 +119,18 @@ let rec buildAll (scripts: list<string>) (soFar: bool) : bool =
     match scripts with
     | [] -> soFar
     | script :: tail ->
-        let sofarPlusOne = buildFsxScript script soFar
-        buildAll tail sofarPlusOne
+        let scriptFile = FileInfo script
+
+        if compilationWasNeeded
+           && scriptFile.Directory.FullName = fsxTestsDir.FullName then
+            // if compilation was needed, it's likely we are running under a
+            // repo which is not fsx itself, so we don't want to compile fsx's
+            // test scripts (because they have dependencies)
+            Console.WriteLine(sprintf "Skipping %s" script)
+            buildAll tail soFar
+        else
+            let sofarPlusOne = buildFsxScript script soFar
+            buildAll tail sofarPlusOne
 
 let scripts = List.ofArray fsxScripts
 let allCompile = buildAll scripts true
