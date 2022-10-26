@@ -29,14 +29,7 @@ if args.Length > 3 then
 if args.Length > 2 && args.[0] <> "--output-version" then
     PrintUsage()
 
-let rootDir =
-    DirectoryInfo(
-        Path.Combine(
-            __SOURCE_DIRECTORY__, // Tools/
-            "..", // fsx root
-            ".." // repo root
-        )
-    )
+let currentDir = Directory.GetCurrentDirectory() |> DirectoryInfo
 
 // this is a translation of doing this in unix (assuming initialVersion="0.1.0"):
 // 0.1.0--date`date +%Y%m%d-%H%M`.git-`git rev-parse --short=7 HEAD`
@@ -83,7 +76,7 @@ let IsDotNetSdkInstalled() =
 
 let EnsureNugetExists() =
     let nugetTargetDir =
-        Path.Combine(rootDir.FullName, ".nuget") |> DirectoryInfo
+        Path.Combine(currentDir.FullName, ".nuget") |> DirectoryInfo
 
     if not nugetTargetDir.Exists then
         nugetTargetDir.Create()
@@ -104,7 +97,7 @@ let EnsureNugetExists() =
     nugetExe
 
 let FindOrGenerateNugetPackages() : seq<FileInfo> =
-    let nuspecFiles = rootDir.EnumerateFiles "*.nuspec"
+    let nuspecFiles = currentDir.EnumerateFiles "*.nuspec"
 
     if nuspecFiles.Any() then
         if args.Length < 1 then
@@ -144,8 +137,8 @@ let FindOrGenerateNugetPackages() : seq<FileInfo> =
         }
     else
         let FindNugetPackages() =
-            rootDir.Refresh()
-            rootDir.EnumerateFiles("*.nupkg", SearchOption.AllDirectories)
+            currentDir.Refresh()
+            currentDir.EnumerateFiles("*.nupkg", SearchOption.AllDirectories)
 
         if not(FindNugetPackages().Any()) then
             if args.Length < 1 then
