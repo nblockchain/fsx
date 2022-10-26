@@ -13,6 +13,8 @@ open System.Configuration
 open FSX.Infrastructure
 open Process
 
+let fsxRootDir = __SOURCE_DIRECTORY__ |> DirectoryInfo
+
 let rec FindFsxc(nestedCall: bool) : FileInfo =
     let fsxCompiler = "fsxc.exe"
 
@@ -28,6 +30,9 @@ let rec FindFsxc(nestedCall: bool) : FileInfo =
             )
 
             Environment.Exit 1
+
+        let prevCurrentDir = Directory.GetCurrentDirectory()
+        Directory.SetCurrentDirectory fsxRootDir.FullName
 
         let configureProc =
             Process.Execute(
@@ -54,6 +59,8 @@ let rec FindFsxc(nestedCall: bool) : FileInfo =
         if makeProc.ExitCode <> 0 then
             Environment.Exit 1
             failwith "Unreachable"
+
+        Directory.SetCurrentDirectory prevCurrentDir
 
         FindFsxc true
 
