@@ -18,7 +18,7 @@ while (retryCount < 20) do //this is a stress test
         Process.Execute(
             {
                 Command = "fsharpi"
-                Arguments = "test/testProcessConcurrencySample.fsx"
+                Arguments = "test/testProcessSample.fsx"
             },
             Echo.Off
         )

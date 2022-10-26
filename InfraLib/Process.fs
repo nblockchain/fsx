@@ -90,11 +90,15 @@ module Process =
         override self.ToString() =
             Filter(buffer, None).ToString()
 
-    type ProcessResult =
-        {
-            ExitCode: int
-            Output: OutputBuffer
-        }
+    type ProcessResultState =
+        // exitCode=0, no stdErr
+        | Success of output: string
+
+        // exitCode<>0
+        | Error of exitCode: int * output: OutputBuffer
+
+        // exitCode=0, some stdErr
+        | WarningsOrAmbiguous of output: OutputBuffer
 
     type ProcessDetails =
         {
@@ -104,6 +108,39 @@ module Process =
 
         override self.ToString() =
             sprintf "Command: %s. Arguments: %s." self.Command self.Arguments
+
+
+    exception ProcessSucceededWithWarnings of string
+    exception ProcessFailed of string
+
+    type ProcessResult =
+        {
+            Details: ProcessDetails
+            Result: ProcessResultState
+        }
+
+        member self.Unwrap(errMsg: string) : string =
+            match self.Result with
+            | Success output -> output
+            | Error(_, output) ->
+                output.PrintToConsole()
+                Console.WriteLine()
+                Console.Out.Flush()
+                raise <| ProcessFailed errMsg
+            | WarningsOrAmbiguous output ->
+                output.PrintToConsole()
+                Console.WriteLine()
+                Console.Out.Flush()
+                Console.Error.Flush()
+
+                raise
+                <| ProcessSucceededWithWarnings(
+                    sprintf "%s (with warnings?)" errMsg
+                )
+
+        member self.UnwrapDefault() : string =
+            self.Unwrap(sprintf "Error when running '%s'" self.Details.Command)
+
 
     type ProcessCouldNotStart
         (
@@ -147,7 +184,7 @@ module Process =
 
             let print =
                 match std with
-                | Standard.Output -> Console.Write: array<char> -> unit
+                | Standard.Output -> Console.Write: char -> unit
                 | Standard.Error -> Console.Error.Write
 
             let flush =
@@ -160,21 +197,51 @@ module Process =
                 | Standard.Output -> proc.StandardOutput
                 | Standard.Error -> proc.StandardError
 
-            let EndOfStream(readCount: int) : bool =
-                if (readCount > 0) then
-                    false
-                else if (readCount < 0) then
-                    true
-                else //if (readCount = 0)
-                    outputToReadFrom.EndOfStream
+            let ReadIteration() : bool =
+                let append(charToAppend: char) : unit =
 
-            let rec ReadIterationInner() : bool =
+                    let newBuilder = StringBuilder(charToAppend.ToString())
+
+                    match outputBuffer with
+                    | [] ->
+                        let newBlock =
+                            match std with
+                            | Standard.Output ->
+                                {
+                                    OutputType = Standard.Output
+                                    Chunk = newBuilder
+                                }
+                            | Standard.Error ->
+                                {
+                                    OutputType = Standard.Error
+                                    Chunk = newBuilder
+                                }
+
+                        outputBuffer <- List.singleton newBlock
+                    | head :: _tail ->
+                        if head.OutputType = std then
+                            head.Chunk.Append charToAppend |> ignore
+                        else
+                            let newBlock =
+                                {
+                                    OutputType = std
+                                    Chunk = newBuilder
+                                }
+
+                            outputBuffer <- newBlock :: outputBuffer
+
+                    if not(echo = Echo.Off) then
+                        print charToAppend
+                        flush()
+
                 // I want to hardcode this to 1 because otherwise the order of the stderr|stdout
                 // chunks in the outputbuffer would innecessarily depend on this bufferSize, setting
                 // it to 1 makes it slow but then the order is only relying (in theory) on how the
                 // streams come and how fast the .NET IO processes them
-                let outChar = [| 'x' |] // 'x' is a dummy value that will get replaced
                 let bufferSize = 1
+
+                // 'x' is a dummy value that will get replaced
+                let outChar = Array.singleton 'x'
                 let uniqueElementIndexInTheSingleCharBuffer = bufferSize - 1
 
                 if not(outChar.Length = bufferSize) then
@@ -198,60 +265,36 @@ module Process =
                     failwith
                         "StreamReader.Read() should not read more than the bufferSize if we passed the bufferSize as a parameter"
 
-                if (readCount = bufferSize) then
-                    if not(echo = Echo.Off) then
-                        print outChar
-                        flush()
+                let singleChar =
 
-                    let append() =
-                        let leChar =
-                            outChar.[uniqueElementIndexInTheSingleCharBuffer]
+                    // meaning readCount < bufferSize (and bufferSize being 1 means readCount=0 or negative)
+                    if readCount <> bufferSize then
+                        None
+                    else
+                        outChar.[uniqueElementIndexInTheSingleCharBuffer]
+                        |> Some
 
-                        let newBuilder = StringBuilder(leChar.ToString())
-
-                        match outputBuffer with
-                        | [] ->
-                            let newBlock =
-                                match std with
-                                | Standard.Output ->
-                                    {
-                                        OutputType = Standard.Output
-                                        Chunk = newBuilder
-                                    }
-                                | Standard.Error ->
-                                    {
-                                        OutputType = Standard.Error
-                                        Chunk = newBuilder
-                                    }
-
-                            outputBuffer <- [ newBlock ]
-                        | head :: tail ->
-                            if head.OutputType = std then
-                                head.Chunk.Append outChar |> ignore
-                            else
-                                let newBuilder =
-                                    {
-                                        OutputType = std
-                                        Chunk = newBuilder
-                                    }
-
-                                outputBuffer <- newBuilder :: outputBuffer
-
-                    append()
-
-                if EndOfStream readCount then
+                match singleChar with
+                | None when
+                    readCount < 0
+                    || (readCount = 0 && outputToReadFrom.EndOfStream)
+                    ->
                     false
-                elif outChar.Single() = '\n' then
-                    true
-                else
-                    ReadIterationInner()
+                | None -> true
 
-            let ReadIteration() : bool =
-                try
-                    queuedLock.Enter()
-                    ReadIterationInner()
-                finally
-                    queuedLock.Exit()
+                // FIXME: only appending after \n was a previous approach that
+                // helped with the test "testProcessConcurrency.fsx" (it was
+                // passing in Linux, even if it sometimes failed in macOS):
+                //| Some '\n' -> ...
+
+                | Some char ->
+                    try
+                        queuedLock.Enter()
+                        append char
+                    finally
+                        queuedLock.Exit()
+
+                    true
 
             // this is a way to do a `do...while` loop in F#...
             while (ReadIteration()) do
@@ -266,7 +309,7 @@ module Process =
         try
             proc.Start() |> ignore
         with
-        | e -> raise <| ProcessCouldNotStart(procDetails, e)
+        | ex -> raise <| ProcessCouldNotStart(procDetails, ex)
 
         outReaderThread.Start()
         errReaderThread.Start()
@@ -276,34 +319,24 @@ module Process =
         outReaderThread.Join()
         errReaderThread.Join()
 
-        {
-            ExitCode = exitCode
-            Output = OutputBuffer(outputBuffer)
-        }
+        let output = OutputBuffer outputBuffer
 
-
-    exception ProcessFailed of string
-
-    let SafeExecute(procDetails: ProcessDetails, echo: Echo) : ProcessResult =
-        let procResult = Execute(procDetails, echo)
-
-        if not(procResult.ExitCode = 0) then
-            if (echo = Echo.Off) then
-                Console.WriteLine(procResult.Output.StdOut)
-                Console.Error.WriteLine(procResult.Output.StdErr)
-                Console.Error.WriteLine()
-
-            raise
-            <| ProcessFailed(
-                String.Format(
-                    "Command '{0}' failed with exit code {1}. Arguments supplied: '{2}'",
-                    procDetails.Command,
-                    procResult.ExitCode.ToString(),
-                    procDetails.Arguments
-                )
-            )
-
-        procResult
+        match exitCode with
+        | 0 when output.StdErr.Length = 0 ->
+            {
+                Details = procDetails
+                Result = ProcessResultState.Success output.StdOut
+            }
+        | 0 ->
+            {
+                Details = procDetails
+                Result = ProcessResultState.WarningsOrAmbiguous output
+            }
+        | _ ->
+            {
+                Details = procDetails
+                Result = ProcessResultState.Error(exitCode, output)
+            }
 
     let rec private ExceptionIsOfTypeOrIncludesAnyInnerExceptionOfType
         (
@@ -352,7 +385,7 @@ module Process =
         if not(WhichCommandWorksInShell()) then
             failwith "'which' doesn't work, please install it first"
 
-        let procResult =
+        let proc =
             Execute(
                 {
                     Command = "which"
@@ -361,9 +394,15 @@ module Process =
                 Echo.Off
             )
 
-        match procResult.ExitCode with
-        | 0 -> true
-        | _ -> false
+        match proc.Result with
+        | ProcessResultState.Error _ -> false
+        | ProcessResultState.WarningsOrAmbiguous output ->
+            output.PrintToConsole()
+            Console.WriteLine()
+            Console.Out.Flush()
+            Console.Error.Flush()
+            failwith "Unexpected 'which' output ^ (with warnings?)"
+        | ProcessResultState.Success _ -> true
 
     let private HasWindowsExecutableExtension(path: string) =
         //FIXME: should do it in a case-insensitive way

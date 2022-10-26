@@ -54,18 +54,20 @@ let Bump(toStable: bool) : Version * Version =
 
     let replaceScript = Path.Combine(__SOURCE_DIRECTORY__, "replace.fsx")
 
-    Process.SafeExecute(
-        {
-            Command = replaceScript
-            Arguments =
-                sprintf
-                    "%s %s"
-                    (fullVersion.ToString())
-                    (newFullVersion.ToString())
-        },
-        Echo.Off
-    )
-    |> ignore
+    Process
+        .Execute(
+            {
+                Command = replaceScript
+                Arguments =
+                    sprintf
+                        "%s %s"
+                        (fullVersion.ToString())
+                        (newFullVersion.ToString())
+            },
+            Echo.Off
+        )
+        .UnwrapDefault()
+    |> ignore<string>
 
     // this code is weird, I know, but it's to avoid replace.fsx to change this script itself!
     let pluralSuffix = "s"
@@ -76,54 +78,64 @@ let Bump(toStable: bool) : Version * Version =
         else
             sprintf "50year%s 50day%s" pluralSuffix pluralSuffix
 
-    Process.SafeExecute(
-        {
-            Command = replaceScript
-            Arguments = artifactsExpiry
-        },
-        Echo.Off
-    )
-    |> ignore
+    Process
+        .Execute(
+            {
+                Command = replaceScript
+                Arguments = artifactsExpiry
+            },
+            Echo.Off
+        )
+        .UnwrapDefault()
+    |> ignore<string>
 
     fullVersion, newFullVersion
 
 
 let GitCommit (fullVersion: Version) (newFullVersion: Version) =
-    Process.SafeExecute(
-        {
-            Command = "git"
-            Arguments = "add version.config"
-        },
-        Echo.Off
-    )
-    |> ignore
+    Process
+        .Execute(
+            {
+                Command = "git"
+                Arguments = "add version.config"
+            },
+            Echo.Off
+        )
+        .UnwrapDefault()
+    |> ignore<string>
 
-    Process.SafeExecute(
-        {
-            Command = "git"
-            Arguments = "add snap/snapcraft.yaml"
-        },
-        Echo.Off
-    )
-    |> ignore
+    Process
+        .Execute(
+            {
+                Command = "git"
+                Arguments = "add snap/snapcraft.yaml"
+            },
+            Echo.Off
+        )
+        .UnwrapDefault()
+    |> ignore<string>
 
-    Process.SafeExecute(
-        {
-            Command = "git"
-            Arguments = "add InfraLib/AssemblyInfo.fs"
-        },
-        Echo.Off
-    )
-    |> ignore
+    Process
+        .Execute(
+            {
+                Command = "git"
+                Arguments = "add InfraLib/AssemblyInfo.fs"
+            },
+            Echo.Off
+        )
+        .UnwrapDefault()
+    |> ignore<string>
 
-    Process.SafeExecute(
-        {
-            Command = "git"
-            Arguments = "add .gitlab-ci.yml"
-        },
-        Echo.Off
-    )
-    |> ignore
+    Process
+        .Execute(
+            {
+                Command = "git"
+                Arguments = "add .gitlab-ci.yml"
+            },
+            Echo.Off
+        )
+        .UnwrapDefault()
+    |> ignore<string>
 
     let commitMessage =
         sprintf
@@ -137,14 +149,16 @@ let GitCommit (fullVersion: Version) (newFullVersion: Version) =
         else
             commitMessage
 
-    Process.SafeExecute(
-        {
-            Command = "git"
-            Arguments = sprintf "commit -m \"%s\"" finalCommitMessage
-        },
-        Echo.Off
-    )
-    |> ignore
+    Process
+        .Execute(
+            {
+                Command = "git"
+                Arguments = sprintf "commit -m \"%s\"" finalCommitMessage
+            },
+            Echo.Off
+        )
+        .UnwrapDefault()
+    |> ignore<string>
 
 let GitTag(newFullVersion: Version) =
     if not(IsStableRevision newFullVersion.MinorRevision) then
@@ -160,14 +174,16 @@ let GitTag(newFullVersion: Version) =
     )
     |> ignore
 
-    Process.SafeExecute(
-        {
-            Command = "git"
-            Arguments = sprintf "tag %s" (newFullVersion.ToString())
-        },
-        Echo.Off
-    )
-    |> ignore
+    Process
+        .Execute(
+            {
+                Command = "git"
+                Arguments = sprintf "tag %s" (newFullVersion.ToString())
+            },
+            Echo.Off
+        )
+        .UnwrapDefault()
+    |> ignore<string>
 
 Console.WriteLine "Bumping..."
 let fullUnstableVersion, newFullStableVersion = Bump true

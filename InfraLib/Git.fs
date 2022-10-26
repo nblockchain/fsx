@@ -36,8 +36,15 @@ module Git =
                     Arguments = "git"
                 }
 
-        let gitCheck = Process.Execute(gitCheckCommand, Echo.Off)
-        gitCheck.ExitCode = 0
+        match Process.Execute(gitCheckCommand, Echo.Off).Result with
+        | Success _ -> true
+        | Error _ -> false
+        | WarningsOrAmbiguous output ->
+            output.PrintToConsole()
+            Console.WriteLine()
+            Console.Out.Flush()
+            Console.Error.Flush()
+            failwith "Unexpected 'git' output ^ (with warnings?)"
 
     let private CheckGitIsInstalled() : unit =
         if not(IsGitInstalled()) then
@@ -56,13 +63,10 @@ module Git =
                 Echo.Off
             )
 
-        if (gitBranch.ExitCode <> 0) then
-            failwith "Unexpected git behaviour, `git branch` didn't succeed"
+        let output = gitBranch.UnwrapDefault()
+        let branchesOutput = Misc.CrossPlatformStringSplitInLines output
 
-        let branchesOutput =
-            Misc.CrossPlatformStringSplitInLines gitBranch.Output.StdOut
-
-        GetBranchFromGitBranch(branchesOutput)
+        GetBranchFromGitBranch branchesOutput
 
     let GetLastCommit() =
         CheckGitIsInstalled()
@@ -75,13 +79,9 @@ module Git =
             }
 
         let gitLastCommit = Process.Execute(gitLogCmd, Echo.Off)
+        let output = gitLastCommit.UnwrapDefault()
 
-        if (gitLastCommit.ExitCode <> 0) then
-            gitLastCommit.Output.PrintToConsole()
-            failwith "Unexpected git behaviour, as `git log` failed"
-
-        let lines =
-            Misc.CrossPlatformStringSplitInLines gitLastCommit.Output.StdOut
+        let lines = Misc.CrossPlatformStringSplitInLines output
 
         if (lines.Length <> 1) then
             failwith "Unexpected git output for special git log command"
@@ -108,7 +108,10 @@ module Git =
                 Arguments = sprintf "remote add %s %s" remoteName remoteUrl
             }
 
-        Process.SafeExecute(gitRemoteAdd, Echo.Off) |> ignore
+        Process
+            .Execute(gitRemoteAdd, Echo.Off)
+            .UnwrapDefault()
+        |> ignore<string>
 
     let private RemoveRemote(remoteName: string) =
         let gitRemoteRemove =
@@ -117,7 +120,10 @@ module Git =
                 Arguments = sprintf "remote remove %s" remoteName
             }
 
-        Process.SafeExecute(gitRemoteRemove, Echo.Off) |> ignore
+        Process
+            .Execute(gitRemoteRemove, Echo.Off)
+            .UnwrapDefault()
+        |> ignore<string>
 
     let private GetRemotesInternal() =
         let gitShowRemotes =
@@ -126,7 +132,9 @@ module Git =
                 Arguments = "remote -v"
             }
 
-        Process.SafeExecute(gitShowRemotes, Echo.Off)
+        Process
+            .Execute(gitShowRemotes, Echo.Off)
+            .UnwrapDefault()
 
     let CheckRemotes() =
         let gitRemoteVerbose =
@@ -136,7 +144,7 @@ module Git =
             }
 
         let proc = Process.Execute(gitRemoteVerbose, Echo.Off)
-        let map = proc.Output.StdOut |> Misc.TsvParse
+        let map = proc.UnwrapDefault() |> Misc.TsvParse
 
         let removedLastAction =
             Map.map (fun (k: string) (v: string) -> (v.Split(' ').[0])) map
@@ -150,10 +158,13 @@ module Git =
                 Arguments = "fetch --all"
             }
 
-        Process.SafeExecute(gitFetchAll, Echo.Off) |> ignore
+        Process
+            .Execute(gitFetchAll, Echo.Off)
+            .UnwrapDefault()
+        |> ignore<string>
 
     let GetRemotes() =
-        let remoteLines = GetRemotesInternal().Output.StdOut |> Misc.TsvParse
+        let remoteLines = GetRemotesInternal() |> Misc.TsvParse
 
         seq {
             for KeyValue(remoteName, remoteUrl) in remoteLines do
@@ -196,13 +207,11 @@ module Git =
                         lastCommit
             }
 
-        let gitCommitDivergence = Process.SafeExecute(gitRevListCmd, Echo.Off)
+        let gitCommitDivergence = Process.Execute(gitRevListCmd, Echo.Off)
+        let output = gitCommitDivergence.UnwrapDefault()
 
         let numbers =
-            gitCommitDivergence.Output.StdOut.Split(
-                [| "\t" |],
-                StringSplitOptions.RemoveEmptyEntries
-            )
+            output.Split([| "\t" |], StringSplitOptions.RemoveEmptyEntries)
 
         let expectedNumberOfNumbers = 2
 
@@ -245,9 +254,8 @@ module Git =
                     )
             }
 
-        let gitLastNCommit = Process.SafeExecute(gitLogCmd, Echo.Off)
-        gitLastNCommit.Output.StdOut
-
+        let gitLastNCommit = Process.Execute(gitLogCmd, Echo.Off)
+        gitLastNCommit.UnwrapDefault()
 
     let GetCommitMessagesOfCommitsInThisBranchNotPresentInRemoteBranch
         repo
@@ -271,9 +279,17 @@ module Git =
                     Echo.Off
                 )
 
-            if gitLog.ExitCode <> 0 then
-                String.Empty
-            else
+            match gitLog.Result with
+            | ProcessResultState.Error _ -> String.Empty
+            | ProcessResultState.WarningsOrAmbiguous output ->
+                output.PrintToConsole()
+                Console.WriteLine()
+                Console.Out.Flush()
+                Console.Error.Flush()
+
+                failwith
+                    "Unexpected git behaviour, as `git log` succeeded with warnings? ^"
+            | ProcessResultState.Success _ ->
                 let branch = GetCurrentBranch()
 
                 let gitLogCmd =
@@ -285,16 +301,29 @@ module Git =
 
                 let gitLastCommit = Process.Execute(gitLogCmd, Echo.Off)
 
-                if gitLastCommit.ExitCode <> 0 then
+                match gitLastCommit.Result with
+                | ProcessResultState.Error(_, output) ->
+                    output.PrintToConsole()
+                    Console.WriteLine()
+                    Console.Out.Flush()
+                    Console.Error.Flush()
+
                     failwith
-                        "Unexpected git behaviour, as `git log` succeeded before but not now"
+                        "Unexpected git behaviour, as `git log` succeeded before but not now ^"
+                | ProcessResultState.WarningsOrAmbiguous output ->
+                    output.PrintToConsole()
+                    Console.WriteLine()
+                    Console.Out.Flush()
+                    Console.Error.Flush()
 
-                let lines =
-                    Misc.CrossPlatformStringSplitInLines
-                        gitLastCommit.Output.StdOut
+                    failwith
+                        "Unexpected git behaviour, as `git log` succeeded before but now has warnings? ^"
+                | ProcessResultState.Success output ->
+                    let lines = Misc.CrossPlatformStringSplitInLines output
 
-                if lines.Length <> 1 then
-                    failwith "Unexpected git output for special git log command"
-                else
-                    let lastCommitSingleOutput = lines.[0]
-                    sprintf "(%s/%s)" branch lastCommitSingleOutput
+                    if lines.Length <> 1 then
+                        failwith
+                            "Unexpected git output for special git log command"
+                    else
+                        let lastCommitSingleOutput = lines.[0]
+                        sprintf "(%s/%s)" branch lastCommitSingleOutput

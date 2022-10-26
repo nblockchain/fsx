@@ -72,7 +72,11 @@ let IsDotNetSdkInstalled() =
                 Arguments = "--version"
             }
 
-        Process.SafeExecute(dotnetVersionCmd, Echo.All) |> ignore
+        Process
+            .Execute(dotnetVersionCmd, Echo.All)
+            .UnwrapDefault()
+        |> ignore<string>
+
         true
     with
     | :? ProcessCouldNotStart -> false
@@ -131,7 +135,11 @@ let FindOrGenerateNugetPackages() : seq<FileInfo> =
                                 nugetVersion
                     }
 
-                Process.SafeExecute(nugetPackCmd, Echo.All) |> ignore
+                Process
+                    .Execute(nugetPackCmd, Echo.All)
+                    .UnwrapDefault()
+                |> ignore<string>
+
                 yield FileInfo(sprintf "%s.%s.nupkg" packageName nugetVersion)
         }
     else
@@ -157,7 +165,10 @@ let FindOrGenerateNugetPackages() : seq<FileInfo> =
                             sprintf "pack -c Release -p:Version=%s" nugetVersion
                     }
 
-                Process.SafeExecute(dotnetPackCmd, Echo.All) |> ignore
+                Process
+                    .Execute(dotnetPackCmd, Echo.All)
+                    .UnwrapDefault()
+                |> ignore<string>
             else
                 failwith
                     "Please install .NET SDK to build nuget packages without nuspec file"
@@ -181,7 +192,10 @@ let NugetUpload (packageFile: FileInfo) (nugetApiKey: string) =
                         defaultNugetFeedUrl
             }
 
-        Process.SafeExecute(nugetPushCmd, Echo.All) |> ignore
+        Process
+            .Execute(nugetPushCmd, Echo.All)
+            .UnwrapDefault()
+        |> ignore<string>
     else
         let nugetPushCmd =
             {
@@ -194,7 +208,10 @@ let NugetUpload (packageFile: FileInfo) (nugetApiKey: string) =
                         defaultNugetFeedUrl
             }
 
-        Process.SafeExecute(nugetPushCmd, Echo.All) |> ignore
+        Process
+            .Execute(nugetPushCmd, Echo.All)
+            .UnwrapDefault()
+        |> ignore<string>
 
 if args.Length > 0 && args.[0] = "--output-version" then
     if args.Length < 2 then

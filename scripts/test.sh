@@ -17,4 +17,7 @@ cd ./test/ && fsharpc test.fs --target:library --out:lib/test2.dll && cd ..
 ./test/testFsiCommandLineArgs.fsx one 2 three
 
 ./test/testTsv.fsx
-./test/testProcessConcurrency.fsx
+./test/testProcess.fsx
+
+# this is actually only really useful for when process spits both stdout & stderr
+#./test/testProcessConcurrency.fsx

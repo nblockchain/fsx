@@ -92,14 +92,16 @@ module Network =
                     (Path.GetFileName(uri.LocalPath))
                     (uri.ToString())
 
-            Process.SafeExecute(
-                {
-                    Command = "wget"
-                    Arguments = wgetArgs
-                },
-                Echo.All
-            )
-            |> ignore
+            let wgetProc =
+                Process.Execute(
+                    {
+                        Command = "wget"
+                        Arguments = wgetArgs
+                    },
+                    Echo.All
+                )
+
+            wgetProc.UnwrapDefault() |> ignore<string>
 
         resultFile
 
