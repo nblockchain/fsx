@@ -153,11 +153,6 @@ module Process =
                 innerException
             )
 
-    type private ReaderState =
-        | Continue // new character in the same line
-        | Pause // e.g. an EOL has arrived -> other thread can take the lock
-        | End // no more data
-
     let Execute(procDetails: ProcessDetails, echo: Echo) : ProcessResult =
 
         // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events?
