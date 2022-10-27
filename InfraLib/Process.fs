@@ -126,6 +126,8 @@ module Process =
                 output.PrintToConsole()
                 Console.WriteLine()
                 Console.Out.Flush()
+
+                Console.Error.WriteLine errMsg
                 raise <| ProcessFailed errMsg
             | WarningsOrAmbiguous output ->
                 output.PrintToConsole()
@@ -133,10 +135,9 @@ module Process =
                 Console.Out.Flush()
                 Console.Error.Flush()
 
-                raise
-                <| ProcessSucceededWithWarnings(
-                    sprintf "%s (with warnings?)" errMsg
-                )
+                let fullErrMsg = sprintf "%s (with warnings?)" errMsg
+                Console.Error.WriteLine fullErrMsg
+                raise <| ProcessSucceededWithWarnings fullErrMsg
 
         member self.UnwrapDefault() : string =
             self.Unwrap(sprintf "Error when running '%s'" self.Details.Command)
