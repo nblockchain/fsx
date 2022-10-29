@@ -16,6 +16,9 @@ open Process
 
 let ScriptsDir = __SOURCE_DIRECTORY__ |> DirectoryInfo
 let RootDir = Path.Combine(ScriptsDir.FullName, "..") |> DirectoryInfo
+let TestDir = Path.Combine(RootDir.FullName, "test") |> DirectoryInfo
+let ToolsDir = Path.Combine(RootDir.FullName, "Tools") |> DirectoryInfo
+let InfraLibDir = Path.Combine(RootDir.FullName, "InfraLib") |> DirectoryInfo
 let NugetDir = Path.Combine(RootDir.FullName, ".nuget") |> DirectoryInfo
 let NugetExe = Path.Combine(NugetDir.FullName, "nuget.exe") |> FileInfo
 let NugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
@@ -206,6 +209,15 @@ let MakeAll() =
     JustBuild buildConfig
     buildConfig
 
+let programFiles =
+    Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
+
+let fsxInstallationDir = Path.Combine(programFiles, "fsx") |> DirectoryInfo
+let fsxBat = Path.Combine(ScriptsDir.FullName, "fsx.bat") |> FileInfo
+
+let fsxBatDestination =
+    Path.Combine(fsxInstallationDir.FullName, fsxBat.Name) |> FileInfo
+
 let maybeTarget = GatherTarget(Misc.FsxOnlyArguments())
 
 match maybeTarget with
@@ -216,11 +228,6 @@ match maybeTarget with
 | Some "install" ->
     let buildConfig = BinaryConfig.Release
     JustBuild buildConfig
-
-    let programFiles =
-        Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
-
-    let fsxInstallationDir = Path.Combine(programFiles, "fsx") |> DirectoryInfo
 
     if fsxInstallationDir.Exists then
         failwith "this script can't overwrite an existing installation yet" //TODO
@@ -233,6 +240,85 @@ match maybeTarget with
         fsxInstallationDir,
         List.Empty
     )
+
+    let fsiBat = Path.Combine(ToolsDir.FullName, "fsi.bat") |> FileInfo
+
+    File.Copy(
+        fsiBat.FullName,
+        Path.Combine(fsxInstallationDir.FullName, fsiBat.Name)
+    )
+
+    let fsxLauncher = Path.Combine(RootDir.FullName, "launcher.fsx") |> FileInfo
+
+    File.Copy(
+        fsxLauncher.FullName,
+        Path.Combine(fsxInstallationDir.FullName, "fsx.fsx")
+    )
+
+    File.Copy(fsxBat.FullName, fsxBatDestination.FullName)
+
+    let infraLibInstallDir =
+        Path.Combine(fsxInstallationDir.FullName, "InfraLib") |> DirectoryInfo
+
+    if not infraLibInstallDir.Exists then
+        Directory.CreateDirectory infraLibInstallDir.FullName
+        |> ignore<DirectoryInfo>
+
+    let miscFs = Path.Combine(InfraLibDir.FullName, "Misc.fs") |> FileInfo
+
+    let miscFsTarget =
+        Path.Combine(infraLibInstallDir.FullName, "Misc.fs") |> FileInfo
+
+    File.Copy(miscFs.FullName, miscFsTarget.FullName)
+    let processFs = Path.Combine(InfraLibDir.FullName, "Process.fs") |> FileInfo
+
+    let processFsTarget =
+        Path.Combine(infraLibInstallDir.FullName, "Process.fs") |> FileInfo
+
+    File.Copy(processFs.FullName, processFsTarget.FullName)
+
+
+    // FIXME: the below way of installing fsx into PATH env var seems to work, but somehow cannot be
+    // tested inside CI, because `ConfigCommandCheck(List.singleton "fsx.bat")` fails, even though
+    // Environment.GetEnvironmentVariable(pathEnvVarName, envVarScope) contains the new path (even
+    // when testing this inside a different Makefile target -> "check")
+    let pathEnvVarName = "PATH"
+    let envVarScope = EnvironmentVariableTarget.Machine
+
+    let currentPaths =
+        Environment.GetEnvironmentVariable(pathEnvVarName, envVarScope)
+
+    if not(currentPaths.Contains fsxInstallationDir.FullName) then
+        let newPathEnvVar =
+            sprintf
+                "%s%c%s"
+                fsxInstallationDir.FullName
+                Path.PathSeparator
+                currentPaths
+
+        Environment.SetEnvironmentVariable(
+            pathEnvVarName,
+            newPathEnvVar,
+            envVarScope
+        )
+
+| Some "check" ->
+
+    // FIXME: contributor should be able to run 'make check' before 'make install'
+    if not fsxBatDestination.Exists then
+        Console.WriteLine "install first"
+        Environment.Exit 1
+
+    let testProcess =
+        Process.Execute(
+            {
+                Command = fsxBatDestination.FullName
+                Arguments = Path.Combine(TestDir.FullName, "test.fsx")
+            },
+            Echo.All
+        )
+
+    testProcess.UnwrapDefault() |> ignore<string>
 
 | Some someOtherTarget ->
     Console.Error.WriteLine("Unrecognized target: " + someOtherTarget)

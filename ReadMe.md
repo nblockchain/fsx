@@ -53,13 +53,16 @@ Which is a huge difference in memory footprint.
 
 ### Installation
 
-The old-fashioned way by cloning and compiling it yourself:
+In Linux/macOS, the old-fashioned way by cloning and compiling it yourself:
 
 ```
 ./configure.sh --prefix=/usr/local
 make
 sudo make install
 ```
+
+(If you're using Windows, just build with "make.bat" and install with "make install".)
+
 
 ### Usage
 

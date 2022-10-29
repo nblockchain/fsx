@@ -88,3 +88,5 @@ jobs:
       run: .\make.bat
     - name: install
       run: .\make.bat install
+    - name: run tests
+      run: .\make.bat check

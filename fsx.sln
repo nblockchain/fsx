@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
@@ -37,6 +37,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{DBAE02AB
 		configure.sh = configure.sh
 		Makefile = Makefile
 		scripts\install.sh = scripts\install.sh
+		launcher.fsx = launcher.fsx
 		scripts\build.sh = scripts\build.sh
 		scripts\launcher.sh = scripts\launcher.sh
 		compileFSharpScripts.fsx = compileFSharpScripts.fsx

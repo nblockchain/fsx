@@ -414,10 +414,39 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                     else
                         Echo.Off
 
+                let fsharpCompilerCommand =
+                    match Misc.GuessPlatform() with
+                    | Misc.Platform.Windows ->
+                        let vswherePath =
+                            Path.Combine(
+                                Environment.GetFolderPath(
+                                    Environment.SpecialFolder.ProgramFilesX86
+                                ),
+                                "Microsoft Visual Studio",
+                                "Installer",
+                                "vswhere.exe"
+                            )
+
+                        Process
+                            .Execute(
+                                {
+                                    Command = vswherePath
+                                    Arguments = "-find **\\fsc.exe"
+                                },
+                                Echo.Off
+                            )
+                            .UnwrapDefault()
+                            .Split(
+                                Array.singleton Environment.NewLine,
+                                StringSplitOptions.RemoveEmptyEntries
+                            )
+                            .First()
+                    | _ -> "fsharpc"
+
                 let proc =
                     Process.Execute(
                         {
-                            Command = "fsharpc"
+                            Command = fsharpCompilerCommand
                             Arguments = fscompilerflags
                         },
                         echo
