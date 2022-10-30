@@ -49,7 +49,7 @@ jobs:
         ./configure.sh && sudo make install
 
     - name: run tests
-      run: ./scripts/test.sh
+      run: make check
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
@@ -76,7 +76,7 @@ jobs:
         ./configure.sh && sudo make install
 
     - name: run tests
-      run: ./scripts/test.sh
+      run: make check
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 

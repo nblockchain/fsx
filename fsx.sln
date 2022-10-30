@@ -26,10 +26,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{848BC281-2
 		test\testProcessConcurrency.fsx = test\testProcessConcurrency.fsx
 		test\testProcessConcurrencySample.fsx = test\testProcessConcurrencySample.fsx
 		test\testTsv.fsx = test\testTsv.fsx
-		test\testRefNugetLib2.fsx = test\testRefNugetLib2.fsx
-		test\testRefNugetLib1.sh = test\testRefNugetLib1.sh
 		test\testProcess.fsx = test\testProcess.fsx
 		test\testProcessSample.fsx = test\testProcessSample.fsx
+		test\testRefNugetLib.fsx = test\testRefNugetLib.fsx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{DBAE02AB-5972-403C-B18B-ED1DFE362054}"
@@ -44,7 +43,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{DBAE02AB
 		make.bat = make.bat
 		scripts\make.fsx = scripts\make.fsx
 		.github\workflows\CI.yml = .github\workflows\CI.yml
-		scripts\test.sh = scripts\test.sh
+		scripts\runTests.fsx = scripts\runTests.fsx
 	EndProjectSection
 EndProject
 Global

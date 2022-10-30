@@ -21,6 +21,7 @@ let ToolsDir = Path.Combine(RootDir.FullName, "Tools") |> DirectoryInfo
 let InfraLibDir = Path.Combine(RootDir.FullName, "InfraLib") |> DirectoryInfo
 let NugetDir = Path.Combine(RootDir.FullName, ".nuget") |> DirectoryInfo
 let NugetExe = Path.Combine(NugetDir.FullName, "nuget.exe") |> FileInfo
+// please maintain this URL in sync with the runTests.fsx file
 let NugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
 type BinaryConfig =

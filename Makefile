@@ -3,3 +3,6 @@ all:
 
 install:
 	./scripts/install.sh
+
+check:
+	./scripts/runTests.fsx
