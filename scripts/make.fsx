@@ -314,7 +314,7 @@ match maybeTarget with
         Process.Execute(
             {
                 Command = fsxBatDestination.FullName
-                Arguments = Path.Combine(TestDir.FullName, "test.fsx")
+                Arguments = Path.Combine(ScriptsDir.FullName, "runTests.fsx")
             },
             Echo.All
         )
