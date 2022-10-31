@@ -327,7 +327,25 @@ match maybeTarget with
             Echo.All
         )
 
-    testProcess.UnwrapDefault() |> ignore<string>
+    match testProcess.Result with
+    | Error _ -> failwith "Tests failed"
+    | _ -> ()
+
+    // the reason to write the result of this to a file is:
+    // if error propagation is broken, then it would be broken as well for make.fsx
+    // when trying to call runTests.fsx and wouldn't pick up an err
+    let errorPropagationResultFile =
+        Path.Combine(TestDir.FullName, "errProp.txt") |> FileInfo
+
+    let errorPropagationResult =
+        File
+            .ReadAllText(errorPropagationResultFile.FullName)
+            .Trim()
+
+    match errorPropagationResult with
+    | "1" -> failwith "Tests failed (error propagation)"
+    | "0" -> ()
+    | _ -> failwith "Unexpected output from tests (error propagation)"
 
 | Some someOtherTarget ->
     Console.Error.WriteLine("Unrecognized target: " + someOtherTarget)
