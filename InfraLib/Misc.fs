@@ -145,6 +145,8 @@ module Misc =
         | Linux
         | Mac
 
+    // FIXME: maybe get rid of this method when we migrate to .NET6 (or earlier)
+    // because it seems it's unnecessary (e.g. see https://gitlab.com/nblockchain/geewallet/-/merge_requests/140 )
     let GuessPlatform() =
         let macDirs =
             [
