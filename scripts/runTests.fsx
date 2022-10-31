@@ -25,20 +25,20 @@ let NugetPackages = Path.Combine(RootDir.FullName, "packages") |> DirectoryInfo
 // please maintain this URL in sync with the make.fsx file
 let NugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
+let GetFsxWindowsLauncher() =
+    let programFiles =
+        Environment.GetEnvironmentVariable "ProgramW6432" |> DirectoryInfo
+
+    let fsxWinInstallationDir =
+        Path.Combine(programFiles.FullName, "fsx") |> DirectoryInfo
+
+    Path.Combine(fsxWinInstallationDir.FullName, "fsx.bat") |> FileInfo
+
 let CreateCommandForTest(fsxFile: FileInfo, args: string) =
     if Misc.GuessPlatform() = Misc.Platform.Windows then
-        let programFiles =
-            Environment.GetEnvironmentVariable "ProgramW6432" |> DirectoryInfo
-
-        let fsxWinInstallationDir =
-            Path.Combine(programFiles.FullName, "fsx") |> DirectoryInfo
-
-        let fsxWindowsLauncher =
-            Path.Combine(fsxWinInstallationDir.FullName, "fsx.bat") |> FileInfo
-
         // because Windows and shebang are not friends
         {
-            Command = fsxWindowsLauncher.FullName
+            Command = GetFsxWindowsLauncher().FullName
             Arguments = sprintf "%s %s" fsxFile.FullName args
         }
     else
@@ -55,6 +55,37 @@ Process
     .Execute(CreateCommandForTest(basicTest, String.Empty), Echo.All)
     .UnwrapDefault()
 |> ignore<string>
+
+let nonExistentTest =
+    Path.Combine(TestDir.FullName, "nonExistentFsx.fsx") |> FileInfo
+
+let commandForNonExistentTest =
+    if Misc.GuessPlatform() = Misc.Platform.Windows then
+        GetFsxWindowsLauncher().FullName
+    else
+        // FIXME: extract PREFIX from build.config instead of assuming default
+        "/usr/local/bin/fsx"
+
+let proc =
+    Process.Execute(
+        {
+            Command = commandForNonExistentTest
+            Arguments = nonExistentTest.FullName
+        },
+        Echo.All
+    )
+
+// the reason to write the result of this to a file is:
+// if error propagation is broken, then it would be broken as well for make.fsx
+// when trying to call this very file (runTests.fsx) and wouldn't pick up an err
+let errorPropagationResultFile =
+    Path.Combine(TestDir.FullName, "errProp.txt") |> FileInfo
+
+match proc.Result with
+| Error _ -> File.WriteAllText(errorPropagationResultFile.FullName, "0")
+| _ ->
+    File.WriteAllText(errorPropagationResultFile.FullName, "1")
+    failwith "Call to non-existent test should have failed (exitCode <> 0)"
 
 
 match Misc.GuessPlatform() with
