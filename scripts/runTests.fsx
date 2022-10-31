@@ -26,7 +26,7 @@ let NugetPackages = Path.Combine(RootDir.FullName, "packages") |> DirectoryInfo
 let NugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
 let CreateCommandForTest (fsxFile: FileInfo, args: string) =
-    if Misc.GuessPlatform() = Platform.Windows then
+    if Misc.GuessPlatform() = Misc.Platform.Windows then
         let programFiles =
             Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
         let fsxWinInstallationDir = Path.Combine(programFiles, "fsx") |> DirectoryInfo
