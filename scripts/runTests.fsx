@@ -25,19 +25,43 @@ let NugetPackages = Path.Combine(RootDir.FullName, "packages") |> DirectoryInfo
 // please maintain this URL in sync with the make.fsx file
 let NugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
-let basicTest = Path.Combine(TestDir.FullName, "test.fsx") |> FileInfo
+let CreateCommandForTest (fsxFile: FileInfo, args: string) =
+    if Misc.GuessPlatform() = Misc.Platform.Windows then
+        let programFiles =
+            Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
+        let fsxWinInstallationDir = Path.Combine(programFiles, "fsx") |> DirectoryInfo
+        let fsxWindowsLauncher =
+            Path.Combine(fsxWinInstallationDir.FullName, "fsx.bat")
+            |> FileInfo
 
+        // because Windows and shebang are not friends
+        {
+            Command = fsxWindowsLauncher.FullName
+            Arguments = sprintf "%s %s" fsxFile.FullName args
+        }
+    else
+        // because shebang works in Unix
+        {
+            Command = fsxFile.FullName
+            Arguments = args
+        }
+
+
+let basicTest = Path.Combine(TestDir.FullName, "test.fsx") |> FileInfo
 Process
     .Execute(
-        {
-            Command = basicTest.FullName
-            Arguments = String.Empty
-        },
+        CreateCommandForTest(basicTest, String.Empty),
         Echo.All
     )
     .UnwrapDefault()
 |> ignore<string>
 
+
+match Misc.GuessPlatform() with
+| Misc.Platform.Windows ->
+    // not all tests run in Windows yet, WIP!
+    Environment.Exit 0
+| _ -> ()
 
 let fsFileToBuild = Path.Combine(TestDir.FullName, "test.fs") |> FileInfo
 let libToRef1 = Path.Combine(TestDir.FullName, "test1.dll") |> FileInfo
@@ -57,10 +81,7 @@ let refLibTest = Path.Combine(TestDir.FullName, "testRefLib.fsx") |> FileInfo
 
 Process
     .Execute(
-        {
-            Command = refLibTest.FullName
-            Arguments = String.Empty
-        },
+        CreateCommandForTest(refLibTest, String.Empty),
         Echo.All
     )
     .UnwrapDefault()
@@ -90,10 +111,7 @@ let refLibOutsideCurrentFolderTest =
 
 Process
     .Execute(
-        {
-            Command = refLibOutsideCurrentFolderTest.FullName
-            Arguments = String.Empty
-        },
+        CreateCommandForTest(refLibOutsideCurrentFolderTest, String.Empty),
         Echo.All
     )
     .UnwrapDefault()
@@ -129,10 +147,7 @@ let refNugetLibTest =
 
 Process
     .Execute(
-        {
-            Command = refNugetLibTest.FullName
-            Arguments = String.Empty
-        },
+        CreateCommandForTest(refNugetLibTest, String.Empty),
         Echo.All
     )
     .UnwrapDefault()
@@ -144,10 +159,7 @@ let cmdLineArgsTest =
 
 Process
     .Execute(
-        {
-            Command = cmdLineArgsTest.FullName
-            Arguments = "one 2 three"
-        },
+        CreateCommandForTest(cmdLineArgsTest, "one 2 three"),
         Echo.All
     )
     .UnwrapDefault()
@@ -157,10 +169,7 @@ let tsvTest = Path.Combine(TestDir.FullName, "testTsv.fsx") |> FileInfo
 
 Process
     .Execute(
-        {
-            Command = tsvTest.FullName
-            Arguments = String.Empty
-        },
+        CreateCommandForTest(tsvTest, String.Empty),
         Echo.All
     )
     .UnwrapDefault()
@@ -170,10 +179,7 @@ let processTest = Path.Combine(TestDir.FullName, "testProcess.fsx") |> FileInfo
 
 Process
     .Execute(
-        {
-            Command = processTest.FullName
-            Arguments = String.Empty
-        },
+        CreateCommandForTest(processTest, String.Empty),
         Echo.All
     )
     .UnwrapDefault()

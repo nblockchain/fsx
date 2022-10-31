@@ -303,6 +303,10 @@ match maybeTarget with
             envVarScope
         )
 
+
+
+    Console.WriteLine(sprintf "Successfully installed in %s" fsxInstallationDir.FullName)
+
 | Some "check" ->
 
     // FIXME: contributor should be able to run 'make check' before 'make install'
@@ -314,7 +318,7 @@ match maybeTarget with
         Process.Execute(
             {
                 Command = fsxBatDestination.FullName
-                Arguments = Path.Combine(TestDir.FullName, "test.fsx")
+                Arguments = Path.Combine(ScriptsDir.FullName, "runTests.fsx")
             },
             Echo.All
         )
