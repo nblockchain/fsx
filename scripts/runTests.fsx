@@ -36,7 +36,7 @@ let CreateCommandForTest (fsxFile: FileInfo, args: string) =
 
         // because Windows and shebang are not friends
         {
-            Command = fsxWindowsLauncher
+            Command = fsxWindowsLauncher.FullName
             Arguments = sprintf "%s %s" fsxFile.FullName args
         }
     else
