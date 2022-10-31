@@ -303,6 +303,10 @@ match maybeTarget with
             envVarScope
         )
 
+
+
+    Console.WriteLine(sprintf "Successfully installed in %s" fsxInstallationDir.FullName)
+
 | Some "check" ->
 
     // FIXME: contributor should be able to run 'make check' before 'make install'
