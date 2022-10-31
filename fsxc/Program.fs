@@ -414,6 +414,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                     else
                         Echo.Off
 
+                // TODO: move to Misc.fs? otherwise it's duped between runTests.fsx & here
                 let fsharpCompilerCommand =
                     match Misc.GuessPlatform() with
                     | Misc.Platform.Windows ->

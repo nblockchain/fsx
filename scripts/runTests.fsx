@@ -46,6 +46,36 @@ let CreateCommandForTest (fsxFile: FileInfo, args: string) =
             Arguments = args
         }
 
+// TODO: move to Misc.fs? otherwise it's duped between fsxc's Program.fs & here
+let fsharpCompilerCommand =
+    match Misc.GuessPlatform() with
+    | Misc.Platform.Windows ->
+        let vswherePath =
+            Path.Combine(
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder.ProgramFilesX86
+                ),
+                "Microsoft Visual Studio",
+                "Installer",
+                "vswhere.exe"
+            )
+
+        Process
+            .Execute(
+                {
+                    Command = vswherePath
+                    Arguments = "-find **\\fsc.exe"
+                },
+                Echo.Off
+            )
+            .UnwrapDefault()
+            .Split(
+                Array.singleton Environment.NewLine,
+                StringSplitOptions.RemoveEmptyEntries
+            )
+            .First()
+    | _ -> "fsharpc"
+
 
 let basicTest = Path.Combine(TestDir.FullName, "test.fsx") |> FileInfo
 Process
@@ -62,7 +92,7 @@ let libToRef1 = Path.Combine(TestDir.FullName, "test1.dll") |> FileInfo
 
 let fscCmd1 =
     {
-        Command = "fsharpc"
+        Command = fsharpCompilerCommand
         Arguments =
             sprintf
                 "%s --target:library --out:%s"
@@ -89,7 +119,7 @@ let libToRef2 = Path.Combine(subLibFolder.FullName, "test2.dll") |> FileInfo
 
 let fscCmd2 =
     {
-        Command = "fsharpc"
+        Command = fsharpCompilerCommand
         Arguments =
             sprintf
                 "%s --target:library --out:%s"
