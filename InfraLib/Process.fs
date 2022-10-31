@@ -113,9 +113,16 @@ module Process =
     exception ProcessSucceededWithWarnings of string
     exception ProcessFailed of string
 
+    type RunDetails =
+        {
+            Command: string
+            Args: string
+            Echo: Echo
+        }
+
     type ProcessResult =
         {
-            Details: ProcessDetails
+            Details: RunDetails
             Result: ProcessResultState
         }
 
@@ -123,17 +130,18 @@ module Process =
             match self.Result with
             | Success output -> output
             | Error(_, output) ->
-                output.PrintToConsole()
-                Console.WriteLine()
-                Console.Out.Flush()
+                if self.Details.Echo = Echo.Off then
+                    output.PrintToConsole()
+                    Console.WriteLine()
+                    Console.Out.Flush()
 
                 Console.Error.WriteLine errMsg
                 raise <| ProcessFailed errMsg
             | WarningsOrAmbiguous output ->
-                output.PrintToConsole()
-                Console.WriteLine()
-                Console.Out.Flush()
-                Console.Error.Flush()
+                if self.Details.Echo = Echo.Off then
+                    output.PrintToConsole()
+                    Console.WriteLine()
+                    Console.Out.Flush()
 
                 let fullErrMsg = sprintf "%s (with warnings?)" errMsg
                 Console.Error.WriteLine fullErrMsg
@@ -316,21 +324,27 @@ module Process =
         errReaderThread.Join()
 
         let output = OutputBuffer outputBuffer
+        let procRunResultDetails =
+            {
+                Command = procDetails.Command
+                Args = procDetails.Arguments
+                Echo = echo
+            }
 
         match exitCode with
         | 0 when output.StdErr.Length = 0 ->
             {
-                Details = procDetails
+                Details = procRunResultDetails
                 Result = ProcessResultState.Success output.StdOut
             }
         | 0 ->
             {
-                Details = procDetails
+                Details = procRunResultDetails
                 Result = ProcessResultState.WarningsOrAmbiguous output
             }
         | _ ->
             {
-                Details = procDetails
+                Details = procRunResultDetails
                 Result = ProcessResultState.Error(exitCode, output)
             }
 
