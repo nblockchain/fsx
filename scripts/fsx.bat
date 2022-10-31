@@ -9,4 +9,5 @@ IF NOT EXIST "%FSIBAT%" (
 IF NOT EXIST "%FSXFSX%" (
     ECHO "%FSXFSX% not found" && EXIT /b 1
 )
-CALL "%ProgramFiles%\fss\fsi.bat" "%ProgramFiles%\fsx\fsx.fsx" %* || EXIT /b
+
+CALL "%FSIBAT%" "%FSXFSX%" %* || EXIT /b
