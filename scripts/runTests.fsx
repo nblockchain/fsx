@@ -25,8 +25,19 @@ let NugetPackages = Path.Combine(RootDir.FullName, "packages") |> DirectoryInfo
 // please maintain this URL in sync with the make.fsx file
 let NugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
-let CreateCommandForTest (fsxFile: FileInfo, args: string) =
-    if Misc.GuessPlatform() = Misc.Platform.Windows then
+let CreateCommandForTest (executable: FileInfo, args: string) =
+    let platform = Misc.GuessPlatform()
+    if (executable.ToLower().EndsWith(".exe") && platform = Misc.Platform.Windows) ||
+
+       // because shebang works in Unix
+       (executable.ToLower().EndsWith(".fsx" && platform <> Misc.Platform.Windows) then
+
+        {
+            Command = executable.FullName
+            Arguments = args
+        }
+
+    elif (executable.ToLower().EndsWith(".fsx" && platform = Misc.Platform.Windows) then
         let programFiles =
             Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
         let fsxWinInstallationDir = Path.Combine(programFiles, "fsx") |> DirectoryInfo
@@ -37,14 +48,15 @@ let CreateCommandForTest (fsxFile: FileInfo, args: string) =
         // because Windows and shebang are not friends
         {
             Command = fsxWindowsLauncher.FullName
-            Arguments = sprintf "%s %s" fsxFile.FullName args
+            Arguments = sprintf "%s %s" executable.FullName args
         }
-    else
-        // because shebang works in Unix
+
+    elif (executable.ToLower().EndsWith(".exe" && platform <> Misc.Platform.Windows) then
         {
-            Command = fsxFile.FullName
-            Arguments = args
+            Command = "mono"
+            Arguments = sprintf "%s %s" executable.FullName args
         }
+
 
 // TODO: move to Misc.fs? otherwise it's duped between fsxc's Program.fs & here
 let fsharpCompilerCommand =
