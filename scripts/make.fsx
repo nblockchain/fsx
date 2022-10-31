@@ -211,7 +211,8 @@ let MakeAll() =
     buildConfig
 
 let programFiles =
-    Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
+    (Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles)
+        .Replace("Program Files (x86)", "Program Files")
 
 let fsxInstallationDir = Path.Combine(programFiles, "fsx") |> DirectoryInfo
 let fsxBat = Path.Combine(ScriptsDir.FullName, "fsx.bat") |> FileInfo
