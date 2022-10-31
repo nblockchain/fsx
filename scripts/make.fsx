@@ -211,9 +211,11 @@ let MakeAll() =
     buildConfig
 
 let programFiles =
-    Environment.GetFolderPath Environment.SpecialFolder.ProgramFiles
+    Environment.GetEnvironmentVariable "ProgramW6432" |> DirectoryInfo
 
-let fsxInstallationDir = Path.Combine(programFiles, "fsx") |> DirectoryInfo
+let fsxInstallationDir =
+    Path.Combine(programFiles.FullName, "fsx") |> DirectoryInfo
+
 let fsxBat = Path.Combine(ScriptsDir.FullName, "fsx.bat") |> FileInfo
 
 let fsxBatDestination =
@@ -303,6 +305,12 @@ match maybeTarget with
             envVarScope
         )
 
+
+
+    Console.WriteLine(
+        sprintf "Successfully installed in %s" fsxInstallationDir.FullName
+    )
+
 | Some "check" ->
 
     // FIXME: contributor should be able to run 'make check' before 'make install'
@@ -314,7 +322,7 @@ match maybeTarget with
         Process.Execute(
             {
                 Command = fsxBatDestination.FullName
-                Arguments = Path.Combine(TestDir.FullName, "test.fsx")
+                Arguments = Path.Combine(ScriptsDir.FullName, "runTests.fsx")
             },
             Echo.All
         )

@@ -1,6 +1,6 @@
 @ECHO OFF
-SET "FSIBAT=%ProgramFiles%\fsx\fsi.bat"
-SET "FSXFSX=%ProgramFiles%\fsx\fsx.fsx"
+SET "FSIBAT=%ProgramW6432%\fsx\fsi.bat"
+SET "FSXFSX=%ProgramW6432%\fsx\fsx.fsx"
 
 IF NOT EXIST "%FSIBAT%" (
     ECHO "%FSIBAT% not found" && EXIT /b 1
