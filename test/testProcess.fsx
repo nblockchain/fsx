@@ -1,6 +1,7 @@
 #!/usr/bin/env fsx
 open System
 open System.IO
+open System.Linq
 
 #r "System.Configuration"
 open System.Configuration
@@ -11,14 +12,53 @@ open System.Configuration
 open FSX.Infrastructure
 open Process
 
+let sourceDir = DirectoryInfo __SOURCE_DIRECTORY__
+
+let sample =
+    Path.Combine(sourceDir.FullName, "testProcessSample.fsx") |> FileInfo
+
 let mutable retryCount = 0
+
+let command =
+    if Misc.GuessPlatform() = Misc.Platform.Windows then
+        // HACK: we should call fsx here but then we would get this problem in
+        // the tests: error FS0193: The process cannot access the file 'D:\a\fsx\fsx\test\bin\FSharp.Core.dll' because it is being used by another process.
+        // so then we gotta be pragmatic here, and hope that when we migrate to
+        // .NET6 (using dotnet fsi and a global/GAC FSharp.Core?) it's fixed
+        let vswherePath =
+            Path.Combine(
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder.ProgramFilesX86
+                ),
+                "Microsoft Visual Studio",
+                "Installer",
+                "vswhere.exe"
+            )
+
+        Process
+            .Execute(
+                {
+                    Command = vswherePath
+                    Arguments = "-find **\\fsi.exe"
+                },
+                Echo.Off
+            )
+            .UnwrapDefault()
+            .Split(
+                Array.singleton Environment.NewLine,
+                StringSplitOptions.RemoveEmptyEntries
+            )
+            .First()
+    else
+        // FIXME: extract PREFIX from build.config instead of assuming default
+        "/usr/local/bin/fsx"
 
 while (retryCount < 20) do //this is a stress test
     let procResult =
         Process.Execute(
             {
-                Command = "fsharpi"
-                Arguments = "test/testProcessSample.fsx"
+                Command = command
+                Arguments = sample.FullName
             },
             Echo.Off
         )

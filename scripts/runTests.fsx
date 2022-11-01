@@ -34,25 +34,75 @@ let GetFsxWindowsLauncher() =
 
     Path.Combine(fsxWinInstallationDir.FullName, "fsx.bat") |> FileInfo
 
-let CreateCommandForTest(fsxFile: FileInfo, args: string) =
-    if Misc.GuessPlatform() = Misc.Platform.Windows then
-        // because Windows and shebang are not friends
+let CreateCommand(executable: FileInfo, args: string) =
+    let platform = Misc.GuessPlatform()
+
+    if (executable.FullName.ToLower().EndsWith(".exe")
+        && platform = Misc.Platform.Windows)
+       ||
+       // because shebang works in Unix
+       (executable.FullName.ToLower().EndsWith(".fsx")
+        && platform <> Misc.Platform.Windows) then
         {
-            Command = GetFsxWindowsLauncher().FullName
-            Arguments = sprintf "%s %s" fsxFile.FullName args
-        }
-    else
-        // because shebang works in Unix
-        {
-            Command = fsxFile.FullName
+            Command = executable.FullName
             Arguments = args
         }
+
+    elif
+        executable.FullName.ToLower().EndsWith(".fsx")
+        && platform = Misc.Platform.Windows
+    then
+        {
+            Command = GetFsxWindowsLauncher().FullName
+            Arguments = sprintf "%s %s" executable.FullName args
+        }
+    elif
+        executable.FullName.ToLower().EndsWith(".exe")
+        && platform <> Misc.Platform.Windows
+    then
+        {
+            Command = "mono"
+            Arguments = sprintf "%s %s" executable.FullName args
+        }
+    else
+        failwith "Unexpected command, you broke 'make check'"
+
+
+// TODO: move to Misc.fs? otherwise it's duped between fsxc's Program.fs & here
+let fsharpCompilerCommand =
+    match Misc.GuessPlatform() with
+    | Misc.Platform.Windows ->
+        let vswherePath =
+            Path.Combine(
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder.ProgramFilesX86
+                ),
+                "Microsoft Visual Studio",
+                "Installer",
+                "vswhere.exe"
+            )
+
+        Process
+            .Execute(
+                {
+                    Command = vswherePath
+                    Arguments = "-find **\\fsc.exe"
+                },
+                Echo.Off
+            )
+            .UnwrapDefault()
+            .Split(
+                Array.singleton Environment.NewLine,
+                StringSplitOptions.RemoveEmptyEntries
+            )
+            .First()
+    | _ -> "fsharpc"
 
 
 let basicTest = Path.Combine(TestDir.FullName, "test.fsx") |> FileInfo
 
 Process
-    .Execute(CreateCommandForTest(basicTest, String.Empty), Echo.All)
+    .Execute(CreateCommand(basicTest, String.Empty), Echo.All)
     .UnwrapDefault()
 |> ignore<string>
 
@@ -88,18 +138,12 @@ match proc.Result with
     failwith "Call to non-existent test should have failed (exitCode <> 0)"
 
 
-match Misc.GuessPlatform() with
-| Misc.Platform.Windows ->
-    // not all tests run in Windows yet, WIP!
-    Environment.Exit 0
-| _ -> ()
-
 let fsFileToBuild = Path.Combine(TestDir.FullName, "test.fs") |> FileInfo
 let libToRef1 = Path.Combine(TestDir.FullName, "test1.dll") |> FileInfo
 
 let fscCmd1 =
     {
-        Command = "fsharpc"
+        Command = fsharpCompilerCommand
         Arguments =
             sprintf
                 "%s --target:library --out:%s"
@@ -111,7 +155,7 @@ Process.Execute(fscCmd1, Echo.All).UnwrapDefault() |> ignore<string>
 let refLibTest = Path.Combine(TestDir.FullName, "testRefLib.fsx") |> FileInfo
 
 Process
-    .Execute(CreateCommandForTest(refLibTest, String.Empty), Echo.All)
+    .Execute(CreateCommand(refLibTest, String.Empty), Echo.All)
     .UnwrapDefault()
 |> ignore<string>
 
@@ -123,7 +167,7 @@ let libToRef2 = Path.Combine(subLibFolder.FullName, "test2.dll") |> FileInfo
 
 let fscCmd2 =
     {
-        Command = "fsharpc"
+        Command = fsharpCompilerCommand
         Arguments =
             sprintf
                 "%s --target:library --out:%s"
@@ -139,7 +183,7 @@ let refLibOutsideCurrentFolderTest =
 
 Process
     .Execute(
-        CreateCommandForTest(refLibOutsideCurrentFolderTest, String.Empty),
+        CreateCommand(refLibOutsideCurrentFolderTest, String.Empty),
         Echo.All
     )
     .UnwrapDefault()
@@ -156,25 +200,24 @@ if not NugetPackages.Exists then
     Directory.CreateDirectory(NugetPackages.FullName) |> ignore
 
 let nugetCmd =
-    {
-        Command = "mono"
-        Arguments =
-            sprintf
-                "%s install Microsoft.Build -Version 16.11.0 -OutputDirectory %s"
-                NugetExe.FullName
-                NugetPackages.FullName
-    }
+    CreateCommand(
+        NugetExe,
+        sprintf
+            "install Microsoft.Build -Version 16.11.0 -OutputDirectory %s"
+            NugetPackages.FullName
+    )
 
 Process
     .Execute(nugetCmd, Echo.All)
     .UnwrapDefault()
 |> ignore<string>
 
+
 let refNugetLibTest =
     Path.Combine(TestDir.FullName, "testRefNugetLib.fsx") |> FileInfo
 
 Process
-    .Execute(CreateCommandForTest(refNugetLibTest, String.Empty), Echo.All)
+    .Execute(CreateCommand(refNugetLibTest, String.Empty), Echo.All)
     .UnwrapDefault()
 |> ignore<string>
 
@@ -183,23 +226,24 @@ let cmdLineArgsTest =
     Path.Combine(TestDir.FullName, "testFsiCommandLineArgs.fsx") |> FileInfo
 
 Process
-    .Execute(CreateCommandForTest(cmdLineArgsTest, "one 2 three"), Echo.All)
+    .Execute(CreateCommand(cmdLineArgsTest, "one 2 three"), Echo.All)
     .UnwrapDefault()
 |> ignore<string>
 
 let tsvTest = Path.Combine(TestDir.FullName, "testTsv.fsx") |> FileInfo
 
 Process
-    .Execute(CreateCommandForTest(tsvTest, String.Empty), Echo.All)
+    .Execute(CreateCommand(tsvTest, String.Empty), Echo.All)
     .UnwrapDefault()
 |> ignore<string>
 
 let processTest = Path.Combine(TestDir.FullName, "testProcess.fsx") |> FileInfo
 
 Process
-    .Execute(CreateCommandForTest(processTest, String.Empty), Echo.All)
+    .Execute(CreateCommand(processTest, String.Empty), Echo.All)
     .UnwrapDefault()
 |> ignore<string>
+
 
 (* this is actually only really useful for when process spits both stdout & stderr
 let processConcurrencyTest = Path.Combine(TestDir.FullName, "testProcessConcurrency.fsx") |> FileInfo

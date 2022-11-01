@@ -29,7 +29,9 @@ let SplitArgsIntoFsxcArgsAndUserArgs() : seq<string> * string * seq<string> =
         : seq<string> * string * seq<string> =
         match nextArgs, fsxScriptDiscoverySoFar with
         | [], FsxFsxFoundAndFsxScriptNameSupplied userScriptName ->
-            Seq.ofList fsxcArgsSoFar, userScriptName, Seq.ofList userArgsSoFar
+            let finalFscxArgs = fsxcArgsSoFar |> List.rev |> Seq.ofList
+            let finalUserArgs = userArgsSoFar |> List.rev |> Seq.ofList
+            finalFscxArgs, userScriptName, finalUserArgs
         | [], _ -> failwith "fsx.fsx not found"
         | head :: tail, fsxScriptDiscoverySoFar ->
             match fsxScriptDiscoverySoFar, head with
