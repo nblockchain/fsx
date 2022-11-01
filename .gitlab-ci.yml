@@ -9,7 +9,7 @@ stages:
   - sanitycheck
   - package
 
-build&install-stockmono:
+build&install-oldLTS-stockmono:
   image: ubuntu:20.04
   stage: buildAndInstall
   script:
@@ -19,7 +19,7 @@ build&install-stockmono:
     - make
     - make install
 
-build&install-newmono:
+build&install-oldLTS-newmono:
   image: ubuntu:20.04
   stage: buildAndInstall
   script:
@@ -29,7 +29,27 @@ build&install-newmono:
     - make
     - make install
 
-buildScripts-stockmono:
+build&install-newLTS-stockmono:
+  image: ubuntu:22.04
+  stage: buildAndInstall
+  script:
+    - ./scripts/CI/install_mono.sh
+
+    - ./configure.sh
+    - make
+    - make install
+
+build&install-newLTS-newmono:
+  image: ubuntu:22.04
+  stage: buildAndInstall
+  script:
+    - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
+
+    - ./configure.sh
+    - make
+    - make install
+
+buildScripts-oldLTS-stockmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
@@ -39,7 +59,7 @@ buildScripts-stockmono:
     - make check
     - ./compileFSharpScripts.fsx
 
-buildScripts-newmono:
+buildScripts-oldLTS-newmono:
   image: ubuntu:20.04
   stage: compileScripts
   script:
@@ -49,7 +69,27 @@ buildScripts-newmono:
     - make check
     - ./compileFSharpScripts.fsx
 
-test-stockmono:
+buildScripts-newLTS-stockmono:
+  image: ubuntu:22.04
+  stage: compileScripts
+  script:
+    - ./scripts/CI/install_mono.sh
+
+    - ./configure.sh && make install
+    - make check
+    - ./compileFSharpScripts.fsx
+
+buildScripts-newLTS-newmono:
+  image: ubuntu:22.04
+  stage: compileScripts
+  script:
+    - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
+
+    - ./configure.sh && make install
+    - make check
+    - ./compileFSharpScripts.fsx
+
+test-oldLTS-stockmono:
   image: ubuntu:20.04
   stage: test
   script:
@@ -58,8 +98,26 @@ test-stockmono:
     - ./configure.sh && make install
     - make check
 
-test-newmono:
+test-oldLTS-newmono:
   image: ubuntu:20.04
+  stage: test
+  script:
+    - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
+
+    - ./configure.sh && make install
+    - make check
+
+test-newLTS-stockmono:
+  image: ubuntu:22.04
+  stage: test
+  script:
+    - ./scripts/CI/install_mono.sh
+
+    - ./configure.sh && make install
+    - make check
+
+test-newLTS-newmono:
+  image: ubuntu:22.04
   stage: test
   script:
     - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh

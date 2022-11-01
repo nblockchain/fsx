@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
 
   sanity_check:
-    needs: [macOS, linux, windows]
+    needs: [macOS, linux_oldLTS, linux_newLTS, windows]
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
@@ -53,8 +53,35 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux:
+  linux_oldLTS:
     runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: check mono version
+      run: mono --version
+    - name: install dependencies
+      run: sudo apt install --yes fsharp
+    - name: check mono version
+      run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  linux_newLTS:
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
     - name: check mono version
