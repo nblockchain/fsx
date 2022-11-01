@@ -36,7 +36,7 @@ buildScripts-stockmono:
     - ./scripts/CI/install_mono.sh
 
     - ./configure.sh && make install
-    - ./scripts/test.sh
+    - make check
     - ./compileFSharpScripts.fsx
 
 buildScripts-newmono:
@@ -46,7 +46,7 @@ buildScripts-newmono:
     - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
 
     - ./configure.sh && make install
-    - ./scripts/test.sh
+    - make check
     - ./compileFSharpScripts.fsx
 
 test-stockmono:
@@ -56,7 +56,7 @@ test-stockmono:
     - ./scripts/CI/install_mono.sh
 
     - ./configure.sh && make install
-    - ./scripts/test.sh
+    - make check
 
 test-newmono:
   image: ubuntu:20.04
@@ -65,7 +65,7 @@ test-newmono:
     - ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
 
     - ./configure.sh && make install
-    - ./scripts/test.sh
+    - make check
 
 style:
   image: ubuntu:20.04
