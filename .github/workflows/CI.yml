@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
 
   sanity_check:
-    needs: [macOS, linux_oldLTS, linux_newLTS, windows]
+    needs: [macOS, linux_oldLTS_github, linux_oldLTS_vanilla, linux_newLTS_github, linux_newLTS_vanilla, windows]
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
@@ -53,7 +53,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_oldLTS:
+  linux_oldLTS_github:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
@@ -80,10 +80,86 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_newLTS:
+  linux_oldLTS_vanilla:
+    runs-on: ubuntu-20.04
+    container:
+      image: "ubuntu:20.04"
+    steps:
+    - uses: actions/checkout@v1
+    - name: install sudo
+      run: apt update && apt install --yes sudo
+    - name: install all dependencies
+      run: sudo apt install --yes git make curl fsharp nunit-console
+
+    # workaround for https://github.com/actions/runner/issues/2033
+    - name: ownership workaround
+      run: git config --global --add safe.directory '*'
+
+    - name: check mono version
+      run: mono --version
+    - name: install dependencies
+      run: sudo apt install --yes fsharp
+    - name: check mono version
+      run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  linux_newLTS_github:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
+    - name: check mono version
+      run: mono --version
+    - name: install dependencies
+      run: sudo apt install --yes fsharp
+    - name: check mono version
+      run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  linux_newLTS_vanilla:
+    runs-on: ubuntu-22.04
+    container:
+      image: "ubuntu:22.04"
+    steps:
+    - uses: actions/checkout@v1
+    - name: install sudo
+      run: apt update && apt install --yes sudo
+    - name: install all dependencies
+      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make curl fsharp nunit-console
+
+    # workaround for https://github.com/actions/runner/issues/2033
+    - name: ownership workaround
+      run: git config --global --add safe.directory '*'
+
     - name: check mono version
       run: mono --version
     - name: install dependencies
