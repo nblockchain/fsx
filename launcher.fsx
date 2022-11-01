@@ -142,13 +142,6 @@ let fsxcArgs, userScript, userArgs = SplitArgsIntoFsxcArgsAndUserArgs()
 
 let userScriptFile = FileInfo userScript
 
-if not userScriptFile.Exists then
-    raise
-    <| FileNotFoundException(
-        "Could not find file \"%s\"",
-        userScriptFile.FullName
-    )
-
 let fsxcCmd =
     {
         Command = fsxcExe.FullName
