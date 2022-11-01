@@ -142,16 +142,13 @@ let fsxcArgs, userScript, userArgs = SplitArgsIntoFsxcArgsAndUserArgs()
 
 let userScriptFile = FileInfo userScript
 
-if not userScriptFile.Exists then
-    failwithf "'%s' doesn't exist" userScriptFile.FullName
-
 let fsxcCmd =
     {
         Command = fsxcExe.FullName
         Arguments = sprintf "%s %s" (String.Join(" ", fsxcArgs)) userScript
     }
 
-let proc = Process.Execute(fsxcCmd, Echo.All)
+let proc = Process.Execute(fsxcCmd, Echo.Off)
 proc.UnwrapDefault() |> ignore<string>
 
 let finalLaunch =
@@ -160,7 +157,7 @@ let finalLaunch =
         Arguments = String.Join(" ", userArgs)
     }
 
-let finalProc = Process.Execute(finalLaunch, Echo.All)
+let finalProc = Process.Execute(finalLaunch, Echo.OutputOnly)
 // FIXME: maybe using a .fsx file as a launcher in Windows wasn't the best idea after all, because it means
 // that, on Windows, fsx will run fsharpi while the compiled user script is running, which means that the
 // memory gains of using fsx instead of fsharpi (as explained in the ReadMe.md file) don't exist for this OS
