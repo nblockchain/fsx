@@ -9,10 +9,12 @@ jobs:
     - macOS
     - linux_oldLTS_github_xbuild
     - linux_oldLTS_github_msbuild
-    - linux_oldLTS_vanilla
+    - linux_oldLTS_vanilla_stockmono
+    - linux_oldLTS_vanilla_newmono
     - linux_newLTS_github_xbuild
     - linux_newLTS_github_msbuild
-    - linux_newLTS_vanilla
+    - linux_newLTS_vanilla_stockmono
+    - linux_newLTS_vanilla_newmono
     - windows
 
     runs-on: ubuntu-20.04
@@ -116,7 +118,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_oldLTS_vanilla:
+  linux_oldLTS_vanilla_stockmono:
     runs-on: ubuntu-20.04
     container:
       image: "ubuntu:20.04"
@@ -125,6 +127,46 @@ jobs:
     - name: install sudo
       run: apt update && apt install --yes sudo
     - name: install all dependencies
+      run: sudo apt install --yes git make curl fsharp nunit-console
+
+    # workaround for https://github.com/actions/runner/issues/2033
+    - name: ownership workaround
+      run: git config --global --add safe.directory '*'
+
+    - name: check mono version
+      run: mono --version
+    - name: install dependencies
+      run: sudo apt install --yes fsharp
+    - name: check mono version
+      run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  linux_oldLTS_vanilla_newmono:
+    runs-on: ubuntu-20.04
+    container:
+      image: "ubuntu:20.04"
+    steps:
+    - uses: actions/checkout@v1
+    - name: install sudo
+      run: apt update && apt install --yes sudo
+    - name: install last version of mono (Microsoft APT repositories)
+      run: sudo ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
+    - name: install rest of dependencies
       run: sudo apt install --yes git make curl fsharp nunit-console
 
     # workaround for https://github.com/actions/runner/issues/2033
@@ -208,7 +250,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_newLTS_vanilla:
+  linux_newLTS_vanilla_stockmono:
     runs-on: ubuntu-22.04
     container:
       image: "ubuntu:22.04"
@@ -217,6 +259,46 @@ jobs:
     - name: install sudo
       run: apt update && apt install --yes sudo
     - name: install all dependencies
+      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make curl fsharp nunit-console
+
+    # workaround for https://github.com/actions/runner/issues/2033
+    - name: ownership workaround
+      run: git config --global --add safe.directory '*'
+
+    - name: check mono version
+      run: mono --version
+    - name: install dependencies
+      run: sudo apt install --yes fsharp
+    - name: check mono version
+      run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  linux_newLTS_vanilla_newmono:
+    runs-on: ubuntu-22.04
+    container:
+      image: "ubuntu:22.04"
+    steps:
+    - uses: actions/checkout@v1
+    - name: install sudo
+      run: apt update && apt install --yes sudo
+    - name: install last version of mono (Microsoft APT repositories)
+      run: sudo ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
+    - name: install rest of dependencies
       run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make curl fsharp nunit-console
 
     # workaround for https://github.com/actions/runner/issues/2033
