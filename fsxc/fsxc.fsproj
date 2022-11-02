@@ -48,6 +48,9 @@
     <Compile Include="..\InfraLib\Process.fs">
       <Link>InfraLib\Process.fs</Link>
     </Compile>
+    <Compile Include="..\InfraLib\Network.fs">
+      <Link>InfraLib\Network.fs</Link>
+    </Compile>
     <Compile Include="Program.fs" />
     <None Include="packages.config" />
   </ItemGroup>

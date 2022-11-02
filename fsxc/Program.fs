@@ -44,6 +44,16 @@ exception NoScriptProvided
 
 module Program =
 
+    let private nugetExeTmpLocation: Lazy<FileInfo> =
+        lazy
+            (let tmpDir = System.IO.Path.GetTempPath() |> DirectoryInfo
+
+             let tmpNuget =
+                 Path.Combine(tmpDir.FullName, "nuget.exe") |> FileInfo
+
+             Network.DownloadNugetExe tmpNuget
+             tmpNuget)
+
     let PrintUsage() =
         Console.WriteLine()
         Console.WriteLine "Usage: fsxc.exe [OPTION] yourscript.fsx"
@@ -120,12 +130,14 @@ module Program =
             }
 
     let LOAD_PREPROCESSOR = "#load \""
+    let REFNUGET_PREPROCESSOR = "#r \"nuget: "
     let REF_PREPROCESSOR = "#r \""
 
     type PreProcessorAction =
         | Skip
         | Load of string
         | Ref of string
+        | NugetRef of name: string * version: string
 
     type LineAction =
         | Normal
@@ -173,6 +185,36 @@ module Program =
                     )
 
                 PreProcessorAction.Load fileToLoad
+            elif line.StartsWith REFNUGET_PREPROCESSOR then
+                let libToRef =
+                    line.Substring(
+                        REFNUGET_PREPROCESSOR.Length,
+                        line.Length - REFNUGET_PREPROCESSOR.Length - 1
+                    )
+
+                let versionPattern = ", Version="
+
+                let libName, maybeVersion =
+                    if libToRef.Contains versionPattern then
+                        let versionPatternIndex =
+                            libToRef.IndexOf versionPattern
+
+                        let theNameOnly =
+                            libToRef.Substring(0, versionPatternIndex)
+
+                        theNameOnly,
+                        Some(
+                            libToRef.Substring(
+                                versionPatternIndex + versionPattern.Length
+                            )
+                        )
+                    else
+                        libToRef, None
+
+                match maybeVersion with
+                | None ->
+                    failwith "nuget refs without version are still unsupported"
+                | Some version -> PreProcessorAction.NugetRef(libName, version)
             elif (line.StartsWith REF_PREPROCESSOR) then
                 let libToRef =
                     line.Substring(
@@ -277,6 +319,91 @@ module Program =
             (contents: List<string * LineAction>)
             : List<CompilerInput> =
 
+            // from "Microsoft.Build", "16.11.0" to .../packages/Microsoft.Build.16.11.0/lib/net472/Microsoft.Build.dll
+            let nugetRefToNormalRef
+                (scriptFile: FileInfo)
+                (pkgName: string)
+                (version: string)
+                : FileInfo =
+
+                let allowedFrameworkProfilesDirs =
+                    [
+                        "netstandard2.0"
+                        "net472"
+                        "net471"
+                        "net462"
+                        "net461"
+                        "net45"
+                    ]
+
+                let binDir =
+                    Path.Combine(scriptFile.Directory.FullName, "bin")
+                    |> DirectoryInfo
+
+                if not binDir.Exists then
+                    binDir.Create()
+
+                let nugetPkgsDir =
+                    Path.Combine(binDir.FullName, "packages") |> DirectoryInfo
+
+                if not nugetPkgsDir.Exists then
+                    nugetPkgsDir.Create()
+
+                let libDir =
+                    Path.Combine(
+                        nugetPkgsDir.FullName,
+                        sprintf "%s.%s" pkgName version,
+                        "lib"
+                    )
+                    |> DirectoryInfo
+
+                let possibleLocations =
+                    seq {
+                        for fxProfileDir in allowedFrameworkProfilesDirs do
+                            let possibleFile =
+                                Path.Combine(
+                                    libDir.FullName,
+                                    fxProfileDir,
+                                    sprintf "%s.dll" pkgName
+                                )
+                                |> FileInfo
+
+                            if possibleFile.Exists then
+                                yield possibleFile
+                    }
+
+                let nugetLibFinalLocation = Seq.tryHead possibleLocations
+
+                match nugetLibFinalLocation with
+                | None ->
+                    let echo =
+                        if verbose then
+                            Echo.All
+                        else
+                            Echo.Off
+
+                    Network.InstallNugetPackage
+                        nugetExeTmpLocation.Value
+                        nugetPkgsDir
+                        pkgName
+                        version
+                        echo
+                    |> ignore<ProcessResult>
+
+                    match Seq.tryHead possibleLocations with
+                    | None ->
+                        failwithf
+                            "Nuget download finished but file still not found in these fx profiles: %s (inside '%s')"
+                            (String.Join(
+                                ", ",
+                                libDir
+                                    .GetDirectories()
+                                    .Select(fun dir -> dir.Name)
+                            ))
+                            libDir.FullName
+                    | Some location -> location
+                | Some location -> location
+
             let initialInjectedContents =
                 """
 type FsiStub =
@@ -333,6 +460,16 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                                 )
 
                             yield CompilerInput.SourceFile(file)
+
+                        | PreProcessorAction.NugetRef(nugetPkgName, version) ->
+                            let downloadedRef =
+                                nugetRefToNormalRef
+                                    origScript
+                                    nugetPkgName
+                                    version
+
+                            yield CompilerInput.CustomRef downloadedRef.FullName
+
                         | PreProcessorAction.Ref refName ->
                             let maybeFile =
                                 FileInfo(
@@ -545,8 +682,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
             exeTarget.Exe
 
-    [<EntryPoint>]
-    let main argv =
+    let Main(argv: array<string>) =
         if argv.Length = 0 then
             Console.Error.WriteLine "Please pass the .fsx script as an argument"
             PrintUsage()
@@ -597,3 +733,11 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
             Console.WriteLine "Up-to-date binary found, skipping compilation"
 
         0 // return an integer exit code
+
+    [<EntryPoint>]
+    let main argv =
+        try
+            Main argv
+        finally
+            if nugetExeTmpLocation.IsValueCreated then
+                nugetExeTmpLocation.Value.Delete()
