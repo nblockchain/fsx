@@ -5,7 +5,16 @@ on: [push, pull_request]
 jobs:
 
   sanity_check:
-    needs: [macOS, linux_oldLTS_github, linux_oldLTS_vanilla, linux_newLTS_github, linux_newLTS_vanilla, windows]
+    needs:
+    - macOS
+    - linux_oldLTS_github_xbuild
+    - linux_oldLTS_github_msbuild
+    - linux_oldLTS_vanilla
+    - linux_newLTS_github_xbuild
+    - linux_newLTS_github_msbuild
+    - linux_newLTS_vanilla
+    - windows
+
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
@@ -53,7 +62,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_oldLTS_github:
+  linux_oldLTS_github_xbuild:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
@@ -61,6 +70,33 @@ jobs:
       run: mono --version
     - name: install dependencies
       run: sudo apt install --yes fsharp
+    - name: check mono version
+      run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  linux_oldLTS_github_msbuild:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: check mono version
+      run: mono --version
+    - name: install last version of mono (Microsoft APT repositories)
+      run: sudo ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
     - name: check mono version
       run: mono --version
     - name: configure
@@ -118,7 +154,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_newLTS_github:
+  linux_newLTS_github_xbuild:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
@@ -126,6 +162,33 @@ jobs:
       run: mono --version
     - name: install dependencies
       run: sudo apt install --yes fsharp
+    - name: check mono version
+      run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  linux_newLTS_github_msbuild:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: check mono version
+      run: mono --version
+    - name: install last version of mono (Microsoft APT repositories)
+      run: sudo ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
     - name: check mono version
       run: mono --version
     - name: configure
