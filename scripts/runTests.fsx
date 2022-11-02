@@ -215,6 +215,15 @@ Process
 |> ignore<string>
 
 
+let refNugetLibTestNewFormat =
+    Path.Combine(TestDir.FullName, "testRefNugetLibNewFormat.fsx") |> FileInfo
+
+Process
+    .Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
+    .UnwrapDefault()
+|> ignore<string>
+
+
 let cmdLineArgsTest =
     Path.Combine(TestDir.FullName, "testFsiCommandLineArgs.fsx") |> FileInfo
 
