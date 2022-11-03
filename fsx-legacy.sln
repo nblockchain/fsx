@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "InfraLib", "InfraLib\InfraLib.fsproj", "{4634F264-784E-42DA-B5A1-FE72125DEAFC}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "InfraLib", "InfraLib\InfraLib-legacy.fsproj", "{4634F264-784E-42DA-B5A1-FE72125DEAFC}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsxc", "fsxc\fsxc.fsproj", "{56DA5F03-8F7F-44AB-B692-5A24DB134A8B}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsxc", "fsxc\fsxc-legacy.fsproj", "{56DA5F03-8F7F-44AB-B692-5A24DB134A8B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{8E1108BE-590F-4C6D-8496-A8AAEB8594D8}"
 	ProjectSection(SolutionItems) = preProject

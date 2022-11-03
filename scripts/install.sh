@@ -7,7 +7,7 @@ if [ ! -f ./build.config ]; then
 fi
 source build.config
 
-$BuildTool fsx.sln /p:Configuration=Release
+$BuildTool fsx-legacy.sln /p:Configuration=Release
 
 FSX_INSTALL_DIR="$Prefix/lib/fsx"
 BIN_INSTALL_DIR="$Prefix/bin"

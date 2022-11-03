@@ -55,7 +55,7 @@
     <Compile Include="Git.fs" />
     <Compile Include="Taiga.fs" />
   </ItemGroup>
-  <Import Project="..\CommonBuildProps.proj" />
+  <Import Project="..\CommonBuildProps-legacy.proj" />
   <Import Condition="'$(FSharpTargetsPath)' != ''" Project="$(FSharpTargetsPath)" />
   <Target Name="BeforeBuild">
     <Message Condition="'$(FSharpTargetsPath)' == ''" Importance="High" Text="F# SDK path was not found!" />

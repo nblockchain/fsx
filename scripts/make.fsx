@@ -166,7 +166,7 @@ let BuildSolution
     | _ -> ()
 
 let JustBuild binaryConfig =
-    let solFile = "fsx.sln"
+    let solFile = "fsx-legacy.sln"
 
     Network.RunNugetCommand
         NugetExe

@@ -8,7 +8,8 @@ open System.Linq
 open Microsoft.Build.Construction
 
 let sol =
-    SolutionFile.Parse <| Path.Combine(__SOURCE_DIRECTORY__, "..", "fsx.sln")
+    SolutionFile.Parse
+    <| Path.Combine(__SOURCE_DIRECTORY__, "..", "fsx-legacy.sln")
 
 for (proj: string) in
     (sol
