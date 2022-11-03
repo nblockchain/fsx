@@ -214,9 +214,18 @@ Process
     .UnwrapDefault()
 |> ignore<string>
 
-
 let refNugetLibTestNewFormat =
     Path.Combine(TestDir.FullName, "testRefNugetLibNewFormat.fsx") |> FileInfo
+
+Process
+    .Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
+    .UnwrapDefault()
+|> ignore<string>
+
+
+let refNugetLibTestNewFormatWithVersion =
+    Path.Combine(TestDir.FullName, "testRefNugetLibNewFormatWithVersion.fsx")
+    |> FileInfo
 
 Process
     .Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)

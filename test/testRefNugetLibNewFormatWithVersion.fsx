@@ -4,7 +4,7 @@ open System
 open System.IO
 open System.Linq
 
-#r "nuget: Microsoft.Build"
+#r "nuget: Microsoft.Build, Version=16.11.0"
 open Microsoft.Build.Construction
 
 let sol =

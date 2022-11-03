@@ -32,6 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{848BC281-2
 		test\testFsiCommandLineArgs.fsx = test\testFsiCommandLineArgs.fsx
 		test\testIfDef.fsx = test\testIfDef.fsx
 		test\testRefNugetLibNewFormat.fsx = test\testRefNugetLibNewFormat.fsx
+		test\testRefNugetLibNewFormatWithVersion.fsx = test\testRefNugetLibNewFormatWithVersion.fsx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{DBAE02AB-5972-403C-B18B-ED1DFE362054}"
