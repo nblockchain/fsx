@@ -406,19 +406,24 @@ module Network =
         (nugetExe: FileInfo)
         (outputDirectory: DirectoryInfo)
         (pkgName: string)
-        (version: string)
+        (maybeVersion: Option<string>)
         (echo: Echo)
         : ProcessResult =
 
         if not outputDirectory.Exists then
             outputDirectory.Create()
 
+        let maybeVersionFlag =
+            match maybeVersion with
+            | None -> String.Empty
+            | Some version -> sprintf "-Version %s" version
+
         RunNugetCommand
             nugetExe
             (sprintf
-                "install %s -Version %s -OutputDirectory %s"
+                "install %s %s -OutputDirectory %s"
                 pkgName
-                version
+                maybeVersionFlag
                 outputDirectory.FullName)
             echo
             true

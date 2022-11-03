@@ -137,7 +137,7 @@ module Program =
         | Skip
         | Load of string
         | Ref of string
-        | NugetRef of name: string * version: string
+        | NugetRef of name: string * version: Option<string>
 
     type LineAction =
         | Normal
@@ -211,10 +211,8 @@ module Program =
                     else
                         libToRef, None
 
-                match maybeVersion with
-                | None ->
-                    failwith "nuget refs without version are still unsupported"
-                | Some version -> PreProcessorAction.NugetRef(libName, version)
+                PreProcessorAction.NugetRef(libName, maybeVersion)
+
             elif (line.StartsWith REF_PREPROCESSOR) then
                 let libToRef =
                     line.Substring(
@@ -323,8 +321,14 @@ module Program =
             let nugetRefToNormalRef
                 (scriptFile: FileInfo)
                 (pkgName: string)
-                (version: string)
+                (version: Option<string>)
                 : FileInfo =
+
+                let echo =
+                    if verbose then
+                        Echo.All
+                    else
+                        Echo.Off
 
                 let allowedFrameworkProfilesDirs =
                     [
@@ -349,38 +353,57 @@ module Program =
                 if not nugetPkgsDir.Exists then
                     nugetPkgsDir.Create()
 
-                let libDir =
-                    Path.Combine(
-                        nugetPkgsDir.FullName,
-                        sprintf "%s.%s" pkgName version,
-                        "lib"
-                    )
-                    |> DirectoryInfo
+                let possibleLibDirs =
+                    match version with
+                    | None ->
+                        Network.InstallNugetPackage
+                            nugetExeTmpLocation.Value
+                            nugetPkgsDir
+                            pkgName
+                            version
+                            echo
+                        |> ignore<ProcessResult>
+
+                        seq {
+                            // not sure if this orderBy is right...
+                            for dir in
+                                nugetPkgsDir
+                                    .GetDirectories(sprintf "%s.*" pkgName)
+                                    .OrderByDescending(fun dir -> dir.Name) do
+                                yield
+                                    Path.Combine(dir.FullName, "lib")
+                                    |> DirectoryInfo
+                        }
+
+                    | Some version ->
+                        Path.Combine(
+                            nugetPkgsDir.FullName,
+                            sprintf "%s.%s" pkgName version,
+                            "lib"
+                        )
+                        |> DirectoryInfo
+                        |> Seq.singleton
 
                 let possibleLocations =
                     seq {
-                        for fxProfileDir in allowedFrameworkProfilesDirs do
-                            let possibleFile =
-                                Path.Combine(
-                                    libDir.FullName,
-                                    fxProfileDir,
-                                    sprintf "%s.dll" pkgName
-                                )
-                                |> FileInfo
+                        for libDir in possibleLibDirs do
+                            for fxProfileDir in allowedFrameworkProfilesDirs do
+                                let possibleFile =
+                                    Path.Combine(
+                                        libDir.FullName,
+                                        fxProfileDir,
+                                        sprintf "%s.dll" pkgName
+                                    )
+                                    |> FileInfo
 
-                            if possibleFile.Exists then
-                                yield possibleFile
+                                if possibleFile.Exists then
+                                    yield possibleFile
                     }
 
                 let nugetLibFinalLocation = Seq.tryHead possibleLocations
 
                 match nugetLibFinalLocation with
                 | None ->
-                    let echo =
-                        if verbose then
-                            Echo.All
-                        else
-                            Echo.Off
 
                     Network.InstallNugetPackage
                         nugetExeTmpLocation.Value
@@ -393,14 +416,8 @@ module Program =
                     match Seq.tryHead possibleLocations with
                     | None ->
                         failwithf
-                            "Nuget download finished but file still not found in these fx profiles: %s (inside '%s')"
-                            (String.Join(
-                                ", ",
-                                libDir
-                                    .GetDirectories()
-                                    .Select(fun dir -> dir.Name)
-                            ))
-                            libDir.FullName
+                            "Nuget download finished but lib still not found inside for package %s"
+                            pkgName
                     | Some location -> location
                 | Some location -> location
 

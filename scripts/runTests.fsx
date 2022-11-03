@@ -202,7 +202,7 @@ Network.InstallNugetPackage
     NugetExe
     NugetPackages
     "Microsoft.Build"
-    "16.11.0"
+    (Some "16.11.0")
     Echo.All
 |> ignore
 
