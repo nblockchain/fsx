@@ -15,7 +15,8 @@ jobs:
     - linux_newLTS_github_msbuild
     - linux_newLTS_vanilla_stockmono
     - linux_newLTS_vanilla_newmono
-    - windows
+    - windows_legacyFramework
+    - windows_dotnet6
 
     runs-on: ubuntu-20.04
     steps:
@@ -328,13 +329,26 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  windows:
+  windows_legacyFramework:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v1
     - name: build in DEBUG mode
-      run: .\make.bat
+      run: .\make-legacy.bat
     - name: install
-      run: .\make.bat install
+      run: .\make-legacy.bat install
     - name: run tests
-      run: .\make.bat check
+      run: .\make-legacy.bat check
+
+  windows_dotnet6:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup .NET SDK 6.0.x
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: '6.0.x'
+    - name: build in DEBUG mode
+      run: .\make.bat
+
+

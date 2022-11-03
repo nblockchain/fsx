@@ -1,2 +1,8 @@
 @ECHO OFF
-Tools\fsi.bat scripts\make.fsx %*
+where /q dotnet
+IF ERRORLEVEL 1 (
+    make-legacy.bat %*
+) ELSE (
+    dotnet fsi scripts\make.fsx %*
+)
+
