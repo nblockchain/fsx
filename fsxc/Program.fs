@@ -185,7 +185,15 @@ module Program =
                 failwithf "Unrecognized preprocessor line: %s" line
 
         let readLine(line: string) : LineAction =
-            if line.StartsWith "#" then
+            let isFsiPreProcessorAction(line: string) =
+                if not(line.StartsWith "#") then
+                    false
+                elif line.StartsWith "#if" || line.StartsWith "#endif" then
+                    false
+                else
+                    true
+
+            if isFsiPreProcessorAction line then
                 LineAction.PreProcessorAction(readPreprocessorLine line)
             else
                 LineAction.Normal

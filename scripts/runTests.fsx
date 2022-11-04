@@ -106,6 +106,15 @@ Process
     .UnwrapDefault()
 |> ignore<string>
 
+
+let ifDefTest = Path.Combine(TestDir.FullName, "testIfDef.fsx") |> FileInfo
+
+Process
+    .Execute(CreateCommand(ifDefTest, String.Empty), Echo.All)
+    .UnwrapDefault()
+|> ignore<string>
+
+
 let nonExistentTest =
     Path.Combine(TestDir.FullName, "nonExistentFsx.fsx") |> FileInfo
 
