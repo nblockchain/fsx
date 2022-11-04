@@ -1,7 +1,9 @@
 #!/usr/bin/env fsx
 
 #if SOME_CONSTANT
-print "pre-hello"
+printf "pre-hello1"
+#else
+printf "pre-hello2"
 #endif
 
 System.Console.WriteLine("hello world")

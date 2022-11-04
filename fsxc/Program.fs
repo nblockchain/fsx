@@ -188,7 +188,9 @@ module Program =
             let isFsiPreProcessorAction(line: string) =
                 if not(line.StartsWith "#") then
                     false
-                elif line.StartsWith "#if" || line.StartsWith "#endif" then
+                elif line.StartsWith "#if"
+                     || line.StartsWith "#else"
+                     || line.StartsWith "#endif" then
                     false
                 else
                     true
