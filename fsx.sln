@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1703.8
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsxc", "fsxc\fsxc.fsproj", "{9E754152-E69A-4DB9-B23A-3B72C189FF5A}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "InfraLib", "InfraLib\InfraLib.fsproj", "{B532D664-2864-4532-9673-3E52DD363BB9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9E754152-E69A-4DB9-B23A-3B72C189FF5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E754152-E69A-4DB9-B23A-3B72C189FF5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E754152-E69A-4DB9-B23A-3B72C189FF5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E754152-E69A-4DB9-B23A-3B72C189FF5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B532D664-2864-4532-9673-3E52DD363BB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B532D664-2864-4532-9673-3E52DD363BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B532D664-2864-4532-9673-3E52DD363BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B532D664-2864-4532-9673-3E52DD363BB9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {54AE85AF-9488-4563-80D5-97FACD773DDA}
+	EndGlobalSection
+EndGlobal

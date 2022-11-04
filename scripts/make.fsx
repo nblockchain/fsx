@@ -102,15 +102,17 @@ let ConfigCommandCheck
         commandNamesByOrderOfPreference
         commandNamesByOrderOfPreference
 
-let FindBuildTool() =
+let FindBuildTool() : string * string =
     match Misc.GuessPlatform() with
     | Misc.Platform.Linux
     | Misc.Platform.Mac ->
         failwith
             "cannot find buildTool because this script is not ready for Unix yet"
     | Misc.Platform.Windows ->
+#if !LEGACY_FRAMEWORK
+        "dotnet", "build"
+#else
         //we need to call "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -find MSBuild\**\Bin\MSBuild.exe
-
         let programFiles =
             Environment.GetFolderPath Environment.SpecialFolder.ProgramFilesX86
 
@@ -133,24 +135,31 @@ let FindBuildTool() =
 
         let procResult = Process.Execute(vswhereCmd, Echo.Off)
         let msbuildPath = procResult.UnwrapDefault().Trim()
-        msbuildPath
-
+        msbuildPath, String.Empty
+#endif
 
 let BuildSolution
-    (buildTool: string)
+    (buildTool: string * string)
     (solutionFileName: string)
     (binaryConfig: BinaryConfig)
     (extraOptions: string)
     =
     let configOption = sprintf "/p:Configuration=%s" (binaryConfig.ToString())
 
+    let buildToolExecutable, buildToolArg = buildTool
+
     let buildArgs =
-        sprintf "%s %s %s" solutionFileName configOption extraOptions
+        sprintf
+            "%s %s %s %s"
+            buildToolArg
+            solutionFileName
+            configOption
+            extraOptions
 
     let buildProcess =
         Process.Execute(
             {
-                Command = buildTool
+                Command = buildToolExecutable
                 Arguments = buildArgs
             },
             Echo.All
@@ -160,12 +169,33 @@ let BuildSolution
     | Error _ ->
         Console.WriteLine()
         Console.Out.Flush()
-        Console.Error.WriteLine(sprintf "%s build failed ^" buildTool)
+
+        Console.Error.WriteLine(
+            sprintf
+                "Build failed with build tool '%s %s' ^"
+                buildToolExecutable
+                buildToolArg
+        )
+
         PrintNugetVersion() |> ignore
         Environment.Exit 1
     | _ -> ()
 
 let JustBuild binaryConfig =
+#if !LEGACY_FRAMEWORK
+    let solFile = "fsx.sln"
+
+    Process
+        .Execute(
+            {
+                Command = "dotnet"
+                Arguments = sprintf "restore %s" solFile
+            },
+            Echo.All
+        )
+        .UnwrapDefault()
+    |> ignore<string>
+#else
     let solFile = "fsx-legacy.sln"
 
     Network.RunNugetCommand
@@ -174,6 +204,8 @@ let JustBuild binaryConfig =
         Echo.All
         true
     |> ignore
+#endif
+
 
     let buildTool = FindBuildTool()
 

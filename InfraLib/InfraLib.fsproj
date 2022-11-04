@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Taiga.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Misc.fs" />
+    <Compile Include="Process.fs" />
+    <Compile Include="Git.fs" />
+    <Compile Include="Unix.fs" />
+    <Compile Include="Network.fs" />
+  </ItemGroup>
+
+</Project>
