@@ -108,6 +108,7 @@ Process
 
 
 let ifDefTest = Path.Combine(TestDir.FullName, "testIfDef.fsx") |> FileInfo
+
 Process
     .Execute(CreateCommand(ifDefTest, String.Empty), Echo.All)
     .UnwrapDefault()
