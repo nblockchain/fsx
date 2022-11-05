@@ -8,28 +8,40 @@ else
     echo "checking for make... found"
 fi
 
-if ! which fsharpc >/dev/null 2>&1; then
-    echo "checking for F# compiler... not found"
-    exit 1
-else
-    echo "checking for F# compiler... found"
-fi
-
 BUILDTOOL=invalid
-if ! which msbuild >/dev/null 2>&1; then
-    echo "checking for msbuild... not found"
+SOLUTION=invalid
+if ! which dotnet >/dev/null 2>&1; then
+    echo "checking for dotnet... not found"
 
-    if ! which xbuild >/dev/null 2>&1; then
-        echo "checking for xbuild... not found"
+    if ! which fsharpc >/dev/null 2>&1; then
+        echo "checking for F# compiler... not found"
         exit 1
     else
-        echo "checking for xbuild... found"
-        BUILDTOOL=xbuild
+        echo "checking for F# compiler... found"
+    fi
+
+    if ! which msbuild >/dev/null 2>&1; then
+        echo "checking for msbuild... not found"
+
+        if ! which xbuild >/dev/null 2>&1; then
+            echo "checking for xbuild... not found"
+            exit 1
+        else
+            echo "checking for xbuild... found"
+            BUILDTOOL=xbuild
+            SOLUTION=fsx-legacy.sln
+        fi
+    else
+        echo "checking for msbuild... found"
+        BUILDTOOL=msbuild
+        SOLUTION=fsx-legacy.sln
     fi
 else
-    echo "checking for msbuild... found"
-    BUILDTOOL=msbuild
+    echo "checking for dotnet... found"
+    BUILDTOOL='"dotnet build"'
+    SOLUTION=fsx.sln
 fi
+
 
 DESCRIPTION="tarball"
 if which git >/dev/null 2>&1; then
@@ -54,7 +66,7 @@ esac
 done
 
 source version.config
-echo -e "BuildTool=$BUILDTOOL\nPrefix=$PREFIX" > build.config
+echo -e "BuildTool=$BUILDTOOL\nSolution=$SOLUTION\nPrefix=$PREFIX" > build.config
 
 echo
 echo -e "\tConfiguration summary for fsx $Version ($DESCRIPTION)"

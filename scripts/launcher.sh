@@ -10,7 +10,10 @@ if [ $# -lt 1 ]; then
 fi
 
 DIR_OF_THIS_SCRIPT=$(cd `dirname $0` && pwd)
-FSXC_PATH="$DIR_OF_THIS_SCRIPT/../lib/fsx/fsxc.exe"
+FSXC_PATH="$DIR_OF_THIS_SCRIPT/../lib/fsx/fsxc.dll"
+if ! [ -e $FSXC_PATH ]; then
+    FSXC_PATH="$DIR_OF_THIS_SCRIPT/../lib/fsx/fsxc.exe"
+fi
 
 FIRST_ARGS=""
 FSX_SCRIPT=""
@@ -32,7 +35,11 @@ do
     fi
 done
 
-mono $FSXC_PATH $FIRST_ARGS
+if ! which dotnet >/dev/null 2>&1; then
+    mono $FSXC_PATH $FIRST_ARGS
+else
+    dotnet $FSXC_PATH $FIRST_ARGS
+fi
 
 if [ -z "$FSX_SCRIPT" ]; then
     echo "Compilation of anything that is not an .fsx should have been rejected by fsx"

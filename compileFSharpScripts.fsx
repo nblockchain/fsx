@@ -17,7 +17,11 @@ let fsxRootDir = __SOURCE_DIRECTORY__ |> DirectoryInfo
 let fsxTestsDir = Path.Combine(fsxRootDir.FullName, "test") |> DirectoryInfo
 
 let rec FindFsxc(nestedCall: bool) : bool * FileInfo =
+#if !LEGACY_FRAMEWORK
+    let fsxCompiler = "fsxc.dll"
+#else
     let fsxCompiler = "fsxc.exe"
+#endif
 
     let fsxcBinDir = Path.Combine(__SOURCE_DIRECTORY__, "fsxc", "bin")
 
@@ -101,8 +105,13 @@ let buildFsxScript (script: string) (soFar: bool) : bool =
     let proc =
         Process.Execute(
             {
+#if !LEGACY_FRAMEWORK
+                Command = "dotnet"
+                Arguments = sprintf "%s -k %s" fsxLocation.FullName script
+#else
                 Command = fsxLocation.FullName
                 Arguments = sprintf "-k %s" script
+#endif
             },
             Echo.OutputOnly
         )
