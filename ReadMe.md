@@ -66,12 +66,39 @@ sudo make install
 
 ### Usage
 
+
+#### Execution
+
 After installing, you can already use the `#!/usr/bin/env fsx` shebang in your scripts.
 
 If you want to use fsx without having to change the shebang of all your scripts, just
 run `fsx yourscript.fsx` every time.
 
-For your CI needs, you could include fsx repository as a submodule, and then bootstrap it in your CI script, and call `compileFSharpScripts.fsx`, which will find all the F# script files in your repository and try to compile them (but not run them). An example of how to do this with GitLabCI, is this `.gitlab-ci.yml` configuration file sample:
+
+#### Compilation
+
+For your CI needs (to compile all scripts in your repo without executing them), you could clone it in your CI recipe (or include fsx repository as a submodule, populating it before the build), and call 
+`compileFSharpScripts.fsx`, which will find all the F# script files in your repository and try to compile them (but not run them).
+
+An example of how to do this with GitHub Actions (choosing the git clone option), is this YML workflow that you can paste into your `.github/workflows/` folder:
+
+```
+name: FSharpScriptsCompilation
+
+on: [push, pull_request]
+
+jobs:
+  compile_scripts:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: clone fsx
+      run: git clone https://github.com/nblockchain/fsx.git
+    - name: compile F# scripts
+      run: fsharpi ./fsx/compileFSharpScripts.fsx
+```
+
+An example of how to do this with GitLabCI (choosing a git submodule), is this `.gitlab-ci.yml` configuration file sample:
 
 ```
 image: ubuntu:20.04
