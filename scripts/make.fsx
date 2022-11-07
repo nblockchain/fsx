@@ -9,6 +9,7 @@ open System.Configuration
 
 #load "../InfraLib/Misc.fs"
 #load "../InfraLib/Process.fs"
+#load "../InfraLib/Network.fs"
 #load "../InfraLib/Git.fs"
 
 open FSX.Infrastructure
@@ -21,8 +22,6 @@ let ToolsDir = Path.Combine(RootDir.FullName, "Tools") |> DirectoryInfo
 let InfraLibDir = Path.Combine(RootDir.FullName, "InfraLib") |> DirectoryInfo
 let NugetDir = Path.Combine(RootDir.FullName, ".nuget") |> DirectoryInfo
 let NugetExe = Path.Combine(NugetDir.FullName, "nuget.exe") |> FileInfo
-// please maintain this URL in sync with the runTests.fsx file
-let NugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
 type BinaryConfig =
     | Debug
@@ -50,40 +49,12 @@ let mainBinariesDir binaryConfig =
     Path.Combine(RootDir.FullName, "fsxc", "bin", binaryConfig.ToString())
     |> DirectoryInfo
 
-let RunNugetCommand (command: string) echoMode (safe: bool) =
-    if not NugetExe.Exists then
-        Console.WriteLine(sprintf "Downloading nuget...")
-
-        if not NugetDir.Exists then
-            NugetDir.Create()
-
-        use webClient = new WebClient()
-        webClient.DownloadFile(NugetUrl, NugetExe.FullName)
-
-    let nugetCmd =
-        match Misc.GuessPlatform() with
-        | Misc.Platform.Linux
-        | Misc.Platform.Mac ->
-            failwith
-                "cannot run nuget because this script is not ready for Unix yet"
-        | _ ->
-            {
-                Command = NugetExe.FullName
-                Arguments = command
-            }
-
-    let proc = Process.Execute(nugetCmd, echoMode)
-
-    if safe then
-        proc.UnwrapDefault() |> ignore<string>
-
-    proc
-
 let PrintNugetVersion() =
     if not NugetExe.Exists then
         false
     else
-        let nugetProc = RunNugetCommand String.Empty Echo.OutputOnly false
+        let nugetProc =
+            Network.RunNugetCommand NugetExe String.Empty Echo.OutputOnly false
 
         match nugetProc.Result with
         | ProcessResultState.Success _ -> true
@@ -196,7 +167,14 @@ let BuildSolution
 
 let JustBuild binaryConfig =
     let solFile = "fsx.sln"
-    RunNugetCommand (sprintf "restore %s" solFile) Echo.All true |> ignore
+
+    Network.RunNugetCommand
+        NugetExe
+        (sprintf "restore %s" solFile)
+        Echo.All
+        true
+    |> ignore
+
     let buildTool = FindBuildTool()
 
     Console.WriteLine(

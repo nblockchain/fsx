@@ -360,6 +360,74 @@ module Network =
             GetPrivateIpOfThisServer()
         )
 
+    let NugetDownloadUrl =
+        "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
+
+    let DownloadNugetExe(targetFile: FileInfo) =
+        if not targetFile.Directory.Exists then
+            targetFile.Directory.Create()
+
+        if not targetFile.Exists then
+            use webClient = new WebClient()
+            webClient.DownloadFile(NugetDownloadUrl, targetFile.FullName)
+
+    let CreateNugetCommand (nugetExe: FileInfo) (args: string) =
+        let platform = Misc.GuessPlatform()
+
+        if platform = Misc.Platform.Windows then
+            {
+                Command = nugetExe.FullName
+                Arguments = args
+            }
+        else
+            {
+                Command = "mono"
+                Arguments = sprintf "%s %s" nugetExe.FullName args
+            }
+
+    let RunNugetCommand
+        (nugetExe: FileInfo)
+        (command: string)
+        (echo: Echo)
+        (safe: bool)
+        : ProcessResult =
+
+        DownloadNugetExe nugetExe
+
+        let cmd = CreateNugetCommand nugetExe command
+        let proc = Process.Execute(cmd, echo)
+
+        if safe then
+            proc.UnwrapDefault() |> ignore<string>
+
+        proc
+
+    let InstallNugetPackage
+        (nugetExe: FileInfo)
+        (outputDirectory: DirectoryInfo)
+        (pkgName: string)
+        (maybeVersion: Option<string>)
+        (echo: Echo)
+        : ProcessResult =
+
+        if not outputDirectory.Exists then
+            outputDirectory.Create()
+
+        let maybeVersionFlag =
+            match maybeVersion with
+            | None -> String.Empty
+            | Some version -> sprintf "-Version %s" version
+
+        RunNugetCommand
+            nugetExe
+            (sprintf
+                "install %s %s -OutputDirectory %s"
+                pkgName
+                maybeVersionFlag
+                outputDirectory.FullName)
+            echo
+            true
+
     let private SLACK_WEBHOOK_URI =
         "https://hooks.slack.com/services/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"
 

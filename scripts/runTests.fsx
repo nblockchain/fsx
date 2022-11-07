@@ -11,6 +11,7 @@ open System.Configuration
 
 #load "../InfraLib/Misc.fs"
 #load "../InfraLib/Process.fs"
+#load "../InfraLib/Network.fs"
 #load "../InfraLib/Git.fs"
 
 open FSX.Infrastructure
@@ -22,8 +23,6 @@ let TestDir = Path.Combine(RootDir.FullName, "test") |> DirectoryInfo
 let NugetDir = Path.Combine(RootDir.FullName, ".nuget") |> DirectoryInfo
 let NugetExe = Path.Combine(NugetDir.FullName, "nuget.exe") |> FileInfo
 let NugetPackages = Path.Combine(RootDir.FullName, "packages") |> DirectoryInfo
-// please maintain this URL in sync with the make.fsx file
-let NugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
 let GetFsxWindowsLauncher() =
     let programFiles =
@@ -198,35 +197,38 @@ Process
     .UnwrapDefault()
 |> ignore<string>
 
-if not NugetExe.Exists then
-    if not NugetDir.Exists then
-        Directory.CreateDirectory(NugetDir.FullName) |> ignore
 
-    use webClient = new WebClient()
-    webClient.DownloadFile(NugetUrl, NugetExe.FullName)
-
-if not NugetPackages.Exists then
-    Directory.CreateDirectory(NugetPackages.FullName) |> ignore
-
-let nugetCmd =
-    CreateCommand(
-        NugetExe,
-        sprintf
-            "install Microsoft.Build -Version 16.11.0 -OutputDirectory %s"
-            NugetPackages.FullName
-    )
-
-Process
-    .Execute(nugetCmd, Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
-
+Network.InstallNugetPackage
+    NugetExe
+    NugetPackages
+    "Microsoft.Build"
+    (Some "16.11.0")
+    Echo.All
+|> ignore
 
 let refNugetLibTest =
     Path.Combine(TestDir.FullName, "testRefNugetLib.fsx") |> FileInfo
 
 Process
     .Execute(CreateCommand(refNugetLibTest, String.Empty), Echo.All)
+    .UnwrapDefault()
+|> ignore<string>
+
+let refNugetLibTestNewFormat =
+    Path.Combine(TestDir.FullName, "testRefNugetLibNewFormat.fsx") |> FileInfo
+
+Process
+    .Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
+    .UnwrapDefault()
+|> ignore<string>
+
+
+let refNugetLibTestNewFormatWithVersion =
+    Path.Combine(TestDir.FullName, "testRefNugetLibNewFormatWithVersion.fsx")
+    |> FileInfo
+
+Process
+    .Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
     .UnwrapDefault()
 |> ignore<string>
 
