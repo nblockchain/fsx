@@ -70,7 +70,9 @@ module Misc =
 
     let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
-
+#if !LEGACY_FRAMEWORK
+        List.skip 2 cmdLineArgs
+#else
         let isFsi =
             String.Equals(
                 currentExe.Name,
@@ -85,6 +87,7 @@ module Misc =
         // below for #!/usr/bin/fsx shebang
         else
             FsxOnlyArgumentsInternalFsx(cmdLineArgs)
+#endif
 
     type private SupportedCheckSumAlgorithm =
         | MD5
@@ -581,6 +584,7 @@ module Misc =
 
         ConsoleReadPasswordLineInternal(String.Empty)
 
+#if LEGACY_FRAMEWORK
     let GetConfigValueFromAppConfig(configKey: string, appConfig: FileInfo) =
         if not(appConfig.Exists) then
             raise
@@ -605,6 +609,7 @@ module Misc =
             Path.Combine(Directory.GetCurrentDirectory(), "app.config")
 
         GetConfigValueFromAppConfig(configKey, FileInfo(appConfigPath))
+#endif
 
     let IsRunningInGitLab() : bool =
         let gitlabUserEmail =

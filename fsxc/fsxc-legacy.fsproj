@@ -27,6 +27,9 @@
     <GenerateTailCalls>true</GenerateTailCalls>
     <PlatformTarget></PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);LEGACY_FRAMEWORK</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System" />

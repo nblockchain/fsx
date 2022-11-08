@@ -549,8 +549,13 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
             let fscompilerflags =
                 (sprintf
-                    "%s --warnaserror --target:exe --out:%s %s"
+                    "%s %s --warnaserror --target:exe --out:%s %s"
                     refs
+#if LEGACY_FRAMEWORK
+                    "--define:LEGACY_FRAMEWORK"
+#else
+                    String.Empty
+#endif
                     exeTarget.FullName
                     sourceFiles)
 
