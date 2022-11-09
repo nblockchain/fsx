@@ -15,6 +15,7 @@ jobs:
     - linux_newLTS_github_dotnet-and-msbuild
     - linux_newLTS_vanilla_stockmono
     - linux_newLTS_vanilla_newmono
+    - linux_newLTS_vanilla_dotnet6
     - windows_legacyFramework
     - windows_dotnet6
 
@@ -312,6 +313,40 @@ jobs:
       run: sudo apt install --yes fsharp
     - name: check mono version
       run: mono --version
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  linux_newLTS_vanilla_dotnet6:
+    runs-on: ubuntu-22.04
+    container:
+      image: "ubuntu:22.04"
+    steps:
+    - uses: actions/checkout@v1
+    - name: install sudo
+      run: apt update && apt install --yes sudo
+    - name: install dependencies
+      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make dotnet6
+
+    # workaround for https://github.com/actions/runner/issues/2033
+    - name: ownership workaround
+      run: git config --global --add safe.directory '*'
+
+    - name: check dotnet version
+      run: dotnet --version
     - name: configure
       run: ./configure.sh
     - name: build in DEBUG mode
