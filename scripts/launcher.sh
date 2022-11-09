@@ -1,8 +1,17 @@
 #!/bin/sh
 set -e
 
-which fsharpc >/dev/null || \
-  (echo "Please install fsharp package first via apt" && exit 2)
+RUNNER=mono
+ASSEMBLY_EXTENSION=exe
+if ! which dotnet >/dev/null 2>&1; then
+    if ! which fsharpc >/dev/null 2>&1; then
+        echo "Please install dotnet (or legacy 'fsharp' apt package)"
+        exit 1
+    fi
+else
+    RUNNER=dotnet
+    ASSEMBLY_EXTENSION=dll
+fi
 
 if [ $# -lt 1 ]; then
     echo "At least one argument expected"
@@ -35,11 +44,7 @@ do
     fi
 done
 
-if ! which dotnet >/dev/null 2>&1; then
-    mono $FSXC_PATH $FIRST_ARGS
-else
-    dotnet $FSXC_PATH $FIRST_ARGS
-fi
+$RUNNER $FSXC_PATH $FIRST_ARGS
 
 if [ -z "$FSX_SCRIPT" ]; then
     echo "Compilation of anything that is not an .fsx should have been rejected by fsx"
@@ -49,5 +54,6 @@ fi
 
 TARGET_DIR=$(dirname -- "$FSX_SCRIPT")
 TARGET_FILE=$(basename -- "$FSX_SCRIPT")
+TARGET_FILE_PATH="$TARGET_DIR/bin/$TARGET_FILE.$ASSEMBLY_EXTENSION"
 
-exec mono "$TARGET_DIR/bin/$TARGET_FILE.exe" $REST_ARGS
+exec $RUNNER $TARGET_FILE_PATH $REST_ARGS

@@ -20,6 +20,9 @@ let sample =
 let mutable retryCount = 0
 
 let command =
+#if !LEGACY_FRAMEWORK
+    "dotnet"
+#else
     if Misc.GuessPlatform() = Misc.Platform.Windows then
         // HACK: we should call fsx here but then we would get this problem in
         // the tests: error FS0193: The process cannot access the file 'D:\a\fsx\fsx\test\bin\FSharp.Core.dll' because it is being used by another process.
@@ -52,13 +55,18 @@ let command =
     else
         // FIXME: extract PREFIX from build.config instead of assuming default
         "/usr/local/bin/fsx"
+#endif
 
 while (retryCount < 20) do //this is a stress test
     let procResult =
         Process.Execute(
             {
                 Command = command
+#if !LEGACY_FRAMEWORK
+                Arguments = sprintf "fsi %s" sample.FullName
+#else
                 Arguments = sample.FullName
+#endif
             },
             Echo.Off
         )
