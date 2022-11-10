@@ -228,7 +228,10 @@ let refNugetLibTestNewFormatWithVersion =
     |> FileInfo
 
 Process
-    .Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
+    .Execute(
+        CreateCommand(refNugetLibTestNewFormatWithVersion, String.Empty),
+        Echo.All
+    )
     .UnwrapDefault()
 |> ignore<string>
 
