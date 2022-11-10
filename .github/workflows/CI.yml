@@ -350,5 +350,7 @@ jobs:
         dotnet-version: '6.0.x'
     - name: build in DEBUG mode
       run: .\make.bat
-
-
+    - name: install
+      run: .\make.bat install
+    - name: run tests
+      run: .\make.bat check

@@ -101,6 +101,13 @@ let SplitArgsIntoFsxcArgsAndUserArgs() : seq<string> * string * seq<string> =
     |> List.ofArray
     |> userArgsInternal FsxFsxNotFoundYet List.empty List.empty
 
+let assemblyExecutableExtension =
+#if !LEGACY_FRAMEWORK
+    "dll"
+#else
+    "exe"
+#endif
+
 let InjectBinSubfolderInPath(userScript: FileInfo) =
     if not(userScript.FullName.EndsWith ".fsx") then
         failwithf
@@ -134,21 +141,40 @@ if thisScriptFileName <> "fsx.fsx" then
         "this launcher should have been renamed to fsx.fsx at install time; please report this bug"
 
 let sourceDir = DirectoryInfo __SOURCE_DIRECTORY__
-let fsxcExe = Path.Combine(sourceDir.FullName, "fsxc.exe") |> FileInfo
 
-if not fsxcExe.Exists then
+let fsxcAssembly =
+    Path.Combine(
+        sourceDir.FullName,
+        sprintf "fsxc.%s" assemblyExecutableExtension
+    )
+    |> FileInfo
+
+if not fsxcAssembly.Exists then
     failwith
-        "fsxc.exe not found in the same folder as this launcher; please report this bug"
+        "fsxc assembly not found in the same folder as this launcher; please report this bug"
 
 let fsxcArgs, userScript, userArgs = SplitArgsIntoFsxcArgsAndUserArgs()
 
 let userScriptFile = FileInfo userScript
 
+#if !LEGACY_FRAMEWORK
 let fsxcCmd =
     {
-        Command = fsxcExe.FullName
+        Command = "dotnet"
+        Arguments =
+            sprintf
+                "\"%s\" %s %s"
+                fsxcAssembly.FullName
+                (String.Join(" ", fsxcArgs))
+                userScript
+    }
+#else
+let fsxcCmd =
+    {
+        Command = fsxcAssembly.FullName
         Arguments = sprintf "%s %s" (String.Join(" ", fsxcArgs)) userScript
     }
+#endif
 
 let proc = Process.Execute(fsxcCmd, Echo.Off)
 proc.UnwrapDefault() |> ignore<string>

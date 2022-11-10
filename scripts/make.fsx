@@ -46,7 +46,17 @@ let GatherTarget(args: List<string>) : Option<string> =
     gatherTarget args None
 
 let mainBinariesDir binaryConfig =
+#if !LEGACY_FRAMEWORK
+    Path.Combine(
+        RootDir.FullName,
+        "fsxc",
+        "bin",
+        binaryConfig.ToString(),
+        "net6.0"
+    )
+#else
     Path.Combine(RootDir.FullName, "fsxc", "bin", binaryConfig.ToString())
+#endif
     |> DirectoryInfo
 
 let PrintNugetVersion() =
@@ -226,10 +236,14 @@ let programFiles =
 let fsxInstallationDir =
     Path.Combine(programFiles.FullName, "fsx") |> DirectoryInfo
 
+#if !LEGACY_FRAMEWORK
 let fsxBat = Path.Combine(ScriptsDir.FullName, "fsx.bat") |> FileInfo
+#else
+let fsxBat = Path.Combine(ScriptsDir.FullName, "fsx-legacy.bat") |> FileInfo
+#endif
 
 let fsxBatDestination =
-    Path.Combine(fsxInstallationDir.FullName, fsxBat.Name) |> FileInfo
+    Path.Combine(fsxInstallationDir.FullName, "fsx.bat") |> FileInfo
 
 let maybeTarget = GatherTarget(Misc.FsxOnlyArguments())
 

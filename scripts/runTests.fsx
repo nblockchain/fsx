@@ -98,20 +98,26 @@ let fsharpCompilerCommand =
     | _ -> "fsharpc"
 
 
+let UnwrapDefault(proc: ProcessResult) =
+#if !LEGACY_FRAMEWORK
+// FIXME: this workaround below is needed because we got warnings in .NET6
+    match proc.Result with
+    | Error _ -> failwithf "Test '%s' failed" proc.Details.Args
+    | _ -> ()
+#else
+    proc.UnwrapDefault() |> ignore<string>
+#endif
+
 let basicTest = Path.Combine(TestDir.FullName, "test.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(basicTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(basicTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 let ifDefTest = Path.Combine(TestDir.FullName, "testIfDef.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(ifDefTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(ifDefTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 let nonExistentTest =
@@ -162,10 +168,8 @@ let fscCmd1 =
 Process.Execute(fscCmd1, Echo.All).UnwrapDefault() |> ignore<string>
 let refLibTest = Path.Combine(TestDir.FullName, "testRefLib.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(refLibTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(refLibTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 let subLibFolder =
@@ -189,13 +193,11 @@ let refLibOutsideCurrentFolderTest =
     Path.Combine(TestDir.FullName, "testRefLibOutsideCurrentFolder.fsx")
     |> FileInfo
 
-Process
-    .Execute(
-        CreateCommand(refLibOutsideCurrentFolderTest, String.Empty),
-        Echo.All
-    )
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(
+    CreateCommand(refLibOutsideCurrentFolderTest, String.Empty),
+    Echo.All
+)
+|> UnwrapDefault
 
 
 Network.InstallNugetPackage
@@ -209,54 +211,41 @@ Network.InstallNugetPackage
 let refNugetLibTest =
     Path.Combine(TestDir.FullName, "testRefNugetLib.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(refNugetLibTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(refNugetLibTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 let refNugetLibTestNewFormat =
     Path.Combine(TestDir.FullName, "testRefNugetLibNewFormat.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 let refNugetLibTestNewFormatWithVersion =
     Path.Combine(TestDir.FullName, "testRefNugetLibNewFormatWithVersion.fsx")
     |> FileInfo
 
-Process
-    .Execute(
-        CreateCommand(refNugetLibTestNewFormatWithVersion, String.Empty),
-        Echo.All
-    )
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(
+    CreateCommand(refNugetLibTestNewFormatWithVersion, String.Empty),
+    Echo.All
+)
+|> UnwrapDefault
 
 
 let cmdLineArgsTest =
     Path.Combine(TestDir.FullName, "testFsiCommandLineArgs.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(cmdLineArgsTest, "one 2 three"), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(cmdLineArgsTest, "one 2 three"), Echo.All)
+|> UnwrapDefault
 
 let tsvTest = Path.Combine(TestDir.FullName, "testTsv.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(tsvTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(tsvTest, String.Empty), Echo.All) |> UnwrapDefault
 
 let processTest = Path.Combine(TestDir.FullName, "testProcess.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(processTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(processTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 (* this is actually only really useful for when process spits both stdout & stderr
