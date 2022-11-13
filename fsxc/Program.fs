@@ -304,6 +304,12 @@ module Program =
         if script = null then
             raise <| ArgumentNullException "script"
 
+        let echo =
+            if verbose then
+                Echo.All
+            else
+                Echo.Off
+
         if not(script.FullName.EndsWith ".fsx") then
             invalidArg
                 "script"
@@ -316,18 +322,13 @@ module Program =
             (contents: List<string * LineAction>)
             : List<CompilerInput> =
 
+#if LEGACY_FRAMEWORK
             // from "Microsoft.Build", "16.11.0" to .../packages/Microsoft.Build.16.11.0/lib/net472/Microsoft.Build.dll
             let nugetRefToNormalRef
                 (scriptFile: FileInfo)
                 (pkgName: string)
                 (version: Option<string>)
                 : FileInfo =
-
-                let echo =
-                    if verbose then
-                        Echo.All
-                    else
-                        Echo.Off
 
                 let allowedFrameworkProfilesDirs =
                     [
@@ -419,6 +420,7 @@ module Program =
                             pkgName
                     | Some location -> location
                 | Some location -> location
+#endif
 
             let initialInjectedContents =
                 """
@@ -481,6 +483,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                             yield CompilerInput.SourceFile(file)
 
                         | PreProcessorAction.NugetRef(nugetPkgName, version) ->
+#if LEGACY_FRAMEWORK
                             let downloadedRef =
                                 nugetRefToNormalRef
                                     origScript
@@ -488,7 +491,9 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                                     version
 
                             yield CompilerInput.CustomRef downloadedRef.FullName
-
+#else
+                            ()
+#endif
                         | PreProcessorAction.Ref refName ->
                             let maybeFile =
                                 FileInfo(
@@ -503,7 +508,6 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                             else
                                 // must be a BCL lib (e.g. #r "System.Xml.Linq.dll")
                                 yield CompilerInput.BclRef refName
-
 
                 yield
                     CompilerInput.Script(
@@ -534,12 +538,118 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                     | _ -> ()
             }
 
+#if !LEGACY_FRAMEWORK
+        let generateProjectFile
+            (origScript: FileInfo)
+            (contents: List<string * LineAction>)
+            : FileInfo =
+            let _binFolder, projectFile =
+                GetAutoGenerationTargets origScript "fsproj"
+
+            let rec iterate lines =
+                match lines with
+                | head :: tail ->
+                    match head with
+                    | (_, LineAction.PreProcessorAction action) ->
+                        match action with
+                        | PreProcessorAction.NugetRef
+                            (
+                                nugetPkgName, maybeVersion
+                            ) ->
+                            let fsprojFragment =
+                                sprintf
+                                    "<ItemGroup><PackageReference Include=\"%s\" "
+                                    nugetPkgName
+
+                            let fsprojFragmentEnd =
+                                match maybeVersion with
+                                | None ->
+                                    "Version=\"*\"><IncludeAssets>all</IncludeAssets></PackageReference></ItemGroup>"
+                                | Some version ->
+                                    sprintf
+                                        "Version=\"%s\"><IncludeAssets>all</IncludeAssets></PackageReference></ItemGroup>"
+                                        version
+
+                            File.AppendAllText(
+                                projectFile.FullName,
+                                fsprojFragment
+                                + fsprojFragmentEnd
+                                + Environment.NewLine
+                            )
+                        | PreProcessorAction.Load fileName ->
+                            let fsProjFragment =
+                                sprintf
+                                    "<ItemGroup><Compile Include=\"..%c%s\" /></ItemGroup>"
+                                    Path.DirectorySeparatorChar
+                                    fileName
+
+                            File.AppendAllText(
+                                projectFile.FullName,
+                                fsProjFragment + Environment.NewLine
+                            )
+                        | PreProcessorAction.Ref refName ->
+                            let fsProjFragment =
+                                if refName.ToLower().EndsWith(".dll") then
+                                    sprintf
+                                        "<ItemGroup><Reference Include=\"%s\"><HintPath>..%c%s</HintPath></Reference></ItemGroup>"
+                                        (FileInfo refName).Name
+                                        Path.DirectorySeparatorChar
+                                        refName
+                                else // bcl ref
+                                    sprintf
+                                        "<ItemGroup><Reference Include=\"%s\"/></ItemGroup>"
+                                        refName
+
+                            File.AppendAllText(
+                                projectFile.FullName,
+                                fsProjFragment + Environment.NewLine
+                            )
+                        | _ -> ()
+                    | _ -> ()
+
+                    iterate tail
+                | [] -> ()
+
+            let initialProjectContents =
+                """<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+
+    <!-- the two settings below allow the binaries sit directly in subfolder /bin/ -->
+    <OutputPath>.</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+"""
+
+            let initialProjectContents = initialProjectContents
+
+            File.WriteAllText(projectFile.FullName, initialProjectContents)
+
+            iterate contents
+
+            File.AppendAllText(
+                projectFile.FullName,
+                "<ItemGroup>
+                  <Compile Include=\"{userScriptFileName}.fs\" />
+                </ItemGroup></Project>"
+                    .Replace("{userScriptFileName}", origScript.Name)
+            )
+
+            projectFile
+#endif
+
         if verbose then
             Console.WriteLine(sprintf "Building %s" script.FullName)
 
         let binFolder = GetBinFolderForAScript script
         let compilerInputs = preprocessScriptContents script contents
         let filesToCompile = getSourceFiles compilerInputs
+#if !LEGACY_FRAMEWORK
+        let projectFile = generateProjectFile script contents
+#endif
 
         let exitCode, exeTarget =
             let _, exeTarget = GetAutoGenerationTargets script "exe"
@@ -547,20 +657,30 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
             let refs = String.Join(" ", getCompilerReferences compilerInputs)
 
+            let buildConfig =
+#if DEBUG
+                "Debug"
+#else
+                "Release"
+#endif
             let fscompilerflags =
+
+
+#if !LEGACY_FRAMEWORK
+                sprintf "build %s -c %s" projectFile.FullName buildConfig
+#else
                 (sprintf
-                    "%s --warnaserror --target:exe --out:%s %s"
+                    "%s %s --warnaserror --target:exe --out:%s %s"
                     refs
+                    "--define:LEGACY_FRAMEWORK"
                     exeTarget.FullName
                     sourceFiles)
-
-            let echo =
-                if verbose then
-                    Echo.All
-                else
-                    Echo.Off
+#endif
 
             let fsharpCompilerCommand =
+#if !LEGACY_FRAMEWORK
+                "dotnet"
+#else
                 match Misc.GuessPlatform() with
                 | Misc.Platform.Windows ->
                     let vswherePath =
@@ -588,6 +708,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                         )
                         .First()
                 | _ -> "fsharpc"
+#endif
 
             let proc =
                 Process.Execute(

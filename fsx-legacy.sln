@@ -1,0 +1,72 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "InfraLib", "InfraLib\InfraLib-legacy.fsproj", "{4634F264-784E-42DA-B5A1-FE72125DEAFC}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsxc", "fsxc\fsxc-legacy.fsproj", "{56DA5F03-8F7F-44AB-B692-5A24DB134A8B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{8E1108BE-590F-4C6D-8496-A8AAEB8594D8}"
+	ProjectSection(SolutionItems) = preProject
+		Tools\bump.fsx = Tools\bump.fsx
+		Tools\replace.fsx = Tools\replace.fsx
+		Tools\safeRun.fsx = Tools\safeRun.fsx
+		Tools\nugetPush.fsx = Tools\nugetPush.fsx
+		Tools\fsi.bat = Tools\fsi.bat
+		Tools\gitPush1by1.fsx = Tools\gitPush1by1.fsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{848BC281-2B17-47DC-B24E-9BD27B013D02}"
+	ProjectSection(SolutionItems) = preProject
+		test\test.fs = test\test.fs
+		test\test.fsx = test\test.fsx
+		test\testRefLib.fsx = test\testRefLib.fsx
+		test\testRefLibOutsideCurrentFolder.fsx = test\testRefLibOutsideCurrentFolder.fsx
+		test\testProcessConcurrency.fsx = test\testProcessConcurrency.fsx
+		test\testProcessConcurrencySample.fsx = test\testProcessConcurrencySample.fsx
+		test\testTsv.fsx = test\testTsv.fsx
+		test\testProcess.fsx = test\testProcess.fsx
+		test\testProcessSample.fsx = test\testProcessSample.fsx
+		test\testRefNugetLib.fsx = test\testRefNugetLib.fsx
+		test\testFsiCommandLineArgs.fsx = test\testFsiCommandLineArgs.fsx
+		test\testIfDef.fsx = test\testIfDef.fsx
+		test\testRefNugetLibNewFormat.fsx = test\testRefNugetLibNewFormat.fsx
+		test\testRefNugetLibNewFormatWithVersion.fsx = test\testRefNugetLibNewFormatWithVersion.fsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{DBAE02AB-5972-403C-B18B-ED1DFE362054}"
+	ProjectSection(SolutionItems) = preProject
+		configure.sh = configure.sh
+		Makefile = Makefile
+		scripts\install.sh = scripts\install.sh
+		launcher.fsx = launcher.fsx
+		scripts\build.sh = scripts\build.sh
+		scripts\launcher.sh = scripts\launcher.sh
+		compileFSharpScripts.fsx = compileFSharpScripts.fsx
+		make.bat = make.bat
+		scripts\make.fsx = scripts\make.fsx
+		.github\workflows\CI.yml = .github\workflows\CI.yml
+		scripts\runTests.fsx = scripts\runTests.fsx
+		scripts\fsx.bat = scripts\fsx.bat
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4634F264-784E-42DA-B5A1-FE72125DEAFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4634F264-784E-42DA-B5A1-FE72125DEAFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4634F264-784E-42DA-B5A1-FE72125DEAFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4634F264-784E-42DA-B5A1-FE72125DEAFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56DA5F03-8F7F-44AB-B692-5A24DB134A8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56DA5F03-8F7F-44AB-B692-5A24DB134A8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56DA5F03-8F7F-44AB-B692-5A24DB134A8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56DA5F03-8F7F-44AB-B692-5A24DB134A8B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

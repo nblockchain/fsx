@@ -69,6 +69,9 @@ let CreateCommand(executable: FileInfo, args: string) =
 
 // TODO: move to Misc.fs? otherwise it's duped between fsxc's Program.fs & here
 let fsharpCompilerCommand =
+#if !LEGACY_FRAMEWORK
+    "dotnet"
+#else
     match Misc.GuessPlatform() with
     | Misc.Platform.Windows ->
         let vswherePath =
@@ -96,22 +99,32 @@ let fsharpCompilerCommand =
             )
             .First()
     | _ -> "fsharpc"
+#endif
 
+let UnwrapDefault(proc: ProcessResult) =
+#if !LEGACY_FRAMEWORK
+// FIXME: this workaround below is needed because we got warnings in .NET6
+    match proc.Result with
+    | Error _ ->
+        failwithf
+            "Process '%s %s' failed"
+            proc.Details.Command
+            proc.Details.Args
+    | _ -> ()
+#else
+    proc.UnwrapDefault() |> ignore<string>
+#endif
 
 let basicTest = Path.Combine(TestDir.FullName, "test.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(basicTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(basicTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 let ifDefTest = Path.Combine(TestDir.FullName, "testIfDef.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(ifDefTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(ifDefTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 let nonExistentTest =
@@ -148,6 +161,46 @@ match proc.Result with
 
 let fsFileToBuild = Path.Combine(TestDir.FullName, "test.fs") |> FileInfo
 let libToRef1 = Path.Combine(TestDir.FullName, "test1.dll") |> FileInfo
+#if !LEGACY_FRAMEWORK
+let testLibFsProjContent =
+    """
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <!-- the two settings below allow the binaries sit directly in subfolder /bin/ -->
+    <OutputPath>.</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="test.fs" />
+  </ItemGroup>
+
+</Project>
+"""
+
+let test1LibFsProj = Path.Combine(TestDir.FullName, "test1.fsproj") |> FileInfo
+
+try
+    File.WriteAllText(test1LibFsProj.FullName, testLibFsProjContent)
+
+    let dotnetBuildCmd1 =
+        {
+            Command = fsharpCompilerCommand
+            Arguments = sprintf "build %s" test1LibFsProj.FullName
+        }
+
+    Process
+        .Execute(dotnetBuildCmd1, Echo.All)
+        .UnwrapDefault()
+    |> ignore<string>
+finally
+    test1LibFsProj.Delete()
+
+#else
+
 
 let fscCmd1 =
     {
@@ -160,19 +213,40 @@ let fscCmd1 =
     }
 
 Process.Execute(fscCmd1, Echo.All).UnwrapDefault() |> ignore<string>
+#endif
 let refLibTest = Path.Combine(TestDir.FullName, "testRefLib.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(refLibTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(refLibTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 let subLibFolder =
     Directory.CreateDirectory(Path.Combine(TestDir.FullName, "lib"))
 
-let libToRef2 = Path.Combine(subLibFolder.FullName, "test2.dll") |> FileInfo
+let libToRef2Outside =
+    Path.Combine(subLibFolder.FullName, "test2.dll") |> FileInfo
+#if !LEGACY_FRAMEWORK
+let libToRef2 = Path.Combine(TestDir.FullName, "test2.dll") |> FileInfo
+let test2LibFsProj = Path.Combine(TestDir.FullName, "test2.fsproj") |> FileInfo
 
+try
+    File.WriteAllText(test2LibFsProj.FullName, testLibFsProjContent)
+
+    let dotnetBuildCmd2 =
+        {
+            Command = fsharpCompilerCommand
+            Arguments = sprintf "build %s" test2LibFsProj.FullName
+        }
+
+    Process
+        .Execute(dotnetBuildCmd2, Echo.All)
+        .UnwrapDefault()
+    |> ignore<string>
+
+    File.Copy(libToRef2.FullName, libToRef2Outside.FullName, true)
+finally
+    test2LibFsProj.Delete()
+#else
 let fscCmd2 =
     {
         Command = fsharpCompilerCommand
@@ -180,24 +254,24 @@ let fscCmd2 =
             sprintf
                 "%s --target:library --out:%s"
                 fsFileToBuild.FullName
-                libToRef2.FullName
+                libToRef2Outside.FullName
     }
 
 Process.Execute(fscCmd2, Echo.All).UnwrapDefault() |> ignore<string>
+#endif
 
 let refLibOutsideCurrentFolderTest =
     Path.Combine(TestDir.FullName, "testRefLibOutsideCurrentFolder.fsx")
     |> FileInfo
 
-Process
-    .Execute(
-        CreateCommand(refLibOutsideCurrentFolderTest, String.Empty),
-        Echo.All
-    )
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(
+    CreateCommand(refLibOutsideCurrentFolderTest, String.Empty),
+    Echo.All
+)
+|> UnwrapDefault
 
-
+// this test doesn't make much sense when running dotnet because we would use proper #r "nuget: ..." in that case
+#if LEGACY_FRAMEWORK
 Network.InstallNugetPackage
     NugetExe
     NugetPackages
@@ -209,54 +283,45 @@ Network.InstallNugetPackage
 let refNugetLibTest =
     Path.Combine(TestDir.FullName, "testRefNugetLib.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(refNugetLibTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(refNugetLibTest, String.Empty), Echo.All)
+|> UnwrapDefault
+#endif
 
+// not specifying a version is tricky to convert into a <PackageReference /> so not supported atm
+#if LEGACY_FRAMEWORK
 let refNugetLibTestNewFormat =
     Path.Combine(TestDir.FullName, "testRefNugetLibNewFormat.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(refNugetLibTestNewFormat, String.Empty), Echo.All)
+|> UnwrapDefault
+#endif
 
 
 let refNugetLibTestNewFormatWithVersion =
     Path.Combine(TestDir.FullName, "testRefNugetLibNewFormatWithVersion.fsx")
     |> FileInfo
 
-Process
-    .Execute(
-        CreateCommand(refNugetLibTestNewFormatWithVersion, String.Empty),
-        Echo.All
-    )
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(
+    CreateCommand(refNugetLibTestNewFormatWithVersion, String.Empty),
+    Echo.All
+)
+|> UnwrapDefault
 
 
 let cmdLineArgsTest =
     Path.Combine(TestDir.FullName, "testFsiCommandLineArgs.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(cmdLineArgsTest, "one 2 three"), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(cmdLineArgsTest, "one 2 three"), Echo.All)
+|> UnwrapDefault
 
 let tsvTest = Path.Combine(TestDir.FullName, "testTsv.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(tsvTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(tsvTest, String.Empty), Echo.All) |> UnwrapDefault
 
 let processTest = Path.Combine(TestDir.FullName, "testProcess.fsx") |> FileInfo
 
-Process
-    .Execute(CreateCommand(processTest, String.Empty), Echo.All)
-    .UnwrapDefault()
-|> ignore<string>
+Process.Execute(CreateCommand(processTest, String.Empty), Echo.All)
+|> UnwrapDefault
 
 
 (* this is actually only really useful for when process spits both stdout & stderr

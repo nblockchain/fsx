@@ -17,7 +17,11 @@ let fsxRootDir = __SOURCE_DIRECTORY__ |> DirectoryInfo
 let fsxTestsDir = Path.Combine(fsxRootDir.FullName, "test") |> DirectoryInfo
 
 let rec FindFsxc(nestedCall: bool) : bool * FileInfo =
+#if !LEGACY_FRAMEWORK
+    let fsxCompiler = "fsxc.dll"
+#else
     let fsxCompiler = "fsxc.exe"
+#endif
 
     let fsxcBinDir = Path.Combine(__SOURCE_DIRECTORY__, "fsxc", "bin")
 
@@ -101,8 +105,13 @@ let buildFsxScript (script: string) (soFar: bool) : bool =
     let proc =
         Process.Execute(
             {
+#if !LEGACY_FRAMEWORK
+                Command = "dotnet"
+                Arguments = sprintf "%s -k %s" fsxLocation.FullName script
+#else
                 Command = fsxLocation.FullName
                 Arguments = sprintf "-k %s" script
+#endif
             },
             Echo.OutputOnly
         )
@@ -127,11 +136,26 @@ let rec buildAll (scripts: list<string>) (soFar: bool) : bool =
     | script :: tail ->
         let scriptFile = FileInfo script
 
-        if compilationWasNeeded
-           && scriptFile.Directory.FullName = fsxTestsDir.FullName then
+        let binFolder =
+            sprintf
+                "%c%s%c"
+                Path.DirectorySeparatorChar
+                "bin"
+                Path.DirectorySeparatorChar
+
+        let skip =
             // if compilation was needed, it's likely we are running under a
             // repo which is not fsx itself, so we don't want to compile fsx's
             // test scripts (because they have dependencies)
+            if compilationWasNeeded
+               && scriptFile.Directory.FullName = fsxTestsDir.FullName then
+                true
+            elif scriptFile.FullName.Contains binFolder then
+                true
+            else
+                false
+
+        if skip then
             Console.WriteLine(sprintf "Skipping %s" script)
             buildAll tail soFar
         else

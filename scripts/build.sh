@@ -7,4 +7,4 @@ if [ ! -f ./build.config ]; then
 fi
 source build.config
 
-$BuildTool fsx.sln
+$BuildTool $Solution
