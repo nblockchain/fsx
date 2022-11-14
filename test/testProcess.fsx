@@ -49,6 +49,7 @@ let command =
                 StringSplitOptions.RemoveEmptyEntries
             )
             .First()
+            .Trim()
     else
         // FIXME: extract PREFIX from build.config instead of assuming default
         "/usr/local/bin/fsx"

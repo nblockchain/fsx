@@ -95,6 +95,7 @@ let fsharpCompilerCommand =
                 StringSplitOptions.RemoveEmptyEntries
             )
             .First()
+            .Trim()
     | _ -> "fsharpc"
 
 

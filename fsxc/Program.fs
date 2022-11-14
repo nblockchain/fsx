@@ -605,6 +605,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                                 StringSplitOptions.RemoveEmptyEntries
                             )
                             .First()
+                            .Trim()
                     | _ -> "fsharpc"
 
                 let proc =

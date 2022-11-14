@@ -132,7 +132,17 @@ let FindBuildTool() =
             }
 
         let procResult = Process.Execute(vswhereCmd, Echo.Off)
-        let msbuildPath = procResult.UnwrapDefault().Trim()
+
+        let msbuildPath =
+            procResult
+                .UnwrapDefault()
+                .Split(
+                    Array.singleton Environment.NewLine,
+                    StringSplitOptions.RemoveEmptyEntries
+                )
+                .First()
+                .Trim()
+
         msbuildPath
 
 
