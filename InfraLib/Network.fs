@@ -360,9 +360,15 @@ module Network =
             GetPrivateIpOfThisServer()
         )
 
+#if !LEGACY_FRAMEWORK
+    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
+#endif
     let NugetDownloadUrl =
         "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
+#if !LEGACY_FRAMEWORK
+    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
+#endif
     let DownloadNugetExe(targetFile: FileInfo) =
         if not targetFile.Directory.Exists then
             targetFile.Directory.Create()
@@ -371,6 +377,9 @@ module Network =
             use webClient = new WebClient()
             webClient.DownloadFile(NugetDownloadUrl, targetFile.FullName)
 
+#if !LEGACY_FRAMEWORK
+    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
+#endif
     let CreateNugetCommand (nugetExe: FileInfo) (args: string) =
         let platform = Misc.GuessPlatform()
 
@@ -385,6 +394,9 @@ module Network =
                 Arguments = sprintf "%s %s" nugetExe.FullName args
             }
 
+#if !LEGACY_FRAMEWORK
+    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
+#endif
     let RunNugetCommand
         (nugetExe: FileInfo)
         (command: string)
@@ -402,6 +414,9 @@ module Network =
 
         proc
 
+#if !LEGACY_FRAMEWORK
+    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
+#endif
     let InstallNugetPackage
         (nugetExe: FileInfo)
         (outputDirectory: DirectoryInfo)
