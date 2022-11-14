@@ -96,10 +96,10 @@ module Misc =
     let private ComputeHash(algo: SupportedCheckSumAlgorithm, stream: Stream) =
         match algo with
         | SupportedCheckSumAlgorithm.MD5 ->
-            use md5 = MD5.Create()
+            use md5 = System.Security.Cryptography.MD5.Create()
             md5.ComputeHash(stream)
         | SupportedCheckSumAlgorithm.SHA256 ->
-            use sha256 = SHA256.Create()
+            use sha256 = System.Security.Cryptography.SHA256.Create()
             sha256.ComputeHash(stream)
 
     let private CalculateSum(algo: SupportedCheckSumAlgorithm, file: FileInfo) =
