@@ -79,39 +79,6 @@ let PrintNugetVersion() =
             Console.Out.Flush()
             failwith "nuget process' output contained errors ^"
 
-let ConfigCommandCheck
-    (commandNamesByOrderOfPreference: seq<string>)
-    (exitIfNotFound: bool)
-    : Option<string> =
-    let rec configCommandCheck currentCommandNamesQueue allCommands =
-        match Seq.tryHead currentCommandNamesQueue with
-        | Some currentCommand ->
-            //Console.Write (sprintf "checking for %s... " currentCommand)
-            if not(Process.CommandWorksInShell currentCommand) then
-                //Console.WriteLine "not found"
-                configCommandCheck
-                    (Seq.tail currentCommandNamesQueue)
-                    allCommands
-            else
-                //Console.WriteLine "found"
-                currentCommand |> Some
-        | None ->
-            Console.Error.WriteLine(
-                sprintf
-                    "Error, please install %s"
-                    (String.Join(" or ", List.ofSeq allCommands))
-            )
-
-            if exitIfNotFound then
-                Environment.Exit 1
-                failwith "unreachable"
-            else
-                None
-
-    configCommandCheck
-        commandNamesByOrderOfPreference
-        commandNamesByOrderOfPreference
-
 let FindBuildTool() : string * string =
     match Misc.GuessPlatform() with
     | Misc.Platform.Linux
@@ -122,30 +89,7 @@ let FindBuildTool() : string * string =
 #if !LEGACY_FRAMEWORK
         "dotnet", "build"
 #else
-        //we need to call "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -find MSBuild\**\Bin\MSBuild.exe
-        let programFiles =
-            Environment.GetFolderPath Environment.SpecialFolder.ProgramFilesX86
-
-        let vswhereExe =
-            Path.Combine(
-                programFiles,
-                "Microsoft Visual Studio",
-                "Installer",
-                "vswhere.exe"
-            )
-            |> FileInfo
-
-        ConfigCommandCheck(List.singleton vswhereExe.FullName) |> ignore
-
-        let vswhereCmd =
-            {
-                Command = vswhereExe.FullName
-                Arguments = "-find MSBuild\\**\\Bin\\MSBuild.exe"
-            }
-
-        let procResult = Process.Execute(vswhereCmd, Echo.Off)
-        let msbuildPath = procResult.UnwrapDefault().Trim()
-        msbuildPath, String.Empty
+        (Process.VsWhere "MSBuild\\**\\Bin\\MSBuild.exe"), String.Empty
 #endif
 
 let BuildSolution

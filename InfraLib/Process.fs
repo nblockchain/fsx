@@ -324,6 +324,7 @@ module Process =
         errReaderThread.Join()
 
         let output = OutputBuffer outputBuffer
+
         let procRunResultDetails =
             {
                 Command = procDetails.Command
@@ -436,3 +437,83 @@ module Process =
                 false
         else
             CheckIfCommandWorksInShellWithWhich(command)
+
+    let ConfigCommandCheck
+        (commandNamesByOrderOfPreference: seq<string>)
+        (exitIfNotFound: bool)
+        (printConfigureChecks: bool)
+        : Option<string> =
+        let rec configCommandCheck currentCommandNamesQueue allCommands =
+            match Seq.tryHead currentCommandNamesQueue with
+            | Some currentCommand ->
+                if printConfigureChecks then
+                    Console.Write(sprintf "checking for %s... " currentCommand)
+
+                if not(CommandWorksInShell currentCommand) then
+                    if printConfigureChecks then
+                        Console.WriteLine "not found"
+
+                    configCommandCheck
+                        (Seq.tail currentCommandNamesQueue)
+                        allCommands
+                else
+                    if printConfigureChecks then
+                        Console.WriteLine "found"
+
+                    currentCommand |> Some
+            | None ->
+                Console.Error.WriteLine(
+                    sprintf
+                        "Error, please install %s"
+                        (String.Join(" or ", List.ofSeq allCommands))
+                )
+
+                if exitIfNotFound then
+                    Environment.Exit 1
+                    failwith "unreachable"
+                else
+                    None
+
+        configCommandCheck
+            commandNamesByOrderOfPreference
+            commandNamesByOrderOfPreference
+
+    // FIXME: it returns the first result, but we should return all (array<string>)
+    let VsWhere(searchPattern: string) : string =
+        if Misc.GuessPlatform() <> Misc.Platform.Windows then
+            failwith "vswhere.exe doesn't exist in other platforms than Windows"
+
+        let programFiles =
+            Environment.GetFolderPath Environment.SpecialFolder.ProgramFilesX86
+
+        let vswhereExe =
+            Path.Combine(
+                programFiles,
+                "Microsoft Visual Studio",
+                "Installer",
+                "vswhere.exe"
+            )
+            |> FileInfo
+
+        ConfigCommandCheck (List.singleton vswhereExe.FullName) true false
+        |> ignore
+
+        let vswhereCmd =
+            {
+                Command = vswhereExe.FullName
+                Arguments = sprintf "-find %s" searchPattern
+            }
+
+        let procResult = Execute(vswhereCmd, Echo.Off)
+
+        let firstResult =
+            procResult
+                .UnwrapDefault()
+                .Split(
+                    Array.singleton Environment.NewLine,
+                    StringSplitOptions.RemoveEmptyEntries
+                )
+                .First()
+                .Trim()
+
+        firstResult

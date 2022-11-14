@@ -67,37 +67,12 @@ let CreateCommand(executable: FileInfo, args: string) =
         failwith "Unexpected command, you broke 'make check'"
 
 
-// TODO: move to Misc.fs? otherwise it's duped between fsxc's Program.fs & here
 let fsharpCompilerCommand =
 #if !LEGACY_FRAMEWORK
     "dotnet"
 #else
     match Misc.GuessPlatform() with
-    | Misc.Platform.Windows ->
-        let vswherePath =
-            Path.Combine(
-                Environment.GetFolderPath(
-                    Environment.SpecialFolder.ProgramFilesX86
-                ),
-                "Microsoft Visual Studio",
-                "Installer",
-                "vswhere.exe"
-            )
-
-        Process
-            .Execute(
-                {
-                    Command = vswherePath
-                    Arguments = "-find **\\fsc.exe"
-                },
-                Echo.Off
-            )
-            .UnwrapDefault()
-            .Split(
-                Array.singleton Environment.NewLine,
-                StringSplitOptions.RemoveEmptyEntries
-            )
-            .First()
+    | Misc.Platform.Windows -> Process.VsWhere "**\\fsc.exe"
     | _ -> "fsharpc"
 #endif
 
