@@ -89,6 +89,7 @@ module Misc =
             FsxOnlyArgumentsInternalFsx(cmdLineArgs)
 #endif
 
+#if LEGACY_FRAMEWORK
     type private SupportedCheckSumAlgorithm =
         | MD5
         | SHA256
@@ -121,6 +122,7 @@ module Misc =
 
     let CalculateSHA256(file: FileInfo) : string =
         CalculateSum(SupportedCheckSumAlgorithm.SHA256, file)
+#endif
 
     let FirstElementOf3Tuple(a, _, _) =
         a

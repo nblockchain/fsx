@@ -200,6 +200,7 @@ module Network =
 
         resultFile
 
+#if LEGACY_FRAMEWORK
     let SafeDownloadFile(uri: Uri, sha256sum: string) : FileInfo =
         let resultFile =
             try
@@ -246,6 +247,7 @@ module Network =
             )
 
         resultFile
+#endif
 
     let IsPortOpen(host: string, port: int) : bool =
         let canConnect =
