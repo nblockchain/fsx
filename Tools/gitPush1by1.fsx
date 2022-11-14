@@ -5,7 +5,12 @@ open System.IO
 open System.Linq
 open System.Threading
 
+#if !LEGACY_FRAMEWORK
+#r "System.Security.Cryptography"
+#endif
+
 #r "System.Configuration"
+
 open System.Configuration
 
 #load "../InfraLib/Misc.fs"
