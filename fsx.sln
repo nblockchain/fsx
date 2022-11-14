@@ -7,6 +7,50 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsxc", "fsxc\fsxc.fsproj", 
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "InfraLib", "InfraLib\InfraLib.fsproj", "{B532D664-2864-4532-9673-3E52DD363BB9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{17C46E45-4C73-4981-9EE4-686675C2DDBB}"
+	ProjectSection(SolutionItems) = preProject
+		configure.sh = configure.sh
+		Makefile = Makefile
+		scripts\install.sh = scripts\install.sh
+		launcher.fsx = launcher.fsx
+		scripts\build.sh = scripts\build.sh
+		scripts\launcher.sh = scripts\launcher.sh
+		compileFSharpScripts.fsx = compileFSharpScripts.fsx
+		make.bat = make.bat
+		scripts\make.fsx = scripts\make.fsx
+		.github\workflows\CI.yml = .github\workflows\CI.yml
+		scripts\runTests.fsx = scripts\runTests.fsx
+		scripts\fsx.bat = scripts\fsx.bat
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C51659D1-9E99-4C52-A7E4-DCD12922AE73}"
+	ProjectSection(SolutionItems) = preProject
+		test\test.fs = test\test.fs
+		test\test.fsx = test\test.fsx
+		test\testFsiCommandLineArgs.fsx = test\testFsiCommandLineArgs.fsx
+		test\testIfDef.fsx = test\testIfDef.fsx
+		test\testProcess.fsx = test\testProcess.fsx
+		test\testProcessConcurrency.fsx = test\testProcessConcurrency.fsx
+		test\testProcessConcurrencySample.fsx = test\testProcessConcurrencySample.fsx
+		test\testProcessSample.fsx = test\testProcessSample.fsx
+		test\testRefLib.fsx = test\testRefLib.fsx
+		test\testRefLibOutsideCurrentFolder.fsx = test\testRefLibOutsideCurrentFolder.fsx
+		test\testRefNugetLib.fsx = test\testRefNugetLib.fsx
+		test\testRefNugetLibNewFormat.fsx = test\testRefNugetLibNewFormat.fsx
+		test\testRefNugetLibNewFormatWithVersion.fsx = test\testRefNugetLibNewFormatWithVersion.fsx
+		test\testTsv.fsx = test\testTsv.fsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FD764CDA-F880-4954-BA6C-1FC678D64988}"
+	ProjectSection(SolutionItems) = preProject
+                Tools\bump.fsx = Tools\bump.fsx
+                Tools\replace.fsx = Tools\replace.fsx
+                Tools\safeRun.fsx = Tools\safeRun.fsx
+                Tools\nugetPush.fsx = Tools\nugetPush.fsx
+                Tools\fsi.bat = Tools\fsi.bat
+                Tools\gitPush1by1.fsx = Tools\gitPush1by1.fsx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
