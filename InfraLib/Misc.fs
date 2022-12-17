@@ -71,7 +71,19 @@ module Misc =
     let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
 #if !LEGACY_FRAMEWORK
-        List.skip 2 cmdLineArgs
+        if cmdLineArgs.Length = 0 then
+            failwith
+                "When running with 'dotnet' executable, there should be at least one command line arg from Environment.GetCommandLineArgs(): fsi(.dll) or the .dll assembly to run"
+
+        if cmdLineArgs.Length > 1
+           && cmdLineArgs.[0]
+               .EndsWith("fsi.dll", StringComparison.OrdinalIgnoreCase)
+           && cmdLineArgs.[1]
+               .EndsWith(".fsx", StringComparison.OrdinalIgnoreCase) then
+            List.skip 2 cmdLineArgs
+        else
+            // likely running a fsxc-ed assembly from an .fsx script (so 'dotnet someFile.fsx.dll someArg1' instead of 'dotnet fsi someFile.fsx someArg1')
+            List.skip 1 cmdLineArgs
 #else
         let isFsi =
             String.Equals(
