@@ -105,7 +105,7 @@ module Unix =
 
     let mutable firstTimeSudoIsRun = true
 
-    let private SudoInternal(command: string) =
+    let private SudoInternal (command: string) (abortIfAlreadyRoot: bool) =
         if not(Process.CommandWorksInShell "id") then
             Console.Error.WriteLine(
                 "'id' unix command is needed for this script to work"
@@ -126,7 +126,7 @@ module Unix =
 
         let alreadySudo = (idOutput.Trim() = "0")
 
-        if (alreadySudo && (not(Misc.IsRunningInGitLab()))) then
+        if alreadySudo && (not(Misc.IsRunningInGitLab())) && abortIfAlreadyRoot then
             Console.Error.WriteLine(
                 "Error: sudo privileges detected. Please don't run this directly with sudo or with the root user."
             )
@@ -185,7 +185,10 @@ module Unix =
         result
 
     let Sudo(command: string) : unit =
-        (SudoInternal command).UnwrapDefault() |> ignore<string>
+        (SudoInternal command true).UnwrapDefault() |> ignore<string>
+
+    let private SudoIfNeeded(command: string) =
+        (SudoInternal command false).UnwrapDefault() |> ignore<string>
 
     let MAX_TIME_TO_WAIT_FOR_A_PROCESS_TO_DIE = TimeSpan.FromSeconds(float 30)
 
@@ -205,7 +208,7 @@ module Unix =
                     Console.WriteLine("Retrying...")
 
                 try
-                    Sudo("killall " + processName)
+                    SudoIfNeeded("killall " + processName)
                 with
                 | Process.ProcessFailed _ -> () //might fail if the process is gone already, it's fine
 
@@ -294,7 +297,9 @@ module Unix =
     let InstallAptPackageIfNotAlreadyInstalled(packageName: string) =
         if (IsAptPackageInstalled(packageName) = AptPackage.Missing) then
             Console.WriteLine("Installing {0}...", packageName)
-            Sudo(String.Format("apt -y install {0}", packageName)) |> ignore
+
+            SudoIfNeeded(String.Format("apt -y install {0}", packageName))
+            |> ignore
 
     let rec DownloadAptPackage(packageName: string) =
         Console.WriteLine()
@@ -394,14 +399,16 @@ module Unix =
             Environment.Exit(3)
 
         Console.WriteLine("Installing {0}...", package.Name)
-        Sudo(String.Format("dpkg --install {0}", package.FullName)) |> ignore
+
+        SudoIfNeeded(String.Format("dpkg --install {0}", package.FullName))
+        |> ignore
 
     let AptUpdate() =
-        Sudo("apt update")
+        SudoIfNeeded "apt update"
 
     let PurgeAptPackage(packageName: string) =
         if IsAptPackageInstalled packageName <> AptPackage.Missing then
-            Sudo(sprintf "apt -y purge %s" packageName) |> ignore
+            SudoIfNeeded(sprintf "apt -y purge %s" packageName) |> ignore
 
     let GetAllPackageNamesFromAptSource(aptSourceFile: FileInfo) : seq<string> =
         if not(Process.CommandWorksInShell "dpkg") then
@@ -539,7 +546,7 @@ module Unix =
         let addUserToGroupCommand =
             String.Format("sudo usermod -a -G {0} {1}", group, username)
 
-        Sudo(addUserToGroupCommand)
+        SudoIfNeeded addUserToGroupCommand
 
     let AddGroupIfNotExistent(groupname: string) =
         if
@@ -549,7 +556,7 @@ module Unix =
             ()
         else
             let addGroupCommand = String.Format("addgroup {0}", groupname)
-            Sudo(addGroupCommand)
+            SudoIfNeeded addGroupCommand
 
     let AddUserIfNotExistent(username: string, server: Server) =
         let addUserCommand =
@@ -565,7 +572,7 @@ module Unix =
             ()
         else
             match server with
-            | ThisServer -> Sudo(addUserCommand)
+            | ThisServer -> SudoIfNeeded addUserCommand
             | RemoteServer address ->
                 let cmd =
                     {
@@ -610,7 +617,7 @@ module Unix =
 
         let sshFolder = Path.Combine(home, ".ssh")
 
-        Sudo(
+        SudoIfNeeded(
             String.Format(
                 "runuser -l {0} -c 'mkdir -p {1}'",
                 username,
@@ -621,7 +628,7 @@ module Unix =
         let knownHostsFilePath = Path.Combine(sshFolder, "known_hosts")
 
         if not(SudoFileExists(knownHostsFilePath)) then
-            Sudo(
+            SudoIfNeeded(
                 String.Format(
                     "runuser -l {0} -c 'touch {1}'",
                     username,
@@ -638,8 +645,13 @@ module Unix =
                 knownHostsFilePath
             )
 
-        Sudo(String.Format("runuser -l {0} -c '{1}'", username, command1))
-        Sudo(String.Format("runuser -l {0} -c '{1}'", username, command2))
+        SudoIfNeeded(
+            String.Format("runuser -l {0} -c '{1}'", username, command1)
+        )
+
+        SudoIfNeeded(
+            String.Format("runuser -l {0} -c '{1}'", username, command2)
+        )
 
     let GetOwner(fileOrDirectory: FileSystemInfo) : string =
         let cmd =
@@ -665,7 +677,7 @@ module Unix =
                 String.Empty
 
         if (recursively || not(newOwner.Equals(GetOwner(fileOrDirectory)))) then
-            Sudo(
+            SudoIfNeeded(
                 String.Format(
                     "chown {0} {1} {2}",
                     recursiveStr,
@@ -688,7 +700,7 @@ module Unix =
                 String.Empty
 
         if (recursively || not(newOwner.Equals(GetOwner(fileOrDirectory)))) then
-            Sudo(
+            SudoIfNeeded(
                 String.Format(
                     "chown {0} {1}:{2} {3}",
                     recursiveStr,
@@ -710,7 +722,7 @@ module Unix =
             else
                 String.Empty
 
-        Sudo(
+        SudoIfNeeded(
             String.Format(
                 "chmod {0} {1} {2}",
                 recursiveStr,
@@ -723,13 +735,13 @@ module Unix =
         let someRandomCommandWhichShouldWork = "exit"
 
         let sudoProc =
-            SudoInternal(
-                String.Format(
+            SudoInternal
+                (String.Format(
                     "runuser -l {0} -c '{1}'",
                     username,
                     someRandomCommandWhichShouldWork
-                )
-            )
+                ))
+                false
 
         match sudoProc.Result with
         | Success _ -> true
@@ -745,7 +757,7 @@ module Unix =
         let command = String.Format("chsh -s {0} {1}", shell, username)
 
         match server with
-        | Server.ThisServer -> Sudo(String.Format(command, username))
+        | Server.ThisServer -> SudoIfNeeded(String.Format(command, username))
         | Server.RemoteServer address ->
             let cmd =
                 {
@@ -798,7 +810,7 @@ module Unix =
                     privateKeyRelativePath
                 )
 
-            Sudo(
+            SudoIfNeeded(
                 String.Format(
                     "runuser -l {0} -c '{1}'",
                     user,
@@ -811,7 +823,7 @@ module Unix =
         AddRemoteServerFingerprintsToLocalKnownHostsFile(host, user)
         AddRemoteServerFingerprintsToLocalKnownHostsFile(host, "root") //for sudo
 
-        Sudo(
+        SudoIfNeeded(
             String.Format(
                 "scp {0} {1}@{2}:~/",
                 publicKeyRelativePath,
