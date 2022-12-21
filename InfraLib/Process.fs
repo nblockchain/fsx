@@ -434,7 +434,19 @@ module Process =
             if (exists && HasWindowsExecutableExtension(command)) then
                 true
             else
-                false
+                try
+                    Execute(
+                        {
+                            Command = command
+                            Arguments = String.Empty
+                        },
+                        Echo.Off
+                    )
+                    |> ignore<ProcessResult>
+
+                    true
+                with
+                | :? ProcessCouldNotStart -> false
         else
             CheckIfCommandWorksInShellWithWhich(command)
 
