@@ -148,7 +148,12 @@ module Process =
                 raise <| ProcessSucceededWithWarnings fullErrMsg
 
         member self.UnwrapDefault() : string =
-            self.Unwrap(sprintf "Error when running '%s'" self.Details.Command)
+            self.Unwrap(
+                sprintf
+                    "Error when running '%s %s'"
+                    self.Details.Command
+                    self.Details.Args
+            )
 
 
     type ProcessCouldNotStart
