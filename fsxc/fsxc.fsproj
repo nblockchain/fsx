@@ -13,7 +13,6 @@
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
     <PackageId>fsx</PackageId>
-    <Version>1.0.1</Version>
     <Authors>knocte,aarani,Bobface,msonawane</Authors>
     <Copyright>"Copyright (c) 2016-2022 Andres G. Aragoneses", "Copyright (c) 2016-2017 Gatecoin Ltd", "Copyright (c) 2016-2017 Gatecoin Ltd"</Copyright>
     <PackageTags>FSharp F# fsx</PackageTags>
