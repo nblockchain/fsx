@@ -10,6 +10,6 @@ jobs:
       - name: Increment the version
         run: dotnet fsi scripts/CI/incrementVersion.fsx
       - name: Pack the NuGet package
-        run: dotnet pack ~/workshop/nodeffect/fsx/fsxc/fsxc.fsproj -p:PackageVersion=$(cat version.txt)
+        run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$(cat version.txt)
       - name: Publish on NuGet website
         run: dotnet nuget push "fsxc/nupkg/fsx."$(cat version.txt)".nupkg" --api-key oy2kru3qr5oum5zfglwa7xlntpwbprfexo4qu3xb46ccxe --source https://api.nuget.org/v3/index.json
