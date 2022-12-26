@@ -8,7 +8,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Creat version file
-        run: date '+%y.%m.%d.'$(date '+%H * 60 + %M' | bc) >> version.txt
+        run: date '+%y.%m.%d.'$(date '+%H * 60 + %M' | bc) > version.txt
       - name: Pack the NuGet package
         run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$(cat version.txt)
       - name: Publish on NuGet website
