@@ -7,7 +7,6 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>fsxc</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
-    <!-- <PackageLicenseExpression>MIT</PackageLicenseExpression> -->
     <PackageLicenseFile>LICENCE.txt</PackageLicenseFile>
     <RepositoryUrl>https://github.com/nblockchain/fsx.git</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
@@ -37,14 +36,16 @@
   </ItemGroup>
 
   <ItemGroup>
-		<Content Include="..\LICENCE.txt" 
-                 Link="LICENCE.txt" 
-                 Pack="true" 
-                 PackagePath="LICENCE.txt"/>
+    <Content 
+      Include="..\LICENCE.txt" 
+      Link="LICENCE.txt" 
+      Pack="true" 
+      PackagePath="LICENCE.txt"/>
     
-    <Content Include="..\ReadMe.md" 
-              Link="ReadMe.md" 
-              Pack="true" 
-              PackagePath="ReadMe.md"/>
-	</ItemGroup>
+    <Content 
+      Include="..\ReadMe.md" 
+      Link="ReadMe.md" 
+      Pack="true" 
+      PackagePath="ReadMe.md"/>
+  </ItemGroup>
 </Project>
