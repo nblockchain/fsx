@@ -12,4 +12,4 @@ jobs:
       - name: Pack the NuGet package
         run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$(cat version.txt)
       - name: Publish on NuGet website
-        run: dotnet nuget push "fsxc/nupkg/fsx."$(cat version.txt)".nupkg" --api-key oy2g6tywmwrxtz57iwiadp3ejfsj2koevgrdzaz4wrhx2y --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push "fsxc/nupkg/fsxc."$(cat version.txt)".nupkg" --api-key oy2g6tywmwrxtz57iwiadp3ejfsj2koevgrdzaz4wrhx2y --source https://api.nuget.org/v3/index.json
