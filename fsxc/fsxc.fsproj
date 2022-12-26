@@ -5,14 +5,14 @@
     <TargetFramework>net6.0</TargetFramework>
 
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>fsx</ToolCommandName>
+    <ToolCommandName>fsxc</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <!-- <PackageLicenseExpression>MIT</PackageLicenseExpression> -->
     <PackageLicenseFile>LICENCE.txt</PackageLicenseFile>
     <RepositoryUrl>https://github.com/nblockchain/fsx.git</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
-    <PackageId>fsx</PackageId>
+    <PackageId>fsxc</PackageId>
     <Authors>knocte,aarani,Bobface,msonawane</Authors>
     <Copyright>"Copyright (c) 2016-2022 Andres G. Aragoneses", "Copyright (c) 2016-2017 Gatecoin Ltd", "Copyright (c) 2016-2017 Gatecoin Ltd"</Copyright>
     <PackageTags>FSharp F# fsx</PackageTags>
