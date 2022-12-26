@@ -7,8 +7,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Increment the version
-        run: dotnet fsi scripts/CI/incrementVersion.fsx
       - name: Pack the NuGet package
         run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$(date '+%y.%m.%d.'$(date '+%H * 60 + %M' | bc))
       - name: Publish on NuGet website
