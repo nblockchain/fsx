@@ -7,7 +7,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: Creat version file
+        run: date '+%y.%m.%d.'$(date '+%H * 60 + %M' | bc) >> version.txt
       - name: Pack the NuGet package
-        run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$(date '+%y.%m.%d.'$(date '+%H * 60 + %M' | bc))
+        run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$(cat version.txt)
       - name: Publish on NuGet website
         run: dotnet nuget push "fsxc/nupkg/fsx."$(cat version.txt)".nupkg" --api-key oy2g6tywmwrxtz57iwiadp3ejfsj2koevgrdzaz4wrhx2y --source https://api.nuget.org/v3/index.json
