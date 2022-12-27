@@ -12,6 +12,6 @@ jobs:
       - name: Pack the NuGet package
         run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$(cat version.txt)
       - name: Publish on NuGet website
-        run: dotnet nuget push "fsxc/nupkg/fsxc."$(cat version.txt)".nupkg" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push "fsxc/nupkg/fsxc."$(cat version.txt)".nupkg" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
