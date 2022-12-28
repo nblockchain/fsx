@@ -12,6 +12,8 @@ jobs:
         run: |
           source version.config
           echo "version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)" >> $GITHUB_ENV
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "version=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
       - name: Pack the NuGet package
         run: |
           echo $version
