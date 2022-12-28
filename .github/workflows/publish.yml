@@ -7,11 +7,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Create version file
-        if: github.event_name == 'push'
+      - name: Create version environment variable on normal push
         run: |
           source version.config
           echo "version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)" >> $GITHUB_ENV
+      - name: Create version environment variable when it's git tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Pack the NuGet package
