@@ -12,7 +12,7 @@ jobs:
           source version.config
           echo "version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)" >> $GITHUB_ENV
       - name: Create version environment variable when it's git tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/')
         run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Pack the NuGet package
         run: |
