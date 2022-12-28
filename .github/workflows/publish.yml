@@ -8,11 +8,15 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create version file
-        run: date '+%y.%m.%d.'$(date '+%H * 60 + %M' | bc) > version.txt
+        run: |
+          source version.config
+          echo "version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)" >> $GITHUB_ENV
       - name: Pack the NuGet package
-        run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$(cat version.txt)
+        run: |
+          echo $version
+          dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$version
       - name: Publish on NuGet website
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && env.NUGET_API_KEY != null
-        run: dotnet nuget push "fsxc/nupkg/fsxc."$(cat version.txt)".nupkg" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+        if: github.event_name == 'push' && env.NUGET_API_KEY != null
+        run: dotnet nuget push "fsxc/nupkg/fsxc."$version".nupkg" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
