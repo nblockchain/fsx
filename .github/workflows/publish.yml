@@ -10,7 +10,7 @@ jobs:
       - name: Create version file
         run: |
           source version.config
-          version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)
+          echo "version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)" >> $GITHUB_ENV
       - name: Pack the NuGet package
         run: |
           echo $version
