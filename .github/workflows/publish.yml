@@ -12,7 +12,9 @@ jobs:
           source version.config
           version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)
       - name: Pack the NuGet package
-        run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$version
+        run: |
+          echo $version
+          dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$version
       - name: Publish on NuGet website
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
