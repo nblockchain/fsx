@@ -11,7 +11,7 @@ jobs:
         if: github.event_name == 'push'
         run: |
           source version.config
-          echo "version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)" >> $GITHUB_ENV
+          echo "version=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
         if: github.event_name == 'release'
         run: |
           echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
