@@ -86,11 +86,6 @@ match proc.Result with
 
     if (stdErrLog.Exists && stdErrLog.Length = 0L) then
         stdErrLog.Delete()
-| ProcessResultState.WarningsOrAmbiguous output ->
-    output.PrintToConsole()
-    Console.WriteLine()
-    Console.Out.Flush()
-    failwith "Unexpected output ^ (with warnings?)"
 | _ ->
     let stdErrLines = File.ReadAllLines(logForStdErr)
 
