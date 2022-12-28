@@ -10,7 +10,7 @@ jobs:
       - name: Create version file
         run: |
           source version.config
-          $version = `.\fsx\Tools\fsi.bat fsx\Tools\nugetPush.fsx --output-version $env:BASE_VERSION`
+          $version = Tools/nugetPush.fsx --output-version $BaseVersion
       - name: Pack the NuGet package
         run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$version
       - name: Publish on NuGet website
