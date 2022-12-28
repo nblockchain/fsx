@@ -21,5 +21,5 @@ jobs:
       - name: Publish on NuGet website
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        if: github.event_name == 'push' && env.NUGET_API_KEY != null
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && env.NUGET_API_KEY != null
         run: dotnet nuget push "fsxc/nupkg/fsxc."$version".nupkg" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
