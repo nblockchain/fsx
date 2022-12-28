@@ -8,11 +8,13 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create version file
-        run: date '+%y.%m.%d.'$(date '+%H * 60 + %M' | bc) > version.txt
-      - name: Load BaseVersion
-        run: source version.config
+        run: |
+          source version.config
+          $version = `.\fsx\Tools\fsi.bat fsx\Tools\nugetPush.fsx --output-version $env:BASE_VERSION`
+      - name: Pack the NuGet package
+        run: dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$version
       - name: Publish on NuGet website
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         if: github.event_name == 'push' && env.NUGET_API_KEY != null
-        run: dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion $NUGET_API_KEY
+        run: dotnet nuget push "fsxc/nupkg/fsxc."$version".nupkg" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
