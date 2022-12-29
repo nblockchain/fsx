@@ -4,15 +4,10 @@ open System
 open System.IO
 open System.Linq
 
-#r "nuget: Microsoft.Build"
-open Microsoft.Build.Construction
+#r "nuget: TickSpec"
 
-let sol =
-    SolutionFile.Parse <| Path.Combine(__SOURCE_DIRECTORY__, "..", "fsx.sln")
+let someProcedure() =
+    ()
 
-for (proj: string) in
-    (sol
-        .ProjectsInOrder
-        .Select(fun p -> p.ProjectName)
-        .ToList()) do
-    Console.WriteLine proj
+let action: TickSpec.Action = TickSpec.Action someProcedure
+Console.WriteLine(action.GetType().FullName)
