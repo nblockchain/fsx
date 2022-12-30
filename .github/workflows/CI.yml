@@ -46,7 +46,8 @@ jobs:
       run: |
         dotnet new tool-manifest
         dotnet tool install fantomless-tool --version 4.7.996
-        dotnet fantomless --recurse --check .
+        dotnet fantomless --recurse .
+        git diff --exit-code
 
   macOS_dotnet-and-mono:
     runs-on: macOS-latest
