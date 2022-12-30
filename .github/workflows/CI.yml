@@ -374,10 +374,18 @@ jobs:
     - uses: actions/checkout@v1
     - name: build in DEBUG mode
       run: .\make-legacy.bat
+
     - name: install
-      run: .\make-legacy.bat install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        .\make.bat install
+
     - name: run tests
       run: .\make-legacy.bat check
+    - name: compile this repo's .fsx scripts with fsx
+      run: .\Tools\fsi.bat compileFSharpScripts.fsx
 
   windows_dotnet6:
     runs-on: windows-latest
@@ -400,5 +408,5 @@ jobs:
     - name: run tests
       run: .\make.bat check
     - name: compile this repo's .fsx scripts with fsx
-      run: .\Tools\fsi.bat compileFSharpScripts.fsx
+      run: dotnet fsi compileFSharpScripts.fsx
 
