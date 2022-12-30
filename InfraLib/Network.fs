@@ -371,6 +371,9 @@ module Network =
         )
 
 #if !LEGACY_FRAMEWORK
+    let private nugetExeMsg =
+        "We warned you at compile time, NuGet.exe is not supported when using dotnet6 or higher (use 'dotnet restore' or 'dotnet nuget')"
+
     [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
 #endif
     let NugetDownloadUrl =
@@ -383,8 +386,7 @@ module Network =
 #if !LEGACY_FRAMEWORK
         (_targetFile: FileInfo)
         =
-        failwith
-            "We warned you at compile time, NuGet is not supported when using dotnet6 or higher"
+        failwith nugetExeMsg
 #else
         (targetFile: FileInfo)
         =
@@ -423,8 +425,7 @@ module Network =
         (_echo: Echo)
         (_safe: bool)
         : ProcessResult =
-        failwith
-            "We warned you at compile time, NuGet is not supported when using dotnet6 or higher"
+        failwith nugetExeMsg
 #else
         (nugetExe: FileInfo)
         (command: string)
@@ -453,8 +454,7 @@ module Network =
         (_maybeVersion: Option<string>)
         (_echo: Echo)
         : ProcessResult =
-        failwith
-            "We warned you at compile time, NuGet is not supported when using dotnet6 or higher"
+        failwith nugetExeMsg
 #else
         (nugetExe: FileInfo)
         (outputDirectory: DirectoryInfo)
