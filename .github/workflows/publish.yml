@@ -1,0 +1,27 @@
+name: NuGet Publish
+
+on: [push, pull_request]
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Create version environment variable on normal push
+        run: |
+          source version.config
+          echo "version=$(dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion)" >> $GITHUB_ENV
+      - name: Create version environment variable when it's git tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Pack the NuGet package
+        run: |
+          echo $version
+          dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$version
+      - name: Publish on NuGet website
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) && env.NUGET_API_KEY != null
+        run: dotnet nuget push "fsxc/nupkg/fsxc."$version".nupkg" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json

@@ -7,7 +7,7 @@ THIS REPO IS FACING A COMPLETE OVERHAUL/REVAMP/RENOVATION IN ORDER TO SUPPORT .N
 Unfinished tasks so far:
 * Try creating a macOS VM for CI that uninstalls .NETCore/.NET6 first, to make sure legacy framework build still works there.
 * Revamp this ReadMe.md file to remove any mentions to Mono or the legacy .NET4.x framework.
-* To reach a v1.0 release, publish fsx and fsxc as dotnet tools in nuget.
+* To reach a v1.0 release, publish fsx as dotnet tool in nuget.
 * Convert the fsx.fsx script into a console project (1.1?) to gain better performance in Windows.
 * Remove legacy framework support (so that build system can converge into .fsx files instead of autotools in Unix + fsx in Windows).
 * Make fsxc always enable warnAsError and fsx always disable it.
@@ -91,39 +91,16 @@ run `fsx yourscript.fsx` every time.
 
 #### Compilation
 
-For your CI needs (to compile all scripts in your repo without executing them), you could clone it in your CI recipe (or include fsx repository as a submodule, populating it before the build), and call 
-`compileFSharpScripts.fsx`, which will find all the F# script files in your repository and try to compile them (but not run them).
+For your CI needs (to compile all scripts in your repo without executing them), you could call `fsxc` using `find` in your CI step.
 
-An example of how to do this with GitHub Actions (choosing the git clone option), is this YML workflow that you can paste into your `.github/workflows/` folder:
+An example of how to do this with GitHub Actions, is this YML fragment that you could add to your workflow existing in your `.github/workflows/` folder:
 
 ```
-name: FSharpScriptsCompilation
-
-on: [push, pull_request]
-
-jobs:
-  compile_scripts:
-    runs-on: macOS-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: clone fsx
-      run: git clone https://github.com/nblockchain/fsx.git
     - name: compile F# scripts
-      run: fsharpi ./fsx/compileFSharpScripts.fsx
-```
-
-An example of how to do this with GitLabCI (choosing a git submodule), is this `.gitlab-ci.yml` configuration file sample:
-
-```
-image: ubuntu:20.04
-before_script:
-  - sudo apt update
-  - sudo apt install --yes git
-  - git submodule sync --recursive
-  - git submodule update --init --recursive
-  - sudo apt install --yes fsharp
-build:
-  script:
-    - fsharpi ./fsx/compileFSharpScripts.fsx
+      shell: bash
+      run: |
+        dotnet new tool-manifest
+        dotnet tool install fsxc
+        find . -type f -name "*.fsx" | xargs -t -I {} dotnet fsxc {}
 ```
 
