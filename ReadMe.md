@@ -7,7 +7,7 @@ THIS REPO IS FACING A COMPLETE OVERHAUL/REVAMP/RENOVATION IN ORDER TO SUPPORT .N
 Unfinished tasks so far:
 * Try creating a macOS VM for CI that uninstalls .NETCore/.NET6 first, to make sure legacy framework build still works there.
 * Revamp this ReadMe.md file to remove any mentions to Mono or the legacy .NET4.x framework.
-* To reach a v1.0 release, publish fsx and fsxc as dotnet tools in nuget.
+* To reach a v1.0 release, publish fsx as dotnet tool in nuget.
 * Convert the fsx.fsx script into a console project (1.1?) to gain better performance in Windows.
 * Remove legacy framework support (so that build system can converge into .fsx files instead of autotools in Unix + fsx in Windows).
 
