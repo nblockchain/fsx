@@ -389,7 +389,16 @@ jobs:
         dotnet-version: '6.0.x'
     - name: build in DEBUG mode
       run: .\make.bat
+
     - name: install
-      run: .\make.bat install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        .\make.bat install
+
     - name: run tests
       run: .\make.bat check
+    - name: compile this repo's .fsx scripts with fsx
+      run: .\Tools\fsi.bat compileFSharpScripts.fsx
+
