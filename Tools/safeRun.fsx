@@ -87,6 +87,8 @@ match proc.Result with
     if (stdErrLog.Exists && stdErrLog.Length = 0L) then
         stdErrLog.Delete()
 | _ ->
+
+#if LEGACY_FRAMEWORK
     let stdErrLines = File.ReadAllLines(logForStdErr)
 
     let lines =
@@ -127,6 +129,9 @@ match proc.Result with
                 logForGenericStdErr
             )
         )
+#else
+    ()
+#endif
 
 // make 'foo.last.out|err.log' symlinks pointing to last log
 let logForLastStdOutName = sprintf "%s.last.out.log" commandName

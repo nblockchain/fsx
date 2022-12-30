@@ -28,7 +28,7 @@ let Bump(toStable: bool) : Version * Version =
         failwith
             "sanity check failed, post-bump should happen in a stable version"
 
-    let newFullVersion, newVersion =
+    let newFullVersion =
         if Misc.FsxOnlyArguments().Length > 0 then
             if Misc.FsxOnlyArguments().Length > 1 then
                 Console.Error.WriteLine "Only one argument supported, not more"
@@ -36,7 +36,7 @@ let Bump(toStable: bool) : Version * Version =
                 failwith "Unreachable"
             else
                 let full = Version(Misc.FsxOnlyArguments().Head)
-                full, full.MinorRevision
+                full
         else
             let newVersion = androidVersion + 1s
 
@@ -50,7 +50,7 @@ let Bump(toStable: bool) : Version * Version =
                         newVersion
                 )
 
-            full, newVersion
+            full
 
     let replaceScript = Path.Combine(__SOURCE_DIRECTORY__, "replace.fsx")
 

@@ -74,7 +74,7 @@ module Unix =
 
         let processes =
             match procs with
-            | headerRow :: processRows -> processRows
+            | _headerRow :: processRows -> processRows
             | _ -> failwith "Unexpected data from 'ps'"
 
         [
@@ -446,14 +446,40 @@ module Unix =
 
         let textToFind = sprintf "%s/binary-%s/Packages" name arch
         let uri = sprintf "%s/dists/%s/Release" url dist
+#if !LEGACY_FRAMEWORK
+        use httpClient = new System.Net.Http.HttpClient()
+
+        use response =
+            httpClient.GetAsync uri |> Async.AwaitTask |> Async.RunSynchronously
+
+        use content = response.Content
+
+        let metadata =
+            content.ReadAsStringAsync()
+            |> Async.AwaitTask
+            |> Async.RunSynchronously
+#else
         use webClient = new WebClient()
         let metadata = webClient.DownloadString uri
+#endif
 
         if not(metadata.Contains textToFind) then
             failwithf "metadata '%s' not found in '%s'" textToFind metadata
 
         let uri = sprintf "%s/dists/%s/%s" url dist textToFind
+#if !LEGACY_FRAMEWORK
+        use response =
+            httpClient.GetAsync uri |> Async.AwaitTask |> Async.RunSynchronously
+
+        use content = response.Content
+
+        let pkgMetadata =
+            content.ReadAsStringAsync()
+            |> Async.AwaitTask
+            |> Async.RunSynchronously
+#else
         let pkgMetadata = webClient.DownloadString uri
+#endif
 
         seq {
             use reader = new StringReader(pkgMetadata)

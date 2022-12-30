@@ -147,7 +147,9 @@ module Git =
         let map = proc.UnwrapDefault() |> Misc.TsvParse
 
         let removedLastAction =
-            Map.map (fun (k: string) (v: string) -> (v.Split(' ').[0])) map
+            Map.map
+                (fun (_key: string) (value: string) -> (value.Split(' ').[0]))
+                map
 
         removedLastAction
 
