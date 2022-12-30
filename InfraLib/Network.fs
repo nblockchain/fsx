@@ -13,8 +13,13 @@ open Process
 module Network =
 
     let DownloadString(uri: Uri) =
+#if !LEGACY_FRAMEWORK
+        use httpClient = new System.Net.Http.HttpClient()
+        httpClient.GetAsync uri |> Async.AwaitTask |> Async.RunSynchronously
+#else
         use webClient = new WebClient()
         webClient.DownloadString(uri)
+#endif
 
     let DownloadFile(uri: Uri) : FileInfo =
         let resultFile =
@@ -32,7 +37,10 @@ module Network =
                 "File '{0}' not found, going to start download...",
                 resultFile.Name
             )
-
+#if !LEGACY_FRAMEWORK
+            failwith
+                "TODO: https://stackoverflow.com/questions/20661652/progress-bar-with-httpclient/46497896#46497896"
+#else
             use webClient = new WebClient()
 
             let lockObj = new Object()
@@ -66,7 +74,7 @@ module Network =
                 do! Async.AwaitTask task
             }
             |> Async.RunSynchronously
-
+#endif
         resultFile
 
     let DownloadFileWithWGet(uri: Uri) : FileInfo =
@@ -371,13 +379,22 @@ module Network =
 #if !LEGACY_FRAMEWORK
     [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
 #endif
-    let DownloadNugetExe(targetFile: FileInfo) =
+    let DownloadNugetExe
+#if !LEGACY_FRAMEWORK
+        (_targetFile: FileInfo)
+        =
+        failwith
+            "We warned you at compile time, NuGet is not supported when using dotnet6 or higher"
+#else
+        (targetFile: FileInfo)
+        =
         if not targetFile.Directory.Exists then
             targetFile.Directory.Create()
 
         if not targetFile.Exists then
             use webClient = new WebClient()
             webClient.DownloadFile(NugetDownloadUrl, targetFile.FullName)
+#endif
 
 #if !LEGACY_FRAMEWORK
     [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
@@ -400,12 +417,20 @@ module Network =
     [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
 #endif
     let RunNugetCommand
+#if !LEGACY_FRAMEWORK
+        (_nugetExe: FileInfo)
+        (_command: string)
+        (_echo: Echo)
+        (_safe: bool)
+        : ProcessResult =
+        failwith
+            "We warned you at compile time, NuGet is not supported when using dotnet6 or higher"
+#else
         (nugetExe: FileInfo)
         (command: string)
         (echo: Echo)
         (safe: bool)
         : ProcessResult =
-
         DownloadNugetExe nugetExe
 
         let cmd = CreateNugetCommand nugetExe command
@@ -415,11 +440,22 @@ module Network =
             proc.UnwrapDefault() |> ignore<string>
 
         proc
+#endif
 
 #if !LEGACY_FRAMEWORK
     [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
 #endif
     let InstallNugetPackage
+#if !LEGACY_FRAMEWORK
+        (_nugetExe: FileInfo)
+        (_outputDirectory: DirectoryInfo)
+        (_pkgName: string)
+        (_maybeVersion: Option<string>)
+        (_echo: Echo)
+        : ProcessResult =
+        failwith
+            "We warned you at compile time, NuGet is not supported when using dotnet6 or higher"
+#else
         (nugetExe: FileInfo)
         (outputDirectory: DirectoryInfo)
         (pkgName: string)
@@ -444,10 +480,12 @@ module Network =
                 outputDirectory.FullName)
             echo
             true
+#endif
 
     let private SLACK_WEBHOOK_URI =
         "https://hooks.slack.com/services/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"
 
+#if LEGACY_FRAMEWORK
     let SlackNotify(message: string) =
         let textToSend =
             if not(message.Contains(Environment.NewLine)) then
@@ -502,3 +540,4 @@ module Network =
                 sprintf "Problem when trying to upload '%s' to Slack" json,
                 ex
             )
+#endif

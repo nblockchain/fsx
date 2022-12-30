@@ -3,9 +3,11 @@ namespace FSX.Infrastructure
 open System
 open System.IO
 open System.Reflection
-open System.Configuration
 open System.Linq
+#if LEGACY_FRAMEWORK
+open System.Configuration
 open System.Security.Cryptography
+#endif
 
 module Misc =
 
@@ -27,6 +29,7 @@ module Misc =
         with
         | _ -> false
 
+#if LEGACY_FRAMEWORK
     // this below is crazy but is to avoid # char being ignored in Uri.LocalPath property, see https://stackoverflow.com/a/41203269
     let private currentExeUri =
         Uri(Uri.EscapeUriString(Assembly.GetEntryAssembly().CodeBase))
@@ -67,6 +70,7 @@ module Misc =
                     tail
                 else
                     args
+#endif
 
     let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq

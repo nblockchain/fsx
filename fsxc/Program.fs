@@ -44,6 +44,7 @@ exception NoScriptProvided
 
 module Program =
 
+#if LEGACY_FRAMEWORK
     let private nugetExeTmpLocation: Lazy<FileInfo> =
         lazy
             (let tmpDir = System.IO.Path.GetTempPath() |> DirectoryInfo
@@ -53,6 +54,7 @@ module Program =
 
              Network.DownloadNugetExe tmpNuget
              tmpNuget)
+#endif
 
     let PrintUsage() =
         Console.WriteLine()
@@ -483,8 +485,8 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
                             yield CompilerInput.SourceFile(file)
 
-                        | PreProcessorAction.NugetRef(nugetPkgName, version) ->
 #if LEGACY_FRAMEWORK
+                        | PreProcessorAction.NugetRef(nugetPkgName, version) ->
                             let downloadedRef =
                                 nugetRefToNormalRef
                                     origScript
@@ -493,6 +495,8 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
                             yield CompilerInput.CustomRef downloadedRef.FullName
 #else
+
+                        | PreProcessorAction.NugetRef(_nugetPkgName, _version) ->
                             ()
 #endif
                         | PreProcessorAction.Ref refName ->
@@ -520,6 +524,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
             }
             |> List.ofSeq
 
+#if LEGACY_FRAMEWORK
         let getSourceFiles(flags: seq<CompilerInput>) : seq<FileInfo> =
             seq {
                 for f in flags do
@@ -538,8 +543,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                         yield sprintf "--reference:%s" refName
                     | _ -> ()
             }
-
-#if !LEGACY_FRAMEWORK
+#else
         let generateProjectFile
             (origScript: FileInfo)
             (contents: List<string * LineAction>)
@@ -647,33 +651,51 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
         let binFolder = GetBinFolderForAScript script
         let compilerInputs = preprocessScriptContents script contents
-        let filesToCompile = getSourceFiles compilerInputs
 #if !LEGACY_FRAMEWORK
         let projectFile = generateProjectFile script contents
 #endif
 
         let exitCode, exeTarget =
             let _, exeTarget = GetAutoGenerationTargets script "exe"
+#if LEGACY_FRAMEWORK
+            let filesToCompile = getSourceFiles compilerInputs
             let sourceFiles = String.Join(" ", filesToCompile)
 
             let refs = String.Join(" ", getCompilerReferences compilerInputs)
-
-            let buildConfig =
-#if DEBUG
-                "Debug"
-#else
-                "Release"
 #endif
+
+            let buildConfigIsDebug =
+#if DEBUG
+                true
+#else
+                false
+#endif
+
+#if !LEGACY_FRAMEWORK
+            let buildConfig =
+                if buildConfigIsDebug then
+                    "Debug"
+                else
+                    "Release"
+#endif
+
             let fscompilerflags =
 
 
 #if !LEGACY_FRAMEWORK
                 sprintf "build %s -c %s" projectFile.FullName buildConfig
 #else
+                let maybeDebugDefine =
+                    if buildConfigIsDebug then
+                        "--define:DEBUG"
+                    else
+                        String.Empty
+
                 (sprintf
-                    "%s %s --warnaserror --target:exe --out:%s %s"
+                    "%s %s %s --warnaserror --target:exe --out:%s %s"
                     refs
                     "--define:LEGACY_FRAMEWORK"
+                    maybeDebugDefine
                     exeTarget.FullName
                     sourceFiles)
 #endif
@@ -858,5 +880,9 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
         try
             Main argv
         finally
+#if LEGACY_FRAMEWORK
             if nugetExeTmpLocation.IsValueCreated then
                 nugetExeTmpLocation.Value.Delete()
+#else
+            ()
+#endif

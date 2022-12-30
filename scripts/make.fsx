@@ -59,6 +59,7 @@ let mainBinariesDir binaryConfig =
 #endif
     |> DirectoryInfo
 
+#if LEGACY_FRAMEWORK
 let PrintNugetVersion() =
     if not NugetExe.Exists then
         false
@@ -78,6 +79,7 @@ let PrintNugetVersion() =
             Console.WriteLine()
             Console.Out.Flush()
             failwith "nuget process' output contained errors ^"
+#endif
 
 let FindBuildTool() : string * string =
     match Misc.GuessPlatform() with
@@ -131,7 +133,9 @@ let BuildSolution
                 buildToolArg
         )
 
+#if LEGACY_FRAMEWORK
         PrintNugetVersion() |> ignore
+#endif
         Environment.Exit 1
     | _ -> ()
 
