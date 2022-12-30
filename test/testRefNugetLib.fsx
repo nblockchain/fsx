@@ -4,6 +4,10 @@ open System
 open System.IO
 open System.Linq
 
+// with new dotnet (not legacy) we would use #r "nuget: NugetPkgName" so
+// this test only applies to legacy
+#if LEGACY_FRAMEWORK
+
 #r "../packages/Microsoft.Build.16.11.0/lib/net472/Microsoft.Build.dll"
 open Microsoft.Build.Construction
 
@@ -17,3 +21,7 @@ for (proj: string) in
         .Select(fun p -> p.ProjectName)
         .ToList()) do
     Console.WriteLine proj
+
+#endif
+
+Console.WriteLine "hello"
