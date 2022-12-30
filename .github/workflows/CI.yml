@@ -44,10 +44,9 @@ jobs:
         dotnet-version: '6.0.x'
     - name: fantomless
       run: |
-        # NOTE: maintain fantomless version below in sync with .gitlab-ci.yml
-        dotnet tool update --global fantomless-tool --version 4.7.996
-        # path taken from https://stackoverflow.com/a/65367006/544947
-        $HOME/.dotnet/tools/fantomless --recurse --check .
+        dotnet new tool-manifest
+        dotnet tool install fantomless-tool --version 4.7.996
+        dotnet fantomless --recurse --check .
 
   macOS_dotnet-and-mono:
     runs-on: macOS-latest
