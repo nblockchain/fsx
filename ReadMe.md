@@ -95,6 +95,7 @@ An example of how to do this with GitHub Actions, is this YML fragment that you 
 
 ```
     - name: compile F# scripts
+      shell: bash
       run: |
         dotnet new tool-manifest
         dotnet tool install fsxc
