@@ -332,12 +332,13 @@ module Program =
 
                 let allowedFrameworkProfilesDirs =
                     [
-                        "netstandard2.0"
                         "net472"
                         "net471"
                         "net462"
                         "net461"
+                        "net452"
                         "net45"
+                        "netstandard2.0"
                     ]
 
                 let binDir =
@@ -707,6 +708,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                             StringSplitOptions.RemoveEmptyEntries
                         )
                         .First()
+                        .Trim()
                 | _ -> "fsharpc"
 #endif
 
