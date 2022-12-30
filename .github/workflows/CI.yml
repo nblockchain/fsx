@@ -19,7 +19,7 @@ jobs:
     - windows_legacyFramework
     - windows_dotnet6
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
       with:
@@ -38,10 +38,10 @@ jobs:
       if: github.event_name == 'pull_request'
       run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-    - name: Setup .NET SDK 5.0.x
+    - name: Setup .NET SDK 6.0.x
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: '5.0.x'
+        dotnet-version: '6.0.x'
     - name: fantomless
       run: |
         # NOTE: maintain fantomless version below in sync with .gitlab-ci.yml
