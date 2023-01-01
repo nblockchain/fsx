@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseFile>LICENCE.txt</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/nblockchain/fsx.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
+    <PackageId>Fsdk</PackageId>
+    <Authors>knocte,aarani,Bobface,msonawane</Authors>
+    <Copyright>"Copyright (c) 2016-2022 Andres G. Aragoneses", "Copyright (c) 2016-2017 Gatecoin Ltd", "Copyright (c) 2016-2017 Gatecoin Ltd"</Copyright>
+    <PackageTags>FSharp F# fsx</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,4 +25,19 @@
     <Compile Include="Network.fs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content
+      Include="..\LICENCE.txt"
+      Link="LICENCE.txt"
+      Pack="true"
+      PackagePath="LICENCE.txt"
+      />
+
+    <Content
+      Include="..\ReadMe.md"
+      Link="ReadMe.md"
+      Pack="true"
+      PackagePath="ReadMe.md"
+      />
+  </ItemGroup>
 </Project>
