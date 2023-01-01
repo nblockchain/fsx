@@ -24,11 +24,11 @@ jobs:
       - name: Pack the fsxc NuGet package
         run: |
           echo $version
-          dotnet pack $(pwd)"/fsxc/fsxc.fsproj" -p:PackageVersion=$version
+          dotnet pack fsxc/fsxc.fsproj -p:PackageVersion=$version
       - name: Pack the Fsdk NuGet package
         run: |
           echo $version
-          dotnet pack $(pwd)"/Fsdk/Fsdk.fsproj" -p:PackageVersion=$version
+          dotnet pack Fsdk/Fsdk.fsproj -p:PackageVersion=$version
       - name: Publish fsxc on NuGet website
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
