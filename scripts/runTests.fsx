@@ -304,3 +304,18 @@ let processConcurrencyTest = Path.Combine(TestDir.FullName, "testProcessConcurre
 Process.Execute({ Command = processConcurrencyTest.FullName; Arguments = String.Empty }, Echo.All)
        .UnwrapDefault() |> ignore<string>
 *)
+
+
+let legacyDefineTest =
+    Path.Combine(
+        TestDir.FullName,
+#if !LEGACY_FRAMEWORK
+        "testNonLegacyFx.fsx"
+#else
+        "testLegacyFx.fsx"
+#endif
+    )
+    |> FileInfo
+
+Process.Execute(CreateCommand(legacyDefineTest, String.Empty), Echo.All)
+|> UnwrapDefault

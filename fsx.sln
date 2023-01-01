@@ -39,6 +39,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C51659D1-9
 		test\testRefNugetLibNewFormat.fsx = test\testRefNugetLibNewFormat.fsx
 		test\testRefNugetLibNewFormatWithVersion.fsx = test\testRefNugetLibNewFormatWithVersion.fsx
 		test\testTsv.fsx = test\testTsv.fsx
+		test\testLegacyFx.fsx = test\testLegacyFx.fsx
+		test\testNonLegacyFx.fsx = test\testNonLegacyFx.fsx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FD764CDA-F880-4954-BA6C-1FC678D64988}"
