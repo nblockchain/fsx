@@ -1,4 +1,4 @@
-namespace FSX.Infrastructure
+namespace Fsdk
 
 open System.Net
 open System.Collections

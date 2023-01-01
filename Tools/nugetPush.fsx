@@ -7,13 +7,13 @@ open System.Linq
 #r "System.Configuration"
 open System.Configuration
 
-#load "../InfraLib/Misc.fs"
-#load "../InfraLib/Process.fs"
-#load "../InfraLib/Network.fs"
-#load "../InfraLib/Git.fs"
+#load "../Fsdk/Misc.fs"
+#load "../Fsdk/Process.fs"
+#load "../Fsdk/Network.fs"
+#load "../Fsdk/Git.fs"
 
-open FSX.Infrastructure
-open Process
+open Fsdk
+open Fsdk.Process
 
 let PrintUsage() =
     Console.Error.WriteLine

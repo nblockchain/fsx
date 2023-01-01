@@ -41,18 +41,18 @@
     <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="InfraLib\" />
+    <Folder Include="Fsdk\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="..\InfraLib\Misc.fs">
-      <Link>InfraLib\Misc.fs</Link>
+    <Compile Include="..\Fsdk\Misc.fs">
+      <Link>Fsdk\Misc.fs</Link>
     </Compile>
-    <Compile Include="..\InfraLib\Process.fs">
-      <Link>InfraLib\Process.fs</Link>
+    <Compile Include="..\Fsdk\Process.fs">
+      <Link>Fsdk\Process.fs</Link>
     </Compile>
-    <Compile Include="..\InfraLib\Network.fs">
-      <Link>InfraLib\Network.fs</Link>
+    <Compile Include="..\Fsdk\Network.fs">
+      <Link>Fsdk\Network.fs</Link>
     </Compile>
     <Compile Include="Program.fs" />
     <None Include="packages.config" />

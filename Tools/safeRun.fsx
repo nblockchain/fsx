@@ -12,12 +12,12 @@ let NUMBER_OF_LINES_OF_BUFFER_TO_SHOW_IN_NOTIFICATION = 20
 #r "System.Configuration"
 open System.Configuration
 
-#load "../InfraLib/Misc.fs"
-#load "../InfraLib/Process.fs"
-#load "../InfraLib/Unix.fs"
-#load "../InfraLib/Network.fs"
+#load "../Fsdk/Misc.fs"
+#load "../Fsdk/Process.fs"
+#load "../Fsdk/Unix.fs"
+#load "../Fsdk/Network.fs"
 
-open FSX.Infrastructure
+open Fsdk
 
 open Process
 

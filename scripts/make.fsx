@@ -7,19 +7,19 @@ open System.Diagnostics
 #r "System.Configuration"
 open System.Configuration
 
-#load "../InfraLib/Misc.fs"
-#load "../InfraLib/Process.fs"
-#load "../InfraLib/Network.fs"
-#load "../InfraLib/Git.fs"
+#load "../Fsdk/Misc.fs"
+#load "../Fsdk/Process.fs"
+#load "../Fsdk/Network.fs"
+#load "../Fsdk/Git.fs"
 
-open FSX.Infrastructure
-open Process
+open Fsdk
+open Fsdk.Process
 
 let ScriptsDir = __SOURCE_DIRECTORY__ |> DirectoryInfo
 let RootDir = Path.Combine(ScriptsDir.FullName, "..") |> DirectoryInfo
 let TestDir = Path.Combine(RootDir.FullName, "test") |> DirectoryInfo
 let ToolsDir = Path.Combine(RootDir.FullName, "Tools") |> DirectoryInfo
-let InfraLibDir = Path.Combine(RootDir.FullName, "InfraLib") |> DirectoryInfo
+let FsdkDir = Path.Combine(RootDir.FullName, "Fsdk") |> DirectoryInfo
 let NugetDir = Path.Combine(RootDir.FullName, ".nuget") |> DirectoryInfo
 let NugetExe = Path.Combine(NugetDir.FullName, "nuget.exe") |> FileInfo
 
@@ -232,23 +232,23 @@ match maybeTarget with
 
     File.Copy(fsxBat.FullName, fsxBatDestination.FullName)
 
-    let infraLibInstallDir =
-        Path.Combine(fsxInstallationDir.FullName, "InfraLib") |> DirectoryInfo
+    let fsdkInstallDir =
+        Path.Combine(fsxInstallationDir.FullName, "Fsdk") |> DirectoryInfo
 
-    if not infraLibInstallDir.Exists then
-        Directory.CreateDirectory infraLibInstallDir.FullName
+    if not fsdkInstallDir.Exists then
+        Directory.CreateDirectory fsdkInstallDir.FullName
         |> ignore<DirectoryInfo>
 
-    let miscFs = Path.Combine(InfraLibDir.FullName, "Misc.fs") |> FileInfo
+    let miscFs = Path.Combine(FsdkDir.FullName, "Misc.fs") |> FileInfo
 
     let miscFsTarget =
-        Path.Combine(infraLibInstallDir.FullName, "Misc.fs") |> FileInfo
+        Path.Combine(fsdkInstallDir.FullName, "Misc.fs") |> FileInfo
 
     File.Copy(miscFs.FullName, miscFsTarget.FullName)
-    let processFs = Path.Combine(InfraLibDir.FullName, "Process.fs") |> FileInfo
+    let processFs = Path.Combine(FsdkDir.FullName, "Process.fs") |> FileInfo
 
     let processFsTarget =
-        Path.Combine(infraLibInstallDir.FullName, "Process.fs") |> FileInfo
+        Path.Combine(fsdkInstallDir.FullName, "Process.fs") |> FileInfo
 
     File.Copy(processFs.FullName, processFsTarget.FullName)
 

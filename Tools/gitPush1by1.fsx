@@ -8,12 +8,12 @@ open System.Threading
 #r "System.Configuration"
 open System.Configuration
 
-#load "../InfraLib/Misc.fs"
-#load "../InfraLib/Process.fs"
-#load "../InfraLib/Git.fs"
+#load "../Fsdk/Misc.fs"
+#load "../Fsdk/Process.fs"
+#load "../Fsdk/Git.fs"
 
-open FSX.Infrastructure
-open Process
+open Fsdk
+open Fsdk.Process
 
 // mimic https://stackoverflow.com/a/3230241/544947
 let GitSpecificPush

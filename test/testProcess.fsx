@@ -6,11 +6,11 @@ open System.Linq
 #r "System.Configuration"
 open System.Configuration
 
-#load "../InfraLib/Misc.fs"
-#load "../InfraLib/Process.fs"
+#load "../Fsdk/Misc.fs"
+#load "../Fsdk/Process.fs"
 
-open FSX.Infrastructure
-open Process
+open Fsdk
+open Fsdk.Process
 
 let sourceDir = DirectoryInfo __SOURCE_DIRECTORY__
 

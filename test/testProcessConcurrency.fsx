@@ -5,11 +5,11 @@ open System.IO
 #r "System.Configuration"
 open System.Configuration
 
-#load "../InfraLib/Misc.fs"
-#load "../InfraLib/Process.fs"
+#load "../Fsdk/Misc.fs"
+#load "../Fsdk/Process.fs"
 
-open FSX.Infrastructure
-open Process
+open Fsdk
+open Fsdk.Process
 
 let mutable retryCount = 0
 

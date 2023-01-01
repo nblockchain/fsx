@@ -1,4 +1,4 @@
-namespace FSX.Infrastructure
+namespace Fsdk
 
 open System
 open System.IO
