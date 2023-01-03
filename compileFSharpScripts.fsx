@@ -153,7 +153,11 @@ let rec buildAll (scripts: list<string>) (soFar: bool) : bool =
             elif scriptFile.FullName.Contains binFolder then
                 true
             else
-                false
+#if !LEGACY_FRAMEWORK
+                scriptFile.FullName.EndsWith "testLegacyFx.fsx"
+#else
+                scriptFile.FullName.EndsWith "testNonLegacyFx.fsx"
+#endif
 
         if skip then
             Console.WriteLine(sprintf "Skipping %s" script)
