@@ -417,7 +417,7 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        .\make.bat install
+        .\make-legacy.bat install
 
     - name: run tests
       run: .\make-legacy.bat check
