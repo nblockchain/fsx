@@ -252,11 +252,7 @@ module Program =
                 let rest = Seq.tail lines
 
                 let newAcc, newState =
-                    match readState with
-                    | IgnoreLinesUntilNextPreProcessorConditional ->
-                        acc, readState
-                    | NormalOperation
-                    | DeliverLinesUntilNextPreProcessorConditional ->
+                    let normalOperation() =
                         if isFsiPreProcessorAction line then
                             let lineAction =
                                 LineAction.PreProcessorAction(
@@ -269,6 +265,50 @@ module Program =
                             let lineAction = LineAction.Normal
                             let newAcc = (line, lineAction) :: acc
                             newAcc, readState
+
+                    match readState with
+                    | IgnoreLinesUntilNextPreProcessorConditional ->
+                        let newState =
+                            if line.Trim() = "#else" then
+                                DeliverLinesUntilNextPreProcessorConditional
+                            elif line.Trim() = "#endif" then
+                                NormalOperation
+                            else
+                                readState
+
+                        acc, newState
+                    | DeliverLinesUntilNextPreProcessorConditional ->
+                        if line.Trim() = "#else" then
+                            acc, IgnoreLinesUntilNextPreProcessorConditional
+                        elif line.Trim() = "#endif" then
+                            acc, NormalOperation
+                        else
+                            normalOperation()
+                    | NormalOperation ->
+                        let trimmedLine = line.Trim()
+
+                        if trimmedLine.StartsWith "#if"
+                           && line.Contains "LEGACY_FRAMEWORK" then
+                            match trimmedLine with
+                            | "#if LEGACY_FRAMEWORK" ->
+#if LEGACY_FRAMEWORK
+                                acc,
+                                DeliverLinesUntilNextPreProcessorConditional
+#else
+                                acc, IgnoreLinesUntilNextPreProcessorConditional
+#endif
+                            | "#if !LEGACY_FRAMEWORK" ->
+#if LEGACY_FRAMEWORK
+                                acc, IgnoreLinesUntilNextPreProcessorConditional
+#else
+                                acc,
+                                DeliverLinesUntilNextPreProcessorConditional
+#endif
+                            | _ ->
+                                failwith
+                                    "Only simple ifdef statements are supported for the LEGACY_FRAMEWORK define"
+                        else
+                            normalOperation()
 
                 readLines rest newState newAcc
             | None -> acc
