@@ -1,4 +1,4 @@
-﻿namespace InfraLib.AssemblyInfo
+﻿namespace Fsx.Fsxc.AssemblyInfo
 
 open System.Reflection
 open System.Runtime.CompilerServices

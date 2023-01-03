@@ -4,8 +4,8 @@ open System
 open System.IO
 open System.Linq
 
-open FSX.Infrastructure
-open Process
+open Fsdk
+open Fsdk.Process
 
 type Flag =
     | Force

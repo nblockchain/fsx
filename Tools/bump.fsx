@@ -6,11 +6,11 @@ open System.IO
 #r "System.Configuration"
 open System.Configuration
 
-#load "../InfraLib/Misc.fs"
-#load "../InfraLib/Process.fs"
+#load "../Fsdk/Misc.fs"
+#load "../Fsdk/Process.fs"
 
-open FSX.Infrastructure
-open Process
+open Fsdk
+open Fsdk.Process
 
 let IsStableRevision revision =
     (int revision % 2) = 0
@@ -119,7 +119,7 @@ let GitCommit (fullVersion: Version) (newFullVersion: Version) =
         .Execute(
             {
                 Command = "git"
-                Arguments = "add InfraLib/AssemblyInfo.fs"
+                Arguments = "add Fsdk/AssemblyInfo.fs"
             },
             Echo.Off
         )

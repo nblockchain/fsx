@@ -6,9 +6,9 @@ open System.Text
 
 #r "System.Configuration"
 open System.Configuration
-#load "../InfraLib/Misc.fs"
 
-open FSX.Infrastructure
+#load "../Fsdk/Misc.fs"
+open Fsdk
 
 let ReplaceInFile (file: FileInfo) (oldString: string) (newString: string) =
     let hasUtf8Bom(file: FileInfo) =

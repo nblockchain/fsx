@@ -4,8 +4,9 @@ open System.IO
 
 #r "System.Configuration"
 open System.Configuration
-#load "../InfraLib/Misc.fs"
-open FSX.Infrastructure
+
+#load "../Fsdk/Misc.fs"
+open Fsdk
 
 module TsvUnitTests =
     let private TestSymmetricTsvSimple() : unit =
