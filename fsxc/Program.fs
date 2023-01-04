@@ -157,6 +157,11 @@ module Program =
         | BclRef of string
         | CustomRef of string
 
+    type ReadState =
+        | NormalOperation
+        | DeliverLinesUntilNextPreProcessorConditional
+        | IgnoreLinesUntilNextPreProcessorConditional
+
     let GetBinFolderForAScript(script: FileInfo) =
         DirectoryInfo(Path.Combine(script.Directory.FullName, "bin"))
 
@@ -226,7 +231,12 @@ module Program =
             else
                 failwithf "Unrecognized preprocessor line: %s" line
 
-        let readLine(line: string) : LineAction =
+        let rec readLines
+            (lines: seq<string>)
+            (readState: ReadState)
+            (acc: List<string * LineAction>)
+            : List<string * LineAction> =
+
             let isFsiPreProcessorAction(line: string) =
                 if not(line.StartsWith "#") then
                     false
@@ -237,10 +247,71 @@ module Program =
                 else
                     true
 
-            if isFsiPreProcessorAction line then
-                LineAction.PreProcessorAction(readPreprocessorLine line)
-            else
-                LineAction.Normal
+            match Seq.tryHead lines with
+            | Some line ->
+                let rest = Seq.tail lines
+
+                let newAcc, newState =
+                    let normalOperation() =
+                        if isFsiPreProcessorAction line then
+                            let lineAction =
+                                LineAction.PreProcessorAction(
+                                    readPreprocessorLine line
+                                )
+
+                            let newAcc = (line, lineAction) :: acc
+                            newAcc, readState
+                        else
+                            let lineAction = LineAction.Normal
+                            let newAcc = (line, lineAction) :: acc
+                            newAcc, readState
+
+                    match readState with
+                    | IgnoreLinesUntilNextPreProcessorConditional ->
+                        let newState =
+                            if line.Trim() = "#else" then
+                                DeliverLinesUntilNextPreProcessorConditional
+                            elif line.Trim() = "#endif" then
+                                NormalOperation
+                            else
+                                readState
+
+                        acc, newState
+                    | DeliverLinesUntilNextPreProcessorConditional ->
+                        if line.Trim() = "#else" then
+                            acc, IgnoreLinesUntilNextPreProcessorConditional
+                        elif line.Trim() = "#endif" then
+                            acc, NormalOperation
+                        else
+                            normalOperation()
+                    | NormalOperation ->
+                        let trimmedLine = line.Trim()
+
+                        if trimmedLine.StartsWith "#if"
+                           && line.Contains "LEGACY_FRAMEWORK" then
+                            match trimmedLine with
+                            | "#if LEGACY_FRAMEWORK" ->
+#if LEGACY_FRAMEWORK
+                                acc,
+                                DeliverLinesUntilNextPreProcessorConditional
+#else
+                                acc, IgnoreLinesUntilNextPreProcessorConditional
+#endif
+                            | "#if !LEGACY_FRAMEWORK" ->
+#if LEGACY_FRAMEWORK
+                                acc, IgnoreLinesUntilNextPreProcessorConditional
+#else
+                                acc,
+                                DeliverLinesUntilNextPreProcessorConditional
+#endif
+                            | _ ->
+                                failwith
+                                    "Only simple ifdef statements are supported for the LEGACY_FRAMEWORK define"
+                        else
+                            normalOperation()
+
+                readLines rest newState newAcc
+            | None -> acc
 
         if not origScript.Exists then
             raise
@@ -254,16 +325,13 @@ module Program =
         let lines =
             contents.Split([| Environment.NewLine |], StringSplitOptions.None)
 
-        seq {
-            for line in lines do
-                yield line, (readLine line)
-        }
-        |> List.ofSeq
+        let initialReadState, initialAcc = ReadState.NormalOperation, List.Empty
+        readLines lines initialReadState initialAcc
 
     let GetParsedContentsAndOldestLastWriteTimeFromScriptOrItsDependencies
         (script: FileInfo)
         : List<string * LineAction> * DateTime =
-        let scriptContents = ReadScriptContents script
+        let scriptContents = ReadScriptContents script |> List.rev
 
         let lastWriteTimes =
             seq {
