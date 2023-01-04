@@ -13,7 +13,11 @@
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
     <PackageId>fsxc</PackageId>
     <Authors>knocte,aarani,Bobface,msonawane</Authors>
-    <Copyright>"Copyright (c) 2016-2022 Andres G. Aragoneses", "Copyright (c) 2016-2017 Gatecoin Ltd", "Copyright (c) 2016-2017 Gatecoin Ltd"</Copyright>
+    <Copyright>
+        Copyright (c) 2016-2023 Andres G. Aragoneses
+        Copyright (c) 2019 Diginex Ltd
+        Copyright (c) 2016-2017 Gatecoin Ltd
+    </Copyright>
     <PackageTags>FSharp F# fsx</PackageTags>
     
   </PropertyGroup>

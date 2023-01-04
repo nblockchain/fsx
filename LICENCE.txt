@@ -1,8 +1,8 @@
 The MIT License
 
-Copyright (c) 2016-2022 Andres G. Aragoneses
-Copyright (c) 2016-2017 Gatecoin Ltd
+Copyright (c) 2016-2023 Andres G. Aragoneses
 Copyright (c) 2019 Diginex Ltd (www.diginex.com)
+Copyright (c) 2016-2017 Gatecoin Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
