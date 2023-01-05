@@ -87,7 +87,7 @@ jobs:
     - name: Install dependencies of commitlint
       run: sudo apt install --yes npm
     - name: Install dependencies of commitlint
-      run: npm install --save commitlint@17.3.0
+      run: npm install --save --force commitlint@17.3.0
     - name: Pull our commitlint configuration
       run: sudo apt install wget && wget https://raw.githubusercontent.com/nblockchain/conventions/master/commitlint.config.ts
     - name: Validate current commit (last commit) with commitlint
