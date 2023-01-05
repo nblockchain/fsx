@@ -86,11 +86,13 @@ jobs:
 
     - name: Install dependencies of commitlint
       run: sudo apt install --yes npm
+    - name: Install dependencies of commitlint
+      run: npm install --save commitlint@17.3.0
     - name: Pull our commitlint configuration
       run: sudo apt install wget && wget https://raw.githubusercontent.com/nblockchain/conventions/master/commitlint.config.ts
     - name: Validate current commit (last commit) with commitlint
       if: github.event_name == 'push'
-      run: npx commitlint@17.3.0 --from HEAD~1 --to HEAD --verbose
+      run: npm run commitlint --from HEAD~1 --to HEAD --verbose
     - name: Validate PR commits with commitlint
       if: github.event_name == 'pull_request'
       run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
