@@ -7,6 +7,7 @@
     "@commitlint/is-ignored": "^17.0.0",
     "@commitlint/message": "^17.0.0",
     "@commitlint/parse": "^17.0.0",
+    "@commitlint/rules": "^17.0.0",
     "@commitlint/to-lines": "^17.0.0",
     "@commitlint/top-level": "^17.0.0",
     "@commitlint/types": "^17.0.0"
