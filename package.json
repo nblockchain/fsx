@@ -6,6 +6,7 @@
     "@commitlint/format": "^17.0.0",
     "@commitlint/is-ignored": "^17.0.0",
     "@commitlint/lint": "^17.0.0",
+    "@commitlint/load": "^17.0.0",
     "@commitlint/message": "^17.0.0",
     "@commitlint/parse": "^17.0.0",
     "@commitlint/resolve-extends": "^17.0.0",
