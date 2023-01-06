@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@commitlint/config-validator": "^17.0.0",
+    "@commitlint/ensure": "^17.0.0",
     "@commitlint/execute-rule": "^17.0.0",
     "@commitlint/format": "^17.0.0",
     "@commitlint/top-level": "^17.0.0",
