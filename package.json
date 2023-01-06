@@ -9,6 +9,7 @@
     "@commitlint/load": "^17.0.0",
     "@commitlint/message": "^17.0.0",
     "@commitlint/parse": "^17.0.0",
+    "@commitlint/read": "^17.0.0",
     "@commitlint/resolve-extends": "^17.0.0",
     "@commitlint/rules": "^17.0.0",
     "@commitlint/to-lines": "^17.0.0",
