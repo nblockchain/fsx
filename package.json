@@ -5,6 +5,7 @@
     "@commitlint/execute-rule": "^17.0.0",
     "@commitlint/format": "^17.0.0",
     "@commitlint/is-ignored": "^17.0.0",
+    "@commitlint/lint": "^17.0.0",
     "@commitlint/message": "^17.0.0",
     "@commitlint/parse": "^17.0.0",
     "@commitlint/rules": "^17.0.0",
