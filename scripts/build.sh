@@ -7,4 +7,10 @@ if [ ! -f ./build.config ]; then
 fi
 source build.config
 
-$BuildTool $Solution
+if [[ ! $BuildTool == dotnet* ]]; then
+    mkdir -p .nuget/
+    curl -o .nuget/NuGet.exe https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe
+    mono .nuget/NuGet.exe restore $Solution
+fi
+
+$BuildTool $Solution $1

@@ -36,12 +36,20 @@ if ! which dotnet >/dev/null 2>&1; then
         BUILDTOOL=msbuild
         SOLUTION=fsx-legacy.sln
     fi
+
+    # for downloading nuget.exe
+    if ! which curl >/dev/null 2>&1; then
+        echo "checking for curl... not found"
+        exit 1
+    else
+        echo "checking for curl... found"
+    fi
+
 else
     echo "checking for dotnet... found"
     BUILDTOOL='"dotnet build"'
     SOLUTION=fsx.sln
 fi
-
 
 DESCRIPTION="tarball"
 if which git >/dev/null 2>&1; then
