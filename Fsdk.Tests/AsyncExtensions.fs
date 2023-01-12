@@ -213,8 +213,14 @@ type AsyncExtensions() =
             FSharpUtil.AsyncExtensions.WhenAnyAndAll [ longJob; shortJob ]
             |> Async.RunSynchronously
 
+        let timingErrorMargin = TimeSpan.FromMilliseconds 5.0
         Assert.That(stopWatch.Elapsed, Is.LessThan longTime)
-        Assert.That(stopWatch.Elapsed, Is.GreaterThan shortTime)
+
+        Assert.That(
+            stopWatch.Elapsed,
+            Is.GreaterThan(shortTime - timingErrorMargin)
+        )
+
         let results = subJobs |> Async.RunSynchronously
         Assert.That(results.Length, Is.EqualTo 2)
         Assert.That(results.[0], Is.EqualTo longJobRes)
