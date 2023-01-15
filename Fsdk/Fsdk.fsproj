@@ -22,6 +22,7 @@
     <Compile Remove="Taiga.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FSharpUtil.fs" />
     <Compile Include="Misc.fs" />
     <Compile Include="Process.fs" />
     <Compile Include="Git.fs" />

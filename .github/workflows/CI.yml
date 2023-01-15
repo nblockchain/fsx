@@ -116,6 +116,8 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+    - name: run unit tests
+      run: dotnet fsi scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -143,6 +145,8 @@ jobs:
       run: ./configure.sh && cat build.config
     - name: build in DEBUG mode
       run: make
+    - name: run unit tests
+      run: dotnet fsi scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -170,6 +174,8 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+    - name: run unit tests
+      run: dotnet fsi scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -216,6 +222,8 @@ jobs:
 
         ./configure.sh && sudo make install
 
+    - name: run unit tests
+      run: ./scripts/runUnitTests.fsx
     - name: run tests
       run: make check
     - name: compile this repo's .fsx scripts with fsx
@@ -248,6 +256,8 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+    - name: run unit tests
+      run: fsharpi --define:LEGACY_FRAMEWORK scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -275,6 +285,8 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+    - name: run unit tests
+      run: dotnet fsi scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -302,6 +314,8 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+    - name: run unit tests
+      run: dotnet fsi scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -348,6 +362,8 @@ jobs:
 
         ./configure.sh && sudo make install
 
+    - name: run unit tests
+      run: ./scripts/runUnitTests.fsx
     - name: run tests
       run: make check
     - name: compile this repo's .fsx scripts with fsx
@@ -380,6 +396,8 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+    - name: run unit tests
+      run: fsharpi --define:LEGACY_FRAMEWORK scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -414,6 +432,8 @@ jobs:
       run: ./configure.sh
     - name: build in DEBUG mode
       run: make
+    - name: run unit tests
+      run: dotnet fsi scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -433,6 +453,8 @@ jobs:
     - uses: actions/checkout@v1
     - name: build in DEBUG mode
       run: .\make-legacy.bat
+    - name: run unit tests
+      run: .\Tools\fsi.bat scripts\runUnitTests.fsx
 
     - name: install
       run: |
@@ -456,6 +478,8 @@ jobs:
         dotnet-version: '6.0.x'
     - name: build in DEBUG mode
       run: .\make.bat
+    - name: run unit tests
+      run: dotnet fsi scripts/runUnitTests.fsx
 
     - name: install
       run: |
