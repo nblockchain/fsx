@@ -25,4 +25,8 @@
     <ProjectReference Include="..\Fsdk\Fsdk.fsproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.7.0" />
+  </ItemGroup>
+
 </Project>

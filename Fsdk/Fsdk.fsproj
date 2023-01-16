@@ -45,4 +45,8 @@
       PackagePath="ReadMe.md"
       />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.7.0" />
+  </ItemGroup>
 </Project>
