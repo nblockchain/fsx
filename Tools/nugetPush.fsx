@@ -87,7 +87,9 @@ let EnsureNugetExists() =
     let nugetDownloadUri =
         Uri "https://dist.nuget.org/win-x86-commandline/v4.5.1/nuget.exe"
 
-    Network.DownloadFile nugetDownloadUri |> ignore
+    Network.DownloadFile nugetDownloadUri
+    |> Async.RunSynchronously
+    |> ignore<FileInfo>
 
     let nugetExe =
         Path.Combine(nugetTargetDir.FullName, "nuget.exe") |> FileInfo

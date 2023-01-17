@@ -410,7 +410,9 @@ module Unix =
         if IsAptPackageInstalled packageName <> AptPackage.Missing then
             SudoIfNeeded(sprintf "apt -y purge %s" packageName) |> ignore
 
-    let GetAllPackageNamesFromAptSource(aptSourceFile: FileInfo) : seq<string> =
+    let GetAllPackageNamesFromAptSource
+        (aptSourceFile: FileInfo)
+        : Async<seq<string>> =
         if not(Process.CommandWorksInShell "dpkg") then
             Console.Error.WriteLine
                 "This script is only for debian-based distros, aborting."
@@ -446,61 +448,65 @@ module Unix =
 
         let textToFind = sprintf "%s/binary-%s/Packages" name arch
         let uri = sprintf "%s/dists/%s/Release" url dist
+
+        async {
 #if !LEGACY_FRAMEWORK
-        use httpClient = new System.Net.Http.HttpClient()
+            use httpClient = new System.Net.Http.HttpClient()
 
-        use response =
-            httpClient.GetAsync uri |> Async.AwaitTask |> Async.RunSynchronously
+            use! response = httpClient.GetAsync uri |> Async.AwaitTask
 
-        use content = response.Content
+            use content = response.Content
 
-        let metadata =
-            content.ReadAsStringAsync()
-            |> Async.AwaitTask
-            |> Async.RunSynchronously
+            let! metadata = content.ReadAsStringAsync() |> Async.AwaitTask
 #else
-        use webClient = new WebClient()
-        let metadata = webClient.DownloadString uri
+            use webClient = new WebClient()
+            let metadata = webClient.DownloadString uri
 #endif
 
-        if not(metadata.Contains textToFind) then
-            failwithf "metadata '%s' not found in '%s'" textToFind metadata
+            if not(metadata.Contains textToFind) then
+                failwithf "metadata '%s' not found in '%s'" textToFind metadata
 
-        let uri = sprintf "%s/dists/%s/%s" url dist textToFind
+            let uri = sprintf "%s/dists/%s/%s" url dist textToFind
 #if !LEGACY_FRAMEWORK
-        use response =
-            httpClient.GetAsync uri |> Async.AwaitTask |> Async.RunSynchronously
+            use! response = httpClient.GetAsync uri |> Async.AwaitTask
 
-        use content = response.Content
+            use content = response.Content
 
-        let pkgMetadata =
-            content.ReadAsStringAsync()
-            |> Async.AwaitTask
-            |> Async.RunSynchronously
+            let! pkgMetadata = content.ReadAsStringAsync() |> Async.AwaitTask
 #else
-        let pkgMetadata = webClient.DownloadString uri
+            let pkgMetadata = webClient.DownloadString uri
 #endif
 
-        seq {
-            use reader = new StringReader(pkgMetadata)
-            let mutable line = String.Empty
+            return
+                seq {
+                    use reader = new StringReader(pkgMetadata)
+                    let mutable line = String.Empty
 
-            while line <> null do
-                let tag = "Package: "
+                    while line <> null do
+                        let tag = "Package: "
 
-                if line.Trim().StartsWith tag then
-                    yield line.Trim().Substring tag.Length
+                        if line.Trim().StartsWith tag then
+                            yield line.Trim().Substring tag.Length
 
-                line <- reader.ReadLine()
+                        line <- reader.ReadLine()
+                }
         }
 
     let PurgeAllPackagesFromAptSource(aptSourceFile: FileInfo) =
-        for pkg in GetAllPackageNamesFromAptSource aptSourceFile do
-            PurgeAptPackage pkg
+        async {
+            let! packages = GetAllPackageNamesFromAptSource aptSourceFile
+
+            for pkg in packages do
+                PurgeAptPackage pkg
+        }
 
     let InstallAllPackagesFromAptSource(aptSourceFile: FileInfo) =
-        for pkg in GetAllPackageNamesFromAptSource aptSourceFile do
-            InstallAptPackageIfNotAlreadyInstalled pkg
+        async {
+            let! packages = GetAllPackageNamesFromAptSource aptSourceFile
+
+            for pkg in packages do
+                InstallAptPackageIfNotAlreadyInstalled pkg
+        }
 
     let OctalPermissions(fileOrDir: FileSystemInfo) : int =
         let cmd =

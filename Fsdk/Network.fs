@@ -15,13 +15,13 @@ module Network =
     let DownloadString(uri: Uri) =
 #if !LEGACY_FRAMEWORK
         use httpClient = new System.Net.Http.HttpClient()
-        httpClient.GetAsync uri |> Async.AwaitTask |> Async.RunSynchronously
+        httpClient.GetAsync uri |> Async.AwaitTask
 #else
         use webClient = new WebClient()
-        webClient.DownloadString(uri)
+        webClient.DownloadStringTaskAsync uri |> Async.AwaitTask
 #endif
 
-    let DownloadFile(uri: Uri) : FileInfo =
+    let DownloadFile(uri: Uri) : Async<FileInfo> =
         let resultFile =
             new FileInfo(
                 Path.Combine(
@@ -32,6 +32,7 @@ module Network =
 
         if resultFile.Exists then
             Console.WriteLine("File '{0}' already downloaded", resultFile.Name)
+            async { return resultFile }
         else
             Console.WriteLine(
                 "File '{0}' not found, going to start download...",
@@ -72,10 +73,9 @@ module Network =
                     )
 
                 do! Async.AwaitTask task
+                return resultFile
             }
-            |> Async.RunSynchronously
 #endif
-        resultFile
 
     let DownloadFileWithWGet(uri: Uri) : FileInfo =
         let resultFile =
@@ -192,69 +192,72 @@ module Network =
         && someExceptionsInBetweenAreWebExceptions
         && IsMonoTlsProblemException(chain.Last())
 
-    let private DownloadFileIgnoringSslCertificates(uri: Uri) : FileInfo =
+    let private DownloadFileIgnoringSslCertificates
+        (uri: Uri)
+        : Async<FileInfo> =
         ServicePointManager.ServerCertificateValidationCallback <-
             System.Net.Security.RemoteCertificateValidationCallback(fun _ _ _ _ ->
                 true
             )
 
-        let resultFile =
+        async {
             try
-                DownloadFile(uri)
+                return! DownloadFile uri
             with
             | ex when IsMonoTlsProblem(ex) ->
                 Console.Error.WriteLine("Falling back to WGET download")
-                DownloadFileWithWGet(uri)
-
-        resultFile
+                return DownloadFileWithWGet uri
+        }
 
 #if LEGACY_FRAMEWORK
-    let SafeDownloadFile(uri: Uri, sha256sum: string) : FileInfo =
-        let resultFile =
-            try
-                let result = DownloadFile(uri)
-                Console.WriteLine("Download finished")
-                result
-            with
-            | ex when IsMonoTlsProblem(ex) ->
-                Console.Error.WriteLine(
-                    "Falling back to certificate-less safe download"
+    let SafeDownloadFile(uri: Uri, sha256sum: string) : Async<FileInfo> =
+        async {
+            let! resultFile =
+                try
+                    let result = DownloadFile uri
+                    Console.WriteLine "Download finished"
+                    result
+                with
+                | ex when IsMonoTlsProblem ex ->
+                    Console.Error.WriteLine
+                        "Falling back to certificate-less safe download"
+
+                    DownloadFileIgnoringSslCertificates uri
+
+            if not(sha256sum = Misc.CalculateSHA256 resultFile) then
+                failwith(
+                    sprintf
+                        "%s: SHA256 hash doesn't match, beware possible previous unfinished download, or M.I.T.M.A.: Man In The Middle Attack"
+                        resultFile.FullName
                 )
 
-                DownloadFileIgnoringSslCertificates(uri)
-
-        if not(sha256sum = Misc.CalculateSHA256(resultFile)) then
-            failwith(
-                sprintf
-                    "%s: SHA256 hash doesn't match, beware possible previous unfinished download, or M.I.T.M.A.: Man In The Middle Attack"
-                    resultFile.FullName
-            )
-
-        resultFile
+            return resultFile
+        }
 
     [<Obsolete("Rather use safer SafeDownloadFile() which receives SHA256SUM instead of MD5")>]
-    let SafeDownloadFileMD5(uri: Uri, md5sum: string) : FileInfo =
-        let resultFile =
-            try
-                let result = DownloadFile(uri)
-                Console.WriteLine("Download finished")
-                result
-            with
-            | ex when IsMonoTlsProblem(ex) ->
-                Console.Error.WriteLine(
-                    "Falling back to certificate-less safe download"
+    let SafeDownloadFileMD5(uri: Uri, md5sum: string) : Async<FileInfo> =
+        async {
+            let! resultFile =
+                try
+                    let result = DownloadFile uri
+                    Console.WriteLine "Download finished"
+                    result
+                with
+                | ex when IsMonoTlsProblem ex ->
+                    Console.Error.WriteLine
+                        "Falling back to certificate-less safe download"
+
+                    DownloadFileIgnoringSslCertificates uri
+
+            if not(md5sum = Misc.CalculateMD5 resultFile) then
+                failwith(
+                    sprintf
+                        "%s: MD5 hash doesn't match, beware possible previous unfinished download, or M.I.T.M.A.: Man In The Middle Attack"
+                        resultFile.FullName
                 )
 
-                DownloadFileIgnoringSslCertificates(uri)
-
-        if not(md5sum = Misc.CalculateMD5(resultFile)) then
-            failwith(
-                sprintf
-                    "%s: MD5 hash doesn't match, beware possible previous unfinished download, or M.I.T.M.A.: Man In The Middle Attack"
-                    resultFile.FullName
-            )
-
-        resultFile
+            return resultFile
+        }
 #endif
 
     let IsPortOpen(host: string, port: int) : bool =
