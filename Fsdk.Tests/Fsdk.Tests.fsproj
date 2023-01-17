@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="FSharpUtil.fs" />
     <Compile Include="AsyncExtensions.fs" />
+    <Compile Include="AsyncCancellation.fs" />
     <Compile Include="Tsv.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
