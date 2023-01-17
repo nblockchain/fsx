@@ -22,48 +22,97 @@ module Network =
 #endif
 
     let DownloadFile(uri: Uri) : Async<FileInfo> =
-        let resultFile =
-            new FileInfo(
-                Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    Path.GetFileName(uri.LocalPath)
-                )
-            )
-
-        if resultFile.Exists then
-            Console.WriteLine("File '{0}' already downloaded", resultFile.Name)
-            async { return resultFile }
-        else
-            Console.WriteLine(
-                "File '{0}' not found, going to start download...",
-                resultFile.Name
-            )
-#if !LEGACY_FRAMEWORK
-            failwith
-                "TODO: https://stackoverflow.com/questions/20661652/progress-bar-with-httpclient/46497896#46497896"
-#else
-            use webClient = new WebClient()
-
-            let lockObj = new Object()
-            let mutable firstProgressEvent = true
-
-            let onProgress
-                (progressEventArgs: DownloadProgressChangedEventArgs)
-                =
-                lock
-                    lockObj
-                    (fun _ ->
-                        if firstProgressEvent then
-                            Console.WriteLine(
-                                "Starting download of {0}MB...",
-                                (progressEventArgs.TotalBytesToReceive
-                                 / 1000000L)
-                            )
-
-                        firstProgressEvent <- false
+        async {
+            let resultFile =
+                FileInfo(
+                    Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        Path.GetFileName uri.LocalPath
                     )
+                )
 
-            async {
+            if resultFile.Exists then
+                Console.WriteLine(
+                    "File '{0}' already downloaded",
+                    resultFile.Name
+                )
+
+                return resultFile
+            else
+                Console.WriteLine(
+                    "File '{0}' not found, going to start download...",
+                    resultFile.Name
+                )
+#if !LEGACY_FRAMEWORK
+                // adapted code from https://stackoverflow.com/questions/20661652/progress-bar-with-httpclient/46497896#46497896
+                use client = new System.Net.Http.HttpClient()
+                // Get the http headers first to examine the content length
+                use! response =
+                    client.GetAsync(
+                        uri,
+                        System.Net.Http.HttpCompletionOption.ResponseHeadersRead
+                    )
+                    |> Async.AwaitTask
+
+                let contentLength = response.Content.Headers.ContentLength
+
+                if contentLength.HasValue then
+                    printfn
+                        "Starting download of %dMB..."
+                        (contentLength.Value / 1000000L)
+
+                use outputStream = resultFile.OpenWrite()
+
+                use! download =
+                    response.Content.ReadAsStreamAsync() |> Async.AwaitTask
+
+                let buffer = Array.zeroCreate<byte> 81920
+
+                let rec downloadNextPart totalBytesRead =
+                    async {
+                        let! bytesRead =
+                            download.AsyncRead(buffer, 0, buffer.Length)
+
+                        if bytesRead <> 0 then
+                            do! outputStream.AsyncWrite(buffer, 0, bytesRead)
+                            let newTotalBytesRead = totalBytesRead + bytesRead
+                            // report progress
+                            if contentLength.HasValue then
+                                printfn
+                                    "Downloaded %.3f of %.3f MB"
+                                    (float(newTotalBytesRead) / 1000000.0)
+                                    (float(contentLength.Value) / 1000000.0)
+
+                            return! downloadNextPart newTotalBytesRead
+                        else
+                            return ()
+                    }
+
+                do! downloadNextPart 0
+
+                return resultFile
+#else
+                use webClient = new WebClient()
+
+                let lockObj = new Object()
+                let mutable firstProgressEvent = true
+
+                let onProgress
+                    (progressEventArgs: DownloadProgressChangedEventArgs)
+                    =
+                    lock
+                        lockObj
+                        (fun _ ->
+                            if firstProgressEvent then
+                                Console.WriteLine(
+                                    "Starting download of {0}MB...",
+                                    (progressEventArgs.TotalBytesToReceive
+                                     / 1000000L)
+                                )
+
+                            firstProgressEvent <- false
+                        )
+
                 webClient.DownloadProgressChanged.Subscribe onProgress |> ignore
 
                 let task =
@@ -74,8 +123,8 @@ module Network =
 
                 do! Async.AwaitTask task
                 return resultFile
-            }
 #endif
+        }
 
     let DownloadFileWithWGet(uri: Uri) : FileInfo =
         let resultFile =
