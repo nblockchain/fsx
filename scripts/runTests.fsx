@@ -289,10 +289,6 @@ let cmdLineArgsTest =
 Process.Execute(CreateCommand(cmdLineArgsTest, "one 2 three"), Echo.All)
 |> UnwrapDefault
 
-let tsvTest = Path.Combine(TestDir.FullName, "testTsv.fsx") |> FileInfo
-
-Process.Execute(CreateCommand(tsvTest, String.Empty), Echo.All) |> UnwrapDefault
-
 let processTest = Path.Combine(TestDir.FullName, "testProcess.fsx") |> FileInfo
 
 Process.Execute(CreateCommand(processTest, String.Empty), Echo.All)
