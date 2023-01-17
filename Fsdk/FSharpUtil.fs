@@ -186,6 +186,8 @@ module FSharpUtil =
         : Async<Option<'U>> =
         SeqAsyncTryPick (list |> Seq.ofList) chooser
 
+    let SleepSpan(span: TimeSpan) =
+        Async.Sleep(int span.TotalMilliseconds)
 
     let WithTimeout (timeSpan: TimeSpan) (job: Async<'R>) : Async<Option<'R>> =
         async {
