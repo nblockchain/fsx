@@ -14,9 +14,9 @@ open Fsdk.FSharpUtil
 [<TestFixture>]
 type DotNetAsyncCancellation() =
 
-    (* NOTE: these tests are not really GWallet tests, but tests around F#&C# async/await&cancelToken behaviours, to
+    (* NOTE: these tests are not really Fsdk's tests, but tests around F#&C# async/await&cancelToken behaviours, to
              make me understand better how it works; this means that these tests will never be broken by any code that
-             would be introduced in the wallet. If they break, then Microsoft fucked up! haha *)
+             would be introduced in Fsdk. If they break, then Microsoft fucked up! haha *)
 
     [<Test>]
     member __.``assignment after Task.Delay does not await the delay obiously``

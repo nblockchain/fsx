@@ -186,6 +186,7 @@ module FSharpUtil =
         : Async<Option<'U>> =
         SeqAsyncTryPick (list |> Seq.ofList) chooser
 
+    // TODO: remove this once we drop LEGACY_FRAMEWORK support (as FSharp.Core's Async.Sleep(TimeSpan) overload can be used)
     let SleepSpan(span: TimeSpan) =
         Async.Sleep(int span.TotalMilliseconds)
 
