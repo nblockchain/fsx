@@ -286,6 +286,13 @@ module FSharpUtil =
             ReRaise ex |> ignore<Exception>
             failwith "unreachable"
 
+    let UnwrapEither<'T, 'TExn when 'TExn :> Exception>
+        (eitherValue: Either<'T, 'TExn>)
+        =
+        match eitherValue with
+        | SuccessfulValue result -> result
+        | FailureResult ex -> raise <| ReRaise ex
+
     type OptionBuilder() =
         // see https://github.com/dsyme/fsharp-presentations/blob/master/design-notes/ces-compared.md#overview-of-f-computation-expressions
         member x.Bind(v, f) =
