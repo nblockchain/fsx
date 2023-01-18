@@ -479,13 +479,13 @@ module Process =
 
                     currentCommand |> Some
             | None ->
-                Console.Error.WriteLine(
-                    sprintf
-                        "Error, please install %s"
-                        (String.Join(" or ", List.ofSeq allCommands))
-                )
-
                 if exitIfNotFound then
+                    Console.Error.WriteLine(
+                        sprintf
+                            "Error, please install %s"
+                            (String.Join(" or ", List.ofSeq allCommands))
+                    )
+
                     Environment.Exit 1
                     failwith "unreachable"
                 else
