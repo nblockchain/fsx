@@ -143,7 +143,7 @@ jobs:
     - name: build in DEBUG mode
       run: make
     - name: run unit tests
-      run: dotnet fsi scripts/runUnitTests.fsx
+      run: fsharpi --define:LEGACY_FRAMEWORK scripts/runUnitTests.fsx
 
     - name: install
       run: |
