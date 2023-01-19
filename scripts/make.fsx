@@ -200,6 +200,10 @@ match maybeTarget with
 | None
 | Some "all" -> MakeAll() |> ignore
 
+| Some "release" ->
+    let buildConfig = BinaryConfig.Release
+    JustBuild buildConfig
+
 | Some "install" ->
     let buildConfig = BinaryConfig.Release
     JustBuild buildConfig

@@ -1,7 +1,10 @@
 all:
 	./scripts/build.sh
 
-install:
+release:
+	./scripts/build.sh /p:Configuration=Release
+
+install: release
 	./scripts/install.sh
 
 check:
