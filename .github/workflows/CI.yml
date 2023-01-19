@@ -451,6 +451,8 @@ jobs:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v1
+    - name: where
+      run: where.exe dotnet
     - name: build in DEBUG mode
       run: .\make-legacy.bat
     - name: run unit tests
