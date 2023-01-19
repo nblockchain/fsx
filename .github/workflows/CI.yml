@@ -451,10 +451,12 @@ jobs:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v1
-    - name: where
+    - name: where dotnet
       run: where.exe dotnet
+    - name: remove dotnet HACK
+      run: ren "C:\Program Files\dotnet\dotnet.exe" "C:\Program Files\dotnet\dotnet6.exe"
     - name: build in DEBUG mode
-      run: .\make-legacy.bat
+      run: .\make.bat
     - name: run unit tests
       run: .\Tools\fsi.bat scripts\runUnitTests.fsx
 
@@ -467,6 +469,10 @@ jobs:
 
     - name: run tests
       run: .\make-legacy.bat check
+    - name: restore dotnet HACK
+      run: ren "C:\Program Files\dotnet\dotnet6.exe" "C:\Program Files\dotnet\dotnet.exe"
+    - name: where dotnet
+      run: where.exe dotnet
     - name: compile this repo's .fsx scripts with fsx
       run: .\Tools\fsi.bat compileFSharpScripts.fsx
 
