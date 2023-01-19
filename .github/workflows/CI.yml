@@ -64,6 +64,7 @@ jobs:
   sanity_check:
     needs:
     - macOS_dotnet-and-mono
+    - macOS_mono
     - linux_oldLTS_github_dotnet-and-xbuild
     - linux_oldLTS_github_dotnet-and-msbuild
     - linux_oldLTS_vanilla_stockmono
@@ -112,6 +113,31 @@ jobs:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+    - name: run unit tests
+      run: dotnet fsi scripts/runUnitTests.fsx
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh && sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  macOS_mono:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: HACK to emulate dotnet uninstall
+      run: sudo rm -f `which dotnet`
     - name: configure
       run: ./configure.sh
     - name: build in DEBUG mode
