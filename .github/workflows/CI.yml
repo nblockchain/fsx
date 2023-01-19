@@ -124,7 +124,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run tests
       run: make check
@@ -153,7 +155,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run tests
       run: make check
@@ -182,7 +186,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run tests
       run: make check
@@ -220,7 +226,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run unit tests
       run: ./scripts/runUnitTests.fsx
@@ -264,7 +272,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run tests
       run: make check
@@ -293,7 +303,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run tests
       run: make check
@@ -322,7 +334,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run tests
       run: make check
@@ -360,7 +374,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run unit tests
       run: ./scripts/runUnitTests.fsx
@@ -404,7 +420,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run tests
       run: make check
@@ -440,7 +458,9 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        ./configure.sh && sudo make install
+        ./configure.sh
+        make release
+        sudo make install
 
     - name: run tests
       run: make check
@@ -461,6 +481,7 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
+        .\make-legacy.bat release
         .\make-legacy.bat install
 
     - name: run tests
@@ -486,6 +507,7 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
+        .\make.bat release
         .\make.bat install
 
     - name: run tests

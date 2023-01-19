@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
-set -e
+set -euxo
 
-if [ ! -f ./build.config ]; then
-    echo "Please run ./configure.sh first" >&2
-    exit 1
-fi
 source build.config
-
-./scripts/build.sh /p:Configuration=Release
 
 FSX_INSTALL_DIR="$Prefix/lib/fsx"
 BIN_INSTALL_DIR="$Prefix/bin"
