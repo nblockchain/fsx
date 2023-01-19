@@ -64,6 +64,7 @@ jobs:
   sanity_check:
     needs:
     - macOS_dotnet-and-mono
+    - macOS_mono
     - linux_oldLTS_github_dotnet-and-xbuild
     - linux_oldLTS_github_dotnet-and-msbuild
     - linux_oldLTS_vanilla_stockmono
@@ -118,6 +119,33 @@ jobs:
       run: make
     - name: run unit tests
       run: dotnet fsi scripts/runUnitTests.fsx
+
+    - name: install
+      run: |
+        # to clean Debug artifacts first (make install builds in Release config)
+        git clean -fdx
+
+        ./configure.sh
+        make release
+        sudo make install
+
+    - name: run tests
+      run: make check
+    - name: compile this repo's .fsx scripts with fsx
+      run: ./compileFSharpScripts.fsx
+
+  macOS_mono:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: HACK to emulate dotnet uninstall
+      run: sudo rm -f `which dotnet`
+    - name: configure
+      run: ./configure.sh
+    - name: build in DEBUG mode
+      run: make
+    - name: run unit tests
+      run: fsharpi --define:LEGACY_FRAMEWORK scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -471,8 +499,10 @@ jobs:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v1
+    - name: HACK to emulate dotnet uninstall
+      run: del $(where.exe dotnet)
     - name: build in DEBUG mode
-      run: .\make-legacy.bat
+      run: .\make.bat
     - name: run unit tests
       run: .\Tools\fsi.bat scripts\runUnitTests.fsx
 
@@ -481,11 +511,11 @@ jobs:
         # to clean Debug artifacts first (make install builds in Release config)
         git clean -fdx
 
-        .\make-legacy.bat release
-        .\make-legacy.bat install
+        .\make.bat release
+        .\make.bat install
 
     - name: run tests
-      run: .\make-legacy.bat check
+      run: .\make.bat check
     - name: compile this repo's .fsx scripts with fsx
       run: .\Tools\fsi.bat compileFSharpScripts.fsx
 
