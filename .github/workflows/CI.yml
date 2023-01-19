@@ -480,7 +480,7 @@ jobs:
     - name: where dotnet
       run: where.exe dotnet
     - name: remove dotnet HACK v2
-      run: del `where.exe dotnet`
+      run: del $(where.exe dotnet)
     - name: build in DEBUG mode
       run: .\make.bat
     - name: run unit tests
