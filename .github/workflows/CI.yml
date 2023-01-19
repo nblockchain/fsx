@@ -479,8 +479,8 @@ jobs:
     - uses: actions/checkout@v1
     - name: where dotnet
       run: where.exe dotnet
-    - name: remove dotnet HACK
-      run: ren "C:\Program Files\dotnet\dotnet.exe" "C:\Program Files\dotnet\dotnet6.exe"
+    - name: remove dotnet HACK v2
+      run: del `where.exe dotnet`
     - name: build in DEBUG mode
       run: .\make.bat
     - name: run unit tests
