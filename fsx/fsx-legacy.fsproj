@@ -1,0 +1,76 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{14E47DE0-49B3-4B58-9627-8C3F10A21D24}</ProjectGuid>
+    <UseStandardResourceNames>true</UseStandardResourceNames>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>fsx</RootNamespace>
+    <AssemblyName>fsx</AssemblyName>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <ExternalConsole>true</ExternalConsole>
+    <PlatformTarget></PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <DefineConstants></DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <ExternalConsole>true</ExternalConsole>
+    <GenerateTailCalls>true</GenerateTailCalls>
+    <PlatformTarget></PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);LEGACY_FRAMEWORK</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="FSharp.Core">
+      <HintPath>..\packages\FSharp.Core.4.5.4\lib\net45\FSharp.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Fsdk\Misc.fs">
+      <Link>..\Fsdk\Misc.fs</Link>
+    </Compile>
+    <Compile Include="..\Fsdk\Process.fs">
+      <Link>..\Fsdk\Process.fs</Link>
+    </Compile>
+    <Compile Include="..\Fsdk\Network.fs">
+      <Link>..\Fsdk\Network.fs</Link>
+    </Compile>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <Import Project="..\CommonBuildProps-legacy.proj" />
+  <Import Condition="'$(FSharpTargetsPath)' != ''" Project="$(FSharpTargetsPath)" />
+  <Target Name="BeforeBuild">
+    <Message Condition="'$(FSharpTargetsPath)' == ''" Importance="High" Text="F# SDK path was not found!" />
+  </Target>
+  <Target Name="AfterBuild">
+    <!-- NOTE: to simplify the build in Unix(Mac&Linux), we simply copy the system's FSharp.Core instead of
+               taking it from nuget. TODO: we should make this uniform to all platforms, maybe via dotnet restore -->
+    <Copy SourceFiles="/usr/lib/mono/fsharp/FSharp.Core.dll"
+          DestinationFolder="$(OutputPath)"
+          ContinueOnError="true"
+          Condition="Exists('/usr/lib/mono/fsharp/FSharp.Core.dll')"
+     />
+    <Copy SourceFiles="/Library/Frameworks/Mono.framework/Versions/6.12.0/lib/mono/fsharp/FSharp.Core.dll"
+          DestinationFolder="$(OutputPath)"
+          ContinueOnError="true"
+          Condition="Exists('/Library/Frameworks/Mono.framework/Versions/6.12.0/lib/mono/fsharp/FSharp.Core.dll')"
+     />
+  </Target>
+</Project>
