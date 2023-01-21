@@ -63,7 +63,7 @@ jobs:
 
   sanity_check:
     needs:
-    - macOS_dotnet-and-mono
+    - macOS_dotnet6-and-mono
     - macOS_mono
     - linux_oldLTS_github_dotnet-and-xbuild
     - linux_oldLTS_github_dotnet-and-msbuild
@@ -109,10 +109,14 @@ jobs:
         dotnet fantomless --recurse .
         git diff --exit-code
 
-  macOS_dotnet-and-mono:
+  macOS_dotnet6-and-mono:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Setup .NET SDK 6.0.x
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: '6.0.x'
     - name: configure
       run: ./configure.sh
     - name: build in DEBUG mode
