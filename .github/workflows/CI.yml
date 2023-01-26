@@ -7,7 +7,7 @@ jobs:
   publish:
 
     needs:
-    - sanity_check
+    - sanity-check
 
     runs-on: ubuntu-22.04
     container:
@@ -61,21 +61,21 @@ jobs:
           . ./version.config
           dotnet nuget push Fsdk/nupkg/Fsdk.$FullVersion.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
 
-  sanity_check:
+  sanity-check:
     needs:
-    - macOS_dotnet6-and-mono
-    - macOS_mono
-    - linux_oldLTS_github_dotnet-and-xbuild
-    - linux_oldLTS_github_dotnet-and-msbuild
-    - linux_oldLTS_vanilla_stockmono
-    - linux_oldLTS_vanilla_newmono
-    - linux_newLTS_github_dotnet-and-xbuild
-    - linux_newLTS_github_dotnet-and-msbuild
-    - linux_newLTS_vanilla_stockmono
-    - linux_newLTS_vanilla_newmono
-    - linux_newLTS_vanilla_dotnet6
-    - windows_legacyFramework
-    - windows_dotnet6
+    - macOS--dotnet6-and-mono
+    - macOS--mono
+    - linux-oldLTS-github--dotnet-and-xbuild
+    - linux-oldLTS-github--dotnet-and-msbuild
+    - linux-oldLTS-vanilla--stockmono
+    - linux-oldLTS-vanilla--newmono
+    - linux-newLTS-github--dotnet-and-xbuild
+    - linux-newLTS-github--dotnet-and-msbuild
+    - linux-newLTS-vanilla--stockmono
+    - linux-newLTS-vanilla--newmono
+    - linux-newLTS-vanilla--dotnet6
+    - windows--legacyFramework
+    - windows--dotnet6
 
     runs-on: ubuntu-22.04
     steps:
@@ -109,7 +109,7 @@ jobs:
         dotnet fantomless --recurse .
         git diff --exit-code
 
-  macOS_dotnet6-and-mono:
+  macOS--dotnet6-and-mono:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
@@ -138,7 +138,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  macOS_mono:
+  macOS--mono:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
@@ -165,7 +165,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_oldLTS_github_dotnet-and-xbuild:
+  linux-oldLTS-github--dotnet-and-xbuild:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
@@ -196,7 +196,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_oldLTS_github_dotnet-and-msbuild:
+  linux-oldLTS-github--dotnet-and-msbuild:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
@@ -227,7 +227,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_oldLTS_vanilla_stockmono:
+  linux-oldLTS-vanilla--stockmono:
     runs-on: ubuntu-20.04
     container:
       image: "ubuntu:20.04"
@@ -269,7 +269,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_oldLTS_vanilla_newmono:
+  linux-oldLTS-vanilla--newmono:
     runs-on: ubuntu-20.04
     container:
       image: "ubuntu:20.04"
@@ -313,7 +313,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_newLTS_github_dotnet-and-xbuild:
+  linux-newLTS-github--dotnet-and-xbuild:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
@@ -344,7 +344,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_newLTS_github_dotnet-and-msbuild:
+  linux-newLTS-github--dotnet-and-msbuild:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
@@ -375,7 +375,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_newLTS_vanilla_stockmono:
+  linux-newLTS-vanilla--stockmono:
     runs-on: ubuntu-22.04
     container:
       image: "ubuntu:22.04"
@@ -417,7 +417,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_newLTS_vanilla_newmono:
+  linux-newLTS-vanilla--newmono:
     runs-on: ubuntu-22.04
     container:
       image: "ubuntu:22.04"
@@ -461,7 +461,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux_newLTS_vanilla_dotnet6:
+  linux-newLTS-vanilla--dotnet6:
     runs-on: ubuntu-22.04
     container:
       image: "ubuntu:22.04"
@@ -499,7 +499,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  windows_legacyFramework:
+  windows--legacyFramework:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v1
@@ -523,7 +523,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: .\Tools\fsi.bat compileFSharpScripts.fsx
 
-  windows_dotnet6:
+  windows--dotnet6:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
