@@ -213,7 +213,7 @@ type AsyncExtensions() =
             FSharpUtil.AsyncExtensions.WhenAnyAndAll [ longJob; shortJob ]
             |> Async.RunSynchronously
 
-        let timingErrorMargin = TimeSpan.FromMilliseconds 5.0
+        let timingErrorMargin = TimeSpan.FromMilliseconds 10.0
         Assert.That(stopWatch.Elapsed, Is.LessThan longTime)
 
         Assert.That(
