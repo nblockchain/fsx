@@ -773,32 +773,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                 "dotnet"
 #else
                 match Misc.GuessPlatform() with
-                | Misc.Platform.Windows ->
-                    let vswherePath =
-                        Path.Combine(
-                            Environment.GetFolderPath(
-                                Environment.SpecialFolder.ProgramFilesX86
-                            ),
-                            "Microsoft Visual Studio",
-                            "Installer",
-                            "vswhere.exe"
-                        )
-
-                    Process
-                        .Execute(
-                            {
-                                Command = vswherePath
-                                Arguments = "-find **\\fsc.exe"
-                            },
-                            Echo.Off
-                        )
-                        .UnwrapDefault()
-                        .Split(
-                            Array.singleton Environment.NewLine,
-                            StringSplitOptions.RemoveEmptyEntries
-                        )
-                        .First()
-                        .Trim()
+                | Misc.Platform.Windows -> Process.VsWhere "**\\fsc.exe"
                 | _ -> "fsharpc"
 #endif
 
