@@ -32,7 +32,7 @@
     <Compile Include="..\Fsdk\Network.fs">
       <Link>Fsdk\Network.fs</Link>
     </Compile>
-    <Compile Include="Program.fs" />
+    <Compile Include="Fsxc.fs" />
   </ItemGroup>
 
   <ItemGroup>
