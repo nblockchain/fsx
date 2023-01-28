@@ -12,6 +12,7 @@ Unfinished tasks so far:
 * Make fsxc always enable warnAsError and fsx always disable it.
 * After doing the above, make both fsx and fsxc always enable warnAsError for the warning described in https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it
 * Try creating VMs for CI that uninstall .NETCore/.NET6 completely (not just the dotnet executable removal hack), to make sure legacy framework build still works there.
+* Try creating VMs for CI that uninstall Mono/.NET4.x completey (e.g. for macOS see: https://github.com/mono/website/commit/490797429d4b92584394292ff69fbdc0eb002948 )
 
 
 ## Motivation
