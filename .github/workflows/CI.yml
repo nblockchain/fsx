@@ -46,6 +46,10 @@ jobs:
         run: |
           . ./version.config
           dotnet pack Fsdk/Fsdk.fsproj -p:PackageVersion=$FullVersion
+      - name: Pack the fsx NuGet package
+        run: |
+          . ./version.config
+          dotnet pack fsx/fsx.fsproj -p:PackageVersion=$FullVersion
       - name: Publish fsxc on NuGet website
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
@@ -60,6 +64,13 @@ jobs:
         run: |
           . ./version.config
           dotnet nuget push Fsdk/nupkg/Fsdk.$FullVersion.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+      - name: Publish fsx on NuGet website
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) && env.NUGET_API_KEY != null
+        run: |
+          . ./version.config
+          dotnet nuget push fsx/nupkg/fsx.$FullVersion.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
 
   sanity-check:
     needs:

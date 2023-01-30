@@ -16,6 +16,9 @@
     <Compile Include="..\Fsdk\Network.fs">
       <Link>..\Fsdk\Network.fs</Link>
     </Compile>
+    <Compile Include="..\fsxc\Fsxc.fs">
+      <Link>..\fsxc\Fsxc.fs</Link>
+    </Compile>
     <Compile Include="Program.fs" />
   </ItemGroup>
 

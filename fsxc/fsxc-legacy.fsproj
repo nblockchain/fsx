@@ -55,6 +55,7 @@
       <Link>Fsdk\Network.fs</Link>
     </Compile>
     <Compile Include="Fsxc.fs" />
+    <Compile Include="Program.fs" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\CommonBuildProps-legacy.proj" />

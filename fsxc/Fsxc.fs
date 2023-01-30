@@ -356,7 +356,7 @@ module Program =
                                 <| Path.Combine(script.Directory.FullName, ref)
 
                             if not fileInfo.Exists then
-                            // must be a BCL lib (e.g. #r "System.Xml.Linq.dll")
+                                // must be a BCL lib (e.g. #r "System.Xml.Linq.dll")
                                 ()
                             else
                                 yield fileInfo.LastWriteTime
@@ -866,7 +866,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
             exeTarget.Exe
 
-    let Main(argv: array<string>) =
+    let private Main(argv: array<string>) =
         if argv.Length = 0 then
             Console.Error.WriteLine "Please pass the .fsx script as an argument"
             PrintUsage()
@@ -918,7 +918,6 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
         0 // return an integer exit code
 
-    [<EntryPoint>]
     let main argv =
         try
             Main argv
