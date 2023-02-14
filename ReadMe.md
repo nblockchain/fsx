@@ -6,8 +6,6 @@ THIS REPO IS FACING A COMPLETE OVERHAUL/REVAMP/RENOVATION IN ORDER TO SUPPORT .N
 
 Unfinished tasks so far:
 * Revamp this ReadMe.md file to remove any mentions to Mono or the legacy .NET4.x framework.
-* To reach a v1.0 release, publish fsx as dotnet tool in nuget.
-* Convert the fsx.fsx script into a console project (1.1?) to gain better performance in Windows.
 * Remove legacy framework support (so that build system can converge into .fsx files instead of autotools in Unix + fsx in Windows).
 * Make fsxc always enable warnAsError and fsx always disable it.
 * After doing the above, make both fsx and fsxc always enable warnAsError for the warning described in https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it

@@ -1,12 +1,12 @@
-﻿<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{56DA5F03-8F7F-44AB-B692-5A24DB134A8B}</ProjectGuid>
+    <ProjectGuid>{14E47DE0-49B3-4B58-9627-8C3F10A21D24}</ProjectGuid>
     <UseStandardResourceNames>true</UseStandardResourceNames>
     <OutputType>Exe</OutputType>
-    <RootNamespace>fsxc</RootNamespace>
-    <AssemblyName>fsxc</AssemblyName>
+    <RootNamespace>fsx</RootNamespace>
+    <AssemblyName>fsx</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -40,24 +40,23 @@
     </Reference>
     <Reference Include="System.Configuration" />
   </ItemGroup>
+
   <ItemGroup>
-    <Folder Include="Fsdk\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="..\Fsdk\Misc.fs">
-      <Link>Fsdk\Misc.fs</Link>
+      <Link>..\Fsdk\Misc.fs</Link>
     </Compile>
     <Compile Include="..\Fsdk\Process.fs">
-      <Link>Fsdk\Process.fs</Link>
+      <Link>..\Fsdk\Process.fs</Link>
     </Compile>
     <Compile Include="..\Fsdk\Network.fs">
-      <Link>Fsdk\Network.fs</Link>
+      <Link>..\Fsdk\Network.fs</Link>
     </Compile>
-    <Compile Include="Fsxc.fs" />
+    <Compile Include="..\fsxc\Fsxc.fs">
+      <Link>..\fsxc\Fsxc.fs</Link>
+    </Compile>
     <Compile Include="Program.fs" />
-    <None Include="packages.config" />
   </ItemGroup>
+
   <Import Project="..\CommonBuildProps-legacy.proj" />
   <Import Condition="'$(FSharpTargetsPath)' != ''" Project="$(FSharpTargetsPath)" />
   <Target Name="BeforeBuild">

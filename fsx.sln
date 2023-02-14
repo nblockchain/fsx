@@ -53,6 +53,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FD764CDA
 	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fsdk.Tests", "Fsdk.Tests\Fsdk.Tests.fsproj", "{43BA7E25-975B-4DF9-B274-EEF6C806C1D0}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsx", "fsx\fsx.fsproj", "{534A9824-CD0A-47FC-AEF0-9A5F04021507}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,6 +73,10 @@ Global
 		{43BA7E25-975B-4DF9-B274-EEF6C806C1D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43BA7E25-975B-4DF9-B274-EEF6C806C1D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43BA7E25-975B-4DF9-B274-EEF6C806C1D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{534A9824-CD0A-47FC-AEF0-9A5F04021507}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{534A9824-CD0A-47FC-AEF0-9A5F04021507}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{534A9824-CD0A-47FC-AEF0-9A5F04021507}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{534A9824-CD0A-47FC-AEF0-9A5F04021507}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
