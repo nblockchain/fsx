@@ -866,7 +866,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
             exeTarget.Exe
 
-    let private Main(argv: array<string>) =
+    let private InnerMain(argv: array<string>) =
         if argv.Length = 0 then
             Console.Error.WriteLine "Please pass the .fsx script as an argument"
             PrintUsage()
@@ -918,9 +918,9 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
         0 // return an integer exit code
 
-    let main argv =
+    let Main argv =
         try
-            Main argv
+            InnerMain argv
         finally
 #if LEGACY_FRAMEWORK
             if nugetExeTmpLocation.IsValueCreated then

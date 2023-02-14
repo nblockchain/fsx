@@ -2,4 +2,4 @@
 
 [<EntryPoint>]
 let main argv =
-    Program.main argv
+    Program.Main argv

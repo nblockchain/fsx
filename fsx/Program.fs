@@ -136,7 +136,7 @@ let userScriptFile = FileInfo userScript
 let fsxcMainArguments =
     Seq.append fsxcArgs (Seq.singleton userScript) |> Seq.toArray
 
-Program.main fsxcMainArguments |> ignore
+Program.Main fsxcMainArguments |> ignore
 
 let finalLaunch =
     {
