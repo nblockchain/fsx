@@ -257,13 +257,6 @@ match maybeTarget with
         )
     )
 
-#if !LEGACY_FRAMEWORK
-    File.Copy(
-        Path.Combine(finalReleaseFolderPath, "fsx.runtimeconfig.json"),
-        Path.Combine(fsxInstallationDir.FullName, "fsx.runtimeconfig.json")
-    )
-#endif
-
     File.Copy(fsxBat.FullName, fsxBatDestination.FullName)
 
     let fsdkInstallDir =
