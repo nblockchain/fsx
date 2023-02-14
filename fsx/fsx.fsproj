@@ -4,6 +4,23 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <GenerateRuntimeConfigDevFile>true</GenerateRuntimeConfigDevFile>
+
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>fsx</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseFile>LICENCE.txt</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/nblockchain/fsx.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
+    <PackageId>fsx</PackageId>
+    <Authors>knocte,aarani,Bobface,msonawane,realmarv</Authors>
+    <Copyright>
+        Copyright (c) 2016-2023 Andres G. Aragoneses
+        Copyright (c) 2019 Diginex Ltd
+        Copyright (c) 2016-2017 Gatecoin Ltd
+    </Copyright>
+    <PackageTags>FSharp F# fsx</PackageTags>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +37,20 @@
       <Link>..\fsxc\Fsxc.fs</Link>
     </Compile>
     <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content
+      Include="..\LICENCE.txt"
+      Link="LICENCE.txt"
+      Pack="true"
+      PackagePath="LICENCE.txt"/>
+
+    <Content
+      Include="..\ReadMe.md"
+      Link="ReadMe.md"
+      Pack="true"
+      PackagePath="ReadMe.md"/>
   </ItemGroup>
 
   <ItemGroup>
