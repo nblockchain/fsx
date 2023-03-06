@@ -196,25 +196,38 @@ module Program =
                 let libToRef =
                     line.Substring(
                         REFNUGET_PREPROCESSOR.Length,
+
+                        // to remove the last double-quote character
                         line.Length - REFNUGET_PREPROCESSOR.Length - 1
                     )
 
-                let versionPattern = ", Version="
 
                 let libName, maybeVersion =
-                    if libToRef.Contains versionPattern then
-                        let versionPatternIndex =
-                            libToRef.IndexOf versionPattern
+                    if libToRef.Contains "," then
+                        let versionPattern = ", Version="
+                        if libToRef.Contains versionPattern then
+                            let versionPatternIndex =
+                                libToRef.IndexOf versionPattern
 
-                        let theNameOnly =
-                            libToRef.Substring(0, versionPatternIndex)
+                            let theNameOnly =
+                                libToRef.Substring(0, versionPatternIndex)
 
-                        theNameOnly,
-                        Some(
-                            libToRef.Substring(
-                                versionPatternIndex + versionPattern.Length
-                            )
-                        )
+                            let versionNumber =
+                                libToRef.Substring(
+                                    versionPatternIndex + versionPattern.Length
+                                )
+                            theNameOnly, (Some versionNumber)
+                        else
+                            let commaIndex = libToRef.IndexOf ","
+                            let theNameOnly =
+                                libToRef.Substring(0, commaIndex)
+
+                            let versionNumber =
+                                libToRef.Substring(
+                                    commaIndex + ",".Length
+                                ).Trim()
+                            theNameOnly, (Some versionNumber)
+
                     else
                         libToRef, None
 
