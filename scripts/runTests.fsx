@@ -282,6 +282,19 @@ Process.Execute(
 )
 |> UnwrapDefault
 
+let refNugetLibTestNewFormatWithShortVersion =
+    Path.Combine(
+        TestDir.FullName,
+        "testRefNugetLibNewFormatWithShortVersion.fsx"
+    )
+    |> FileInfo
+
+Process.Execute(
+    CreateCommand(refNugetLibTestNewFormatWithShortVersion, String.Empty),
+    Echo.All
+)
+|> UnwrapDefault
+
 
 let cmdLineArgsTest =
     Path.Combine(TestDir.FullName, "testFsiCommandLineArgs.fsx") |> FileInfo
