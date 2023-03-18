@@ -28,20 +28,9 @@ jobs:
       - name: ownership workaround
         run: git config --global --add safe.directory '*'
 
-      - name: Extract full version
-        run: dotnet fsi scripts/prePublish.fsx
-      - name: Pack the fsxc NuGet package
-        run: |
-          . ./version.config
-          dotnet pack fsxc/fsxc.fsproj -p:PackageVersion=$FullVersion
-      - name: Pack the Fsdk NuGet package
-        run: |
-          . ./version.config
-          dotnet pack Fsdk/Fsdk.fsproj -p:PackageVersion=$FullVersion
-      - name: Pack the fsx NuGet package
-        run: |
-          . ./version.config
-          dotnet pack fsx/fsx.fsproj -p:PackageVersion=$FullVersion
+      - name: Create nuget packages
+        run: dotnet fsi scripts/pack.fsx
+
       - name: Publish fsxc on NuGet website
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) && env.NUGET_API_KEY != null
         run: |
