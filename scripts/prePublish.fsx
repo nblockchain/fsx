@@ -62,9 +62,6 @@ else
         let nugetPush =
             Path.Combine(rootDir.FullName, "Tools", "nugetPush.fsx") |> FileInfo
 
-        // to disable welcome msg, see https://stackoverflow.com/a/70493818/544947
-        Environment.SetEnvironmentVariable("DOTNET_NOLOGO", "true")
-
         let fullVersion =
             Process
                 .Execute(
