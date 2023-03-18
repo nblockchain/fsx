@@ -27,12 +27,6 @@ let versionConfigFileName = "version.config"
 let versionConfigFile =
     Path.Combine(rootDir.FullName, versionConfigFileName) |> FileInfo
 
-let AppendFullVersion fullVersion =
-    let fullVersionVarAssignment =
-        sprintf "%sFullVersion=%s" Environment.NewLine fullVersion
-
-    File.AppendAllText(versionConfigFile.FullName, fullVersionVarAssignment)
-
 let tagPrefix = "refs/tags/"
 
 let fullVersion =
@@ -85,8 +79,6 @@ let fullVersion =
 
             fullVersion
 
-AppendFullVersion fullVersion
-
 let Pack proj =
     Process
         .Execute(
@@ -99,10 +91,76 @@ let Pack proj =
                         proj
                         fullVersion
             },
-            Echo.Off
+            Echo.All
         )
         .UnwrapDefault()
     |> ignore
 
-for proj in [ "fsxc"; "Fsdk"; "fsx" ] do
+let projs = [ "fsxc"; "Fsdk"; "fsx" ]
+
+for proj in projs do
     Pack proj
+
+let defaultBranch = "master"
+let branchPrefix = "refs/heads/"
+
+if githubRef.StartsWith branchPrefix then
+    if not(githubRef.StartsWith(sprintf "%s%s" branchPrefix defaultBranch)) then
+        Console.WriteLine(
+            sprintf
+                "Branch different than '%s', skipping dotnet nuget push"
+                defaultBranch
+        )
+
+        Environment.Exit 0
+elif not(githubRef.StartsWith tagPrefix) then
+    failwithf "Unexpected GITHUB_REF value: %s" githubRef
+
+let nugetApiKeyVarName = "NUGET_API_KEY"
+let nugetApiKey = Environment.GetEnvironmentVariable nugetApiKeyVarName
+
+if String.IsNullOrEmpty nugetApiKey then
+    Console.WriteLine(
+        sprintf
+            "Secret '%s' not set as env var, skipping dotnet nuget push"
+            nugetApiKeyVarName
+    )
+
+    Environment.Exit 0
+
+let githubEventName = Environment.GetEnvironmentVariable "GITHUB_EVENT_NAME"
+
+match githubEventName with
+| "push" ->
+    let nugetApiSource = "https://api.nuget.org/v3/index.json"
+
+    let NugetPush proj =
+        Process
+            .Execute(
+                {
+                    Command = "dotnet"
+                    Arguments =
+                        sprintf
+                            "nuget push %s/nupkg/%s.%s.nupkg --api-key %s --source %s"
+                            proj
+                            proj
+                            fullVersion
+                            nugetApiKey
+                            nugetApiSource
+                },
+                Echo.All
+            )
+            .UnwrapDefault()
+        |> ignore
+
+    for proj in projs do
+        NugetPush proj
+
+| null
+| "" -> failwith "The env var for github event name should have a value"
+
+| _ ->
+    Console.WriteLine
+        "Github event name is not 'push', skipping dotnet nuget push"
+
+    Environment.Exit 0
