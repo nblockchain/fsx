@@ -28,18 +28,8 @@ jobs:
       - name: ownership workaround
         run: git config --global --add safe.directory '*'
 
-      - name: Compose full version on normal push
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: |
-          . ./version.config
-
-          # to disable welcome msg, see https://stackoverflow.com/a/70493818/544947
-          export DOTNET_NOLOGO=true
-
-          echo "\nFullVersion=`dotnet fsi Tools/nugetPush.fsx --output-version $BaseVersion`" >> ./version.config
-      - name: Get full version when it's git tag
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        run: echo "\nFullVersion=${GITHUB_REF#refs/*/}" >> ./version.config
+      - name: Extract full version
+        run: dotnet fsi scripts/prePublish.fsx
       - name: Pack the fsxc NuGet package
         run: |
           . ./version.config
