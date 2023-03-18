@@ -28,24 +28,8 @@ jobs:
       - name: ownership workaround
         run: git config --global --add safe.directory '*'
 
-      - name: Create nuget packages
-        run: dotnet fsi scripts/pack.fsx
-
-      - name: Publish fsxc on NuGet website
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) && env.NUGET_API_KEY != null
-        run: |
-          . ./version.config
-          dotnet nuget push fsxc/nupkg/fsxc.$FullVersion.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
-      - name: Publish Fsdk on NuGet website
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) && env.NUGET_API_KEY != null
-        run: |
-          . ./version.config
-          dotnet nuget push Fsdk/nupkg/Fsdk.$FullVersion.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
-      - name: Publish fsx on NuGet website
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) && env.NUGET_API_KEY != null
-        run: |
-          . ./version.config
-          dotnet nuget push fsx/nupkg/fsx.$FullVersion.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+      - name: Publish nuget packages
+        run: dotnet fsi scripts/publish.fsx
 
   sanity-check:
     needs:
