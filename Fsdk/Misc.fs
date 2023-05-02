@@ -5,9 +5,14 @@ open System.IO
 open System.Text
 open System.Reflection
 open System.Linq
+
 #if LEGACY_FRAMEWORK
 open System.Configuration
 open System.Security.Cryptography
+#else
+open System.Xml
+open System.Xml.Linq
+open System.Xml.XPath
 #endif
 
 module Misc =
@@ -636,34 +641,10 @@ module Misc =
 
         not(String.IsNullOrEmpty(gitlabUserEmail))
 
-    let GetCurrentVersion(dir: DirectoryInfo) : Version =
-        let defaultAssemblyVersionFileName = "AssemblyInfo.fs"
-
-        let assemblyVersionFsFiles =
-            (Directory.EnumerateFiles(
-                dir.FullName,
-                defaultAssemblyVersionFileName,
-                SearchOption.AllDirectories
-            ))
-
-        let assemblyVersionFsFile =
-            if assemblyVersionFsFiles.Count() = 1 then
-                assemblyVersionFsFiles.Single()
-            else
-                (Directory.EnumerateFiles(
-                    dir.FullName,
-                    "Common" + defaultAssemblyVersionFileName,
-                    SearchOption.AllDirectories
-                ))
-                    .SingleOrDefault()
-
-        if assemblyVersionFsFile = null then
-            Console.Error.WriteLine(
-                "Canonical AssemblyInfo not found in any subfolder (or found too many), cannot extract version number"
-            )
-
-            Environment.Exit 1
-
+    // TODO: move this as nested func of GetCurrentVersion()
+    let private GetCurrentVersionFromAssemblyInfos
+        (assemblyVersionFsFile: string)
+        : Version =
         let assemblyVersionAttribute = "AssemblyVersion"
 
         let lineContainingVersionNumber =
@@ -713,6 +694,71 @@ module Misc =
 
         Version(version)
 
+    let GetCurrentVersion(dir: DirectoryInfo) : Version =
+        let defaultAssemblyVersionFileName = "AssemblyInfo.fs"
+
+        let assemblyVersionFsFiles =
+            (Directory.EnumerateFiles(
+                dir.FullName,
+                defaultAssemblyVersionFileName,
+                SearchOption.AllDirectories
+            ))
+
+        let assemblyVersionFsFile =
+            if assemblyVersionFsFiles.Count() = 1 then
+                assemblyVersionFsFiles.Single()
+            else
+                (Directory.EnumerateFiles(
+                    dir.FullName,
+                    "Common" + defaultAssemblyVersionFileName,
+                    SearchOption.AllDirectories
+                ))
+                    .SingleOrDefault()
+
+        if not(isNull assemblyVersionFsFile) then
+            GetCurrentVersionFromAssemblyInfos assemblyVersionFsFile
+        else
+#if LEGACY_FRAMEWORK
+            let note =
+                "(NOTE: to extract version from <ApplicationVersion> elements of project files, use dotnet v6 or newer)"
+
+            failwithf
+                "Canonical AssemblyInfo not found in any subfolder (or found too many), cannot extract version number %s."
+                note
+#else
+            let projectFiles =
+                (Directory.EnumerateFiles(
+                    dir.FullName,
+                    "*.*proj",
+                    SearchOption.AllDirectories
+                ))
+
+            let versions =
+                seq {
+                    for projFile in projectFiles do
+                        let xmlDoc = XDocument.Load projFile
+                        let query = "//ApplicationVersion"
+
+                        let appVersionElements =
+                            xmlDoc.XPathSelectElements query
+
+                        for appVersionElement in appVersionElements do
+                            yield appVersionElement.Value
+                }
+                |> Seq.distinct
+
+            if Seq.isEmpty versions then
+                failwithf "No <ApplicationVersion> tag found in project files"
+
+            match Seq.tryExactlyOne versions with
+            | None ->
+                let versionsStr = String.Join(",", versions)
+
+                failwithf
+                    "More than one <ApplicationVersion> tag found in project files: %s"
+                    versionsStr
+            | Some version -> Version version
+#endif
 
     let SqlReadOnlyGroupName = "sqlreadonly"
 
