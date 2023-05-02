@@ -2,6 +2,7 @@ namespace Fsdk
 
 open System
 open System.IO
+open System.Text
 open System.Reflection
 open System.Linq
 #if LEGACY_FRAMEWORK
@@ -753,3 +754,41 @@ module Misc =
                 )
             else
                 failwithf "argument not recognized: %s" head
+
+
+    let ReplaceTextInFile
+        (file: FileInfo)
+        (oldString: string)
+        (newString: string)
+        =
+        let hasUtf8Bom(file: FileInfo) =
+            let fileContentInBytes = File.ReadAllBytes file.FullName
+
+            fileContentInBytes.Length > 2
+            && fileContentInBytes.[..2] = [| 0xEFuy; 0xBBuy; 0xBFuy |]
+
+        let oldText = File.ReadAllText file.FullName
+        let newText = oldText.Replace(oldString, newString)
+
+        if newText <> oldText then
+            File.WriteAllText(
+                file.FullName,
+                newText,
+                UTF8Encoding(hasUtf8Bom file)
+            )
+
+    let rec ReplaceTextInDir
+        (dir: DirectoryInfo)
+        (oldString: string)
+        (newString: string)
+        =
+        for file in dir.GetFiles() do
+            // TODO: use @realmarv's method to find if it's binary file here
+            if file.Extension.ToLower() <> ".dll"
+               && file.Extension.ToLower() <> ".exe"
+               && file.Extension.ToLower() <> ".png" then
+                ReplaceTextInFile file oldString newString
+
+        for subFolder in dir.GetDirectories() do
+            if subFolder.Name <> ".git" then
+                ReplaceTextInDir subFolder oldString newString
