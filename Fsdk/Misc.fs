@@ -838,3 +838,48 @@ module Misc =
         for subFolder in dir.GetDirectories() do
             if subFolder.Name <> ".git" then
                 ReplaceTextInDir subFolder oldString newString
+
+
+    let ExtractEmbeddedResourceFileContentsFromAssembly
+        (resourceName: string)
+        (assembly: Assembly)
+        =
+        let allResourceNames =
+            String.Join(";", assembly.GetManifestResourceNames())
+
+        let fullNameOpt =
+            let possibleNames =
+                assembly.GetManifestResourceNames()
+                |> Array.filter(fun aResourceName ->
+                    aResourceName = resourceName
+                    || aResourceName.EndsWith("." + resourceName)
+                )
+
+            if possibleNames.Length = 1 then
+                Some possibleNames.[0]
+            else
+                None
+
+        match fullNameOpt with
+        | Some fullName ->
+            use stream = assembly.GetManifestResourceStream fullName
+
+            if isNull stream then
+                failwithf
+                    "Embedded resource %s (%s) not found in assembly %s"
+                    resourceName
+                    fullName
+                    assembly.FullName
+
+            use reader = new StreamReader(stream)
+            reader.ReadToEnd()
+        | None ->
+            failwithf
+                "Embedded resource %s not found at all in assembly %s (resource names: %s)"
+                resourceName
+                assembly.FullName
+                allResourceNames
+
+    let ExtractEmbeddedResourceFileContents(resourceName: string) =
+        let assembly = Assembly.GetExecutingAssembly()
+        ExtractEmbeddedResourceFileContentsFromAssembly resourceName assembly
