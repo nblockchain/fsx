@@ -881,5 +881,5 @@ module Misc =
                 allResourceNames
 
     let ExtractEmbeddedResourceFileContents(resourceName: string) =
-        let assembly = Assembly.GetExecutingAssembly()
+        let assembly = Assembly.GetCallingAssembly()
         ExtractEmbeddedResourceFileContentsFromAssembly resourceName assembly
