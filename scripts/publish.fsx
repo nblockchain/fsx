@@ -103,8 +103,12 @@ for proj in projs do
 
 let defaultBranch = "master"
 let branchPrefix = "refs/heads/"
+let prPrefix = "refs/pull/"
 
-if githubRef.StartsWith branchPrefix then
+if githubRef.StartsWith prPrefix then
+    Console.WriteLine(sprintf "CI running in PR, skipping dotnet nuget push")
+    Environment.Exit 0
+elif githubRef.StartsWith branchPrefix then
     if not(githubRef.StartsWith(sprintf "%s%s" branchPrefix defaultBranch)) then
         Console.WriteLine(
             sprintf
