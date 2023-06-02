@@ -726,16 +726,33 @@ module Misc =
                 "Canonical AssemblyInfo not found in any subfolder (or found too many), cannot extract version number %s."
                 note
 #else
+
             let projectFiles =
                 (Directory.EnumerateFiles(
                     dir.FullName,
                     "*.*proj",
                     SearchOption.AllDirectories
                 ))
+                |> List.ofSeq
+
+            let rootPropsFile =
+                let file =
+                    Path.Combine(dir.FullName, "Directory.Build.props")
+                    |> FileInfo
+
+                if file.Exists then
+                    Some file
+                else
+                    None
+
+            let msbuildFiles =
+                match rootPropsFile with
+                | None -> projectFiles
+                | Some file -> file.FullName :: projectFiles
 
             let versions =
                 seq {
-                    for projFile in projectFiles do
+                    for projFile in msbuildFiles do
                         let xmlDoc = XDocument.Load projFile
                         let query = "//ApplicationVersion"
 
