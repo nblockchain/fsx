@@ -47,6 +47,24 @@ let illegalCharsInExFat =
         '|'
     ]
 
+let CheckTimes(filesAndSubDirs: seq<FileSystemInfo>) =
+    let checkTimeStamp (entry: FileSystemInfo) (date: DateTime) =
+        let exFatEarliestAllowedYear = 1980
+        if date.Date.Year < exFatEarliestAllowedYear then
+            Console.Error.WriteLine(
+                sprintf
+                    "Illegal timestamp (for exFAT) found in %s"
+                    entry.FullName
+            )
+
+    for entry in filesAndSubDirs do
+        checkTimeStamp entry entry.CreationTime
+        checkTimeStamp entry entry.CreationTimeUtc
+        checkTimeStamp entry entry.LastAccessTime
+        checkTimeStamp entry entry.LastAccessTimeUtc
+        checkTimeStamp entry entry.LastWriteTime
+        checkTimeStamp entry entry.LastWriteTimeUtc
+
 let CheckNames(filesAndSubDirs: seq<FileSystemInfo>) =
     let rec addToMap
         (entries: seq<FileSystemInfo>)
@@ -109,6 +127,8 @@ let rec Rename(dir: DirectoryInfo) : unit =
         Seq.append (Seq.map (fun dir -> dir :> FileSystemInfo) subDirs) files
 
     CheckNames allEntries
+
+    CheckTimes allEntries
 
     for subDir in subDirs do
         Rename subDir
