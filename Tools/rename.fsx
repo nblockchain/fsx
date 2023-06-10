@@ -139,5 +139,12 @@ let rec Rename(dir: DirectoryInfo) : unit =
     for file in files do
         CheckName file.Name file.FullName
 
-Rename currentDir
+try
+    Rename currentDir
+with
+| :? UnauthorizedAccessException ->
+    Console.Error.WriteLine
+        "Encountered an access-denied error, did you run with root/Administrator privileges?"
+
+    exit 3
 #endif
