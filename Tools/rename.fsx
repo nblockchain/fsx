@@ -50,7 +50,10 @@ let illegalCharsInExFat =
 let CheckTimes(filesAndSubDirs: seq<FileSystemInfo>) =
     let checkTimeStamp (entry: FileSystemInfo) (date: DateTime) =
         let exFatEarliestAllowedYear = 1980
-        if date.Date.Year < exFatEarliestAllowedYear then
+        let nugetMagicFolderMagicDate = DateTime(1979, 12, 31, 16, 0, 0)
+
+        if date.ToUniversalTime() <> nugetMagicFolderMagicDate
+           && date.Date.Year < exFatEarliestAllowedYear then
             Console.Error.WriteLine(
                 sprintf
                     "Illegal timestamp (for exFAT) found in %s"
