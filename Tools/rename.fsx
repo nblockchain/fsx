@@ -134,7 +134,14 @@ let rec Rename(dir: DirectoryInfo) : unit =
     CheckTimes allEntries
 
     for subDir in subDirs do
-        Rename subDir
+        if not(isNull subDir.LinkTarget) then
+            Console.WriteLine(
+                sprintf
+                    "Skipping link %s (if using robocopy, exclude them via /xj)"
+                    subDir.FullName
+            )
+        else
+            Rename subDir
 
     for file in files do
         CheckName file.Name file.FullName
