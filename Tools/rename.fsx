@@ -137,15 +137,30 @@ let CheckName (fileOrDirName: string) (fullName: string) =
         )
 
 let rec Rename(dir: DirectoryInfo) : unit =
+    let Separate
+        (entries: seq<FileSystemInfo>)
+        : seq<DirectoryInfo> * seq<FileInfo> =
+        let dirs =
+            seq {
+                for entry in entries do
+                    if Directory.Exists entry.FullName then
+                        yield DirectoryInfo entry.FullName
+            }
+
+        let files =
+            seq {
+                for entry in entries do
+                    if File.Exists entry.FullName then
+                        yield FileInfo entry.FullName
+            }
+
+        dirs, files
+
     CheckName dir.Name dir.FullName
 
-    let subDirs = dir.EnumerateDirectories()
+    let allEntries = dir.EnumerateFileSystemInfos()
 
-    let files =
-        dir.EnumerateFiles() |> Seq.map(fun file -> file :> FileSystemInfo)
-
-    let allEntries =
-        Seq.append (Seq.map (fun dir -> dir :> FileSystemInfo) subDirs) files
+    let subDirs, files = Separate allEntries
 
     CheckNames allEntries
 
