@@ -30,7 +30,6 @@ let dryRun =
         Environment.Exit 2
         failwith "Unreachable"
     else
-        raise <| NotImplementedException "Not yet implemented buddy"
         false
 
 let currentDir = Directory.GetCurrentDirectory() |> DirectoryInfo
@@ -48,25 +47,44 @@ let illegalCharsInExFat =
     ]
 
 let CheckTimes(filesAndSubDirs: seq<FileSystemInfo>) =
-    let checkTimeStamp (entry: FileSystemInfo) (date: DateTime) =
-        let exFatEarliestAllowedYear = 1980
+    let exFatEarliestAllowedTime = DateTime(1980, 1, 1, 0, 0, 0)
+
+    let checkTimeStampIsCorrect (entry: FileSystemInfo) (date: DateTime) =
         let nugetMagicFolderMagicDate = DateTime(1979, 12, 31, 16, 0, 0)
 
         if date.ToUniversalTime() <> nugetMagicFolderMagicDate
-           && date.Date.Year < exFatEarliestAllowedYear then
-            Console.Error.WriteLine(
-                sprintf
-                    "Illegal timestamp (for exFAT) found in %s"
-                    entry.FullName
-            )
+           && date < exFatEarliestAllowedTime then
+            if dryRun then
+                Console.Error.WriteLine(
+                    sprintf
+                        "Illegal timestamp (for exFAT) found in %s"
+                        entry.FullName
+                )
+
+                true
+            else
+                false
+        else
+            true
 
     for entry in filesAndSubDirs do
-        checkTimeStamp entry entry.CreationTime
-        checkTimeStamp entry entry.CreationTimeUtc
-        checkTimeStamp entry entry.LastAccessTime
-        checkTimeStamp entry entry.LastAccessTimeUtc
-        checkTimeStamp entry entry.LastWriteTime
-        checkTimeStamp entry entry.LastWriteTimeUtc
+        if not(checkTimeStampIsCorrect entry entry.CreationTime) then
+            entry.CreationTime <- exFatEarliestAllowedTime
+
+        if not(checkTimeStampIsCorrect entry entry.CreationTimeUtc) then
+            entry.CreationTimeUtc <- exFatEarliestAllowedTime
+
+        if not(checkTimeStampIsCorrect entry entry.LastAccessTime) then
+            entry.LastAccessTime <- exFatEarliestAllowedTime
+
+        if not(checkTimeStampIsCorrect entry entry.LastAccessTimeUtc) then
+            entry.LastAccessTimeUtc <- exFatEarliestAllowedTime
+
+        if not(checkTimeStampIsCorrect entry entry.LastWriteTime) then
+            entry.LastWriteTime <- exFatEarliestAllowedTime
+
+        if not(checkTimeStampIsCorrect entry entry.LastWriteTimeUtc) then
+            entry.LastWriteTimeUtc <- exFatEarliestAllowedTime
 
 let CheckNames(filesAndSubDirs: seq<FileSystemInfo>) =
     let rec addToMap
