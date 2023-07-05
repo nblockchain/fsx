@@ -16,3 +16,6 @@ snapcraft.login
 
 #macOS
 .DS_Store
+
+#VSCode (Ionide?)
+.fake
