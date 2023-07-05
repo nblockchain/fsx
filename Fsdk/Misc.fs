@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text
 open System.Reflection
+open System.Diagnostics
 open System.Linq
 
 #if LEGACY_FRAMEWORK
@@ -900,3 +901,9 @@ module Misc =
     let ExtractEmbeddedResourceFileContents(resourceName: string) =
         let assembly = Assembly.GetCallingAssembly()
         ExtractEmbeddedResourceFileContentsFromAssembly resourceName assembly
+
+    let BetterAssert (expr: bool) (errMsg: string) =
+        Debug.Assert(expr, errMsg)
+
+        if not expr then
+            failwith errMsg
