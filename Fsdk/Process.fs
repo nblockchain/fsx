@@ -496,7 +496,7 @@ module Process =
             commandNamesByOrderOfPreference
 
     // FIXME: it returns the first result, but we should return all (array<string>)
-    let VsWhere(searchPattern: string) : string =
+    let VsWhere(searchPattern: string) : Option<string> =
         if Misc.GuessPlatform() <> Misc.Platform.Windows then
             failwith "vswhere.exe doesn't exist in other platforms than Windows"
 
@@ -523,14 +523,15 @@ module Process =
 
         let procResult = Execute(vswhereCmd, Echo.Off)
 
-        let firstResult =
+        let entries =
             procResult
                 .UnwrapDefault()
                 .Split(
                     Array.singleton Environment.NewLine,
                     StringSplitOptions.RemoveEmptyEntries
                 )
-                .First()
-                .Trim()
 
-        firstResult
+        if entries.Any() then
+            entries.First().Trim() |> Some
+        else
+            None
