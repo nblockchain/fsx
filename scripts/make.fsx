@@ -91,7 +91,9 @@ let FindBuildTool() : string * string =
 #if !LEGACY_FRAMEWORK
         "dotnet", "build"
 #else
-        (Process.VsWhere "MSBuild\\**\\Bin\\MSBuild.exe"), String.Empty
+        match Process.VsWhere "MSBuild\\**\\Bin\\MSBuild.exe" with
+        | None -> failwith "msbuild not found?"
+        | Some msbuildExe -> msbuildExe, String.Empty
 #endif
 
 let BuildSolution

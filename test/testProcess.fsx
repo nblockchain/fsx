@@ -26,7 +26,9 @@ let command =
     if Misc.GuessPlatform() = Misc.Platform.Windows then
         // HACK: we should call fsx here but then we would get this problem in
         // the tests: error FS0193: The process cannot access the file 'D:\a\fsx\fsx\test\bin\FSharp.Core.dll' because it is being used by another process.
-        Process.VsWhere "**\\fsi.exe"
+        match Process.VsWhere "**\\fsi.exe" with
+        | None -> failwith "fsi.exe not found"
+        | Some fsiExe -> fsiExe
     else
         // FIXME: extract PREFIX from build.config instead of assuming default
         "/usr/local/bin/fsx"

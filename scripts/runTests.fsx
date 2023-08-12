@@ -72,7 +72,10 @@ let fsharpCompilerCommand =
     "dotnet"
 #else
     match Misc.GuessPlatform() with
-    | Misc.Platform.Windows -> Process.VsWhere "**\\fsc.exe"
+    | Misc.Platform.Windows ->
+        match Process.VsWhere "**\\fsc.exe" with
+        | None -> failwith "fsc.exe not found"
+        | Some fscExe -> fscExe
     | _ -> "fsharpc"
 #endif
 
