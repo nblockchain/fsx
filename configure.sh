@@ -3,6 +3,7 @@ set -e
 
 if ! which make >/dev/null 2>&1; then
     echo "checking for make... not found"
+    echo "Error: please install 'make'" >> /dev/stderr
     exit 1
 else
     echo "checking for make... found"
@@ -15,6 +16,7 @@ if ! which dotnet >/dev/null 2>&1; then
 
     if ! which fsharpc >/dev/null 2>&1; then
         echo "checking for F# compiler... not found"
+        echo "Error: please install 'dotnet' (or legacy 'fsharpc')" >> /dev/stderr
         exit 1
     else
         echo "checking for F# compiler... found"
@@ -25,6 +27,7 @@ if ! which dotnet >/dev/null 2>&1; then
 
         if ! which xbuild >/dev/null 2>&1; then
             echo "checking for xbuild... not found"
+            echo "Error: please install 'dotnet' (or legacy 'msbuild' or 'xbuild')" >> /dev/stderr
             exit 1
         else
             echo "checking for xbuild... found"
@@ -40,6 +43,7 @@ if ! which dotnet >/dev/null 2>&1; then
     # for downloading nuget.exe
     if ! which curl >/dev/null 2>&1; then
         echo "checking for curl... not found"
+        echo "Error: please install 'curl'" >> /dev/stderr
         exit 1
     else
         echo "checking for curl... found"
