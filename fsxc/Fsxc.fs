@@ -710,6 +710,9 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
 """
 
             let initialProjectContents = initialProjectContents
