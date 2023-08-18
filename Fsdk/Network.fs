@@ -21,16 +21,8 @@ module Network =
         webClient.DownloadStringTaskAsync uri |> Async.AwaitTask
 #endif
 
-    let DownloadFile(uri: Uri) : Async<FileInfo> =
+    let DownloadFileTo (uri: Uri) (resultFile: FileInfo) : Async<FileInfo> =
         async {
-            let resultFile =
-                FileInfo(
-                    Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        Path.GetFileName uri.LocalPath
-                    )
-                )
-
             if resultFile.Exists then
                 Console.WriteLine(
                     "File '{0}' already downloaded",
@@ -116,15 +108,22 @@ module Network =
                 webClient.DownloadProgressChanged.Subscribe onProgress |> ignore
 
                 let task =
-                    webClient.DownloadFileTaskAsync(
-                        uri,
-                        Path.GetFileName uri.LocalPath
-                    )
+                    webClient.DownloadFileTaskAsync(uri, resultFile.FullName)
 
                 do! Async.AwaitTask task
                 return resultFile
 #endif
         }
+
+    let DownloadFile(uri: Uri) =
+        DownloadFileTo
+            uri
+            (FileInfo(
+                Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    Path.GetFileName uri.LocalPath
+                )
+            ))
 
     let DownloadFileWithWGet(uri: Uri) : FileInfo =
         let resultFile =
