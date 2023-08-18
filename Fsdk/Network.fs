@@ -421,38 +421,24 @@ module Network =
             GetPrivateIpOfThisServer()
         )
 
-#if !LEGACY_FRAMEWORK
-    let private nugetExeMsg =
-        "We warned you at compile time, NuGet.exe is not supported when using dotnet6 or higher (use 'dotnet restore' or 'dotnet nuget')"
-
-    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
-#endif
     let NugetDownloadUrl =
         "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
-#if !LEGACY_FRAMEWORK
-    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
-#endif
-    let DownloadNugetExe
-#if !LEGACY_FRAMEWORK
-        (_targetFile: FileInfo)
-        =
-        failwith nugetExeMsg
-#else
-        (targetFile: FileInfo)
-        =
+    let internal DownloadNugetExeInternal(targetFile: FileInfo) =
         if not targetFile.Directory.Exists then
             targetFile.Directory.Create()
 
-        if not targetFile.Exists then
-            use webClient = new WebClient()
-            webClient.DownloadFile(NugetDownloadUrl, targetFile.FullName)
-#endif
+        DownloadFileTo (Uri NugetDownloadUrl) targetFile
+        |> Async.RunSynchronously
+        |> ignore<FileInfo>
 
 #if !LEGACY_FRAMEWORK
     [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
 #endif
-    let CreateNugetCommand (nugetExe: FileInfo) (args: string) =
+    let DownloadNugetExe(targetFile: FileInfo) =
+        DownloadNugetExeInternal targetFile
+
+    let internal CreateNugetCommand (nugetExe: FileInfo) (args: string) =
         let platform = Misc.GuessPlatform()
 
         if platform = Misc.Platform.Windows then
@@ -466,24 +452,18 @@ module Network =
                 Arguments = sprintf "%s %s" nugetExe.FullName args
             }
 
-#if !LEGACY_FRAMEWORK
-    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
-#endif
-    let RunNugetCommand
-#if !LEGACY_FRAMEWORK
-        (_nugetExe: FileInfo)
-        (_command: string)
-        (_echo: Echo)
-        (_safe: bool)
-        : ProcessResult =
-        failwith nugetExeMsg
-#else
+    let internal RunNugetCommandInternal
         (nugetExe: FileInfo)
         (command: string)
         (echo: Echo)
         (safe: bool)
         : ProcessResult =
-        DownloadNugetExe nugetExe
+        DownloadNugetExeInternal nugetExe
+
+#if !LEGACY_FRAMEWORK
+        Console.Error.WriteLine
+            "WARNING: using nuget.exe is deprecated when using .NET6 or newer, consider using dotnet restore instead"
+#endif
 
         let cmd = CreateNugetCommand nugetExe command
         let proc = Process.Execute(cmd, echo)
@@ -492,21 +472,22 @@ module Network =
             proc.UnwrapDefault() |> ignore<string>
 
         proc
+
+#if !LEGACY_FRAMEWORK
+    [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
 #endif
+    let RunNugetCommand
+        (nugetExe: FileInfo)
+        (command: string)
+        (echo: Echo)
+        (safe: bool)
+        =
+        RunNugetCommandInternal nugetExe command echo safe
 
 #if !LEGACY_FRAMEWORK
     [<Obsolete "Rather call 'dotnet restore' or 'dotnet nuget'">]
 #endif
     let InstallNugetPackage
-#if !LEGACY_FRAMEWORK
-        (_nugetExe: FileInfo)
-        (_outputDirectory: DirectoryInfo)
-        (_pkgName: string)
-        (_maybeVersion: Option<string>)
-        (_echo: Echo)
-        : ProcessResult =
-        failwith nugetExeMsg
-#else
         (nugetExe: FileInfo)
         (outputDirectory: DirectoryInfo)
         (pkgName: string)
@@ -522,7 +503,7 @@ module Network =
             | None -> String.Empty
             | Some version -> sprintf "-Version %s" version
 
-        RunNugetCommand
+        RunNugetCommandInternal
             nugetExe
             (sprintf
                 "install %s %s -OutputDirectory %s"
@@ -531,7 +512,6 @@ module Network =
                 outputDirectory.FullName)
             echo
             true
-#endif
 
     let private SLACK_WEBHOOK_URI =
         "https://hooks.slack.com/services/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"
