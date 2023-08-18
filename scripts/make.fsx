@@ -212,24 +212,17 @@ let finalReleaseFolderPath = Path.Combine(releaseFolderPath, "net6.0")
 let finalReleaseFolderPath = releaseFolderPath
 #endif
 
-match maybeTarget with
-
-| None
-| Some "all" -> MakeAll() |> ignore
-
-| Some "release" ->
-    let buildConfig = BinaryConfig.Release
-    JustBuild buildConfig
-
-| Some "install" ->
+let Install(isReinstall: bool) =
     let buildConfig = BinaryConfig.Release
     JustBuild buildConfig
 
     if fsxInstallationDir.Exists then
-         // TODO
-        failwithf
-            "Existing installation found in '%s'. This script can't overwrite an existing installation yet"
-            fsxInstallationDir.FullName
+        if not isReinstall then
+            failwithf
+                "Existing installation found in '%s'. Consider using the target 'reinstall' instead of 'install'."
+                fsxInstallationDir.FullName
+        else
+            fsxInstallationDir.Delete true
 
     Console.WriteLine "Installing..."
     Console.WriteLine()
@@ -321,6 +314,19 @@ match maybeTarget with
     Console.WriteLine(
         sprintf "Successfully installed in %s" fsxInstallationDir.FullName
     )
+
+match maybeTarget with
+
+| None
+| Some "all" -> MakeAll() |> ignore
+
+| Some "release" ->
+    let buildConfig = BinaryConfig.Release
+    JustBuild buildConfig
+
+| Some "reinstall" -> Install true
+
+| Some "install" -> Install false
 
 | Some "check" ->
 
