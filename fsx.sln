@@ -44,12 +44,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C51659D1-9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FD764CDA-F880-4954-BA6C-1FC678D64988}"
 	ProjectSection(SolutionItems) = preProject
-                Tools\bump.fsx = Tools\bump.fsx
-                Tools\replace.fsx = Tools\replace.fsx
-                Tools\safeRun.fsx = Tools\safeRun.fsx
-                Tools\nugetPush.fsx = Tools\nugetPush.fsx
-                Tools\fsi.bat = Tools\fsi.bat
-                Tools\gitPush1by1.fsx = Tools\gitPush1by1.fsx
+		Tools\bump.fsx = Tools\bump.fsx
+		Tools\clean.fsx = Tools\clean.fsx
+		Tools\nugetPush.fsx = Tools\nugetPush.fsx
+		Tools\rename.fsx = Tools\rename.fsx
+		Tools\replace.fsx = Tools\replace.fsx
+		Tools\safeRun.fsx = Tools\safeRun.fsx
 	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fsdk.Tests", "Fsdk.Tests\Fsdk.Tests.fsproj", "{43BA7E25-975B-4DF9-B274-EEF6C806C1D0}"
