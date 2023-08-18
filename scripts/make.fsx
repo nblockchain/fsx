@@ -226,7 +226,10 @@ match maybeTarget with
     JustBuild buildConfig
 
     if fsxInstallationDir.Exists then
-        failwith "this script can't overwrite an existing installation yet" //TODO
+         // TODO
+        failwithf
+            "Existing installation found in '%s'. This script can't overwrite an existing installation yet"
+            fsxInstallationDir.FullName
 
     Console.WriteLine "Installing..."
     Console.WriteLine()
