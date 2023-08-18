@@ -710,6 +710,9 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
 """
 
             let initialProjectContents = initialProjectContents
@@ -766,7 +769,10 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
 
 #if !LEGACY_FRAMEWORK
-                sprintf "build %s -c %s" projectFile.FullName buildConfig
+                sprintf
+                    "build %s --configuration %s"
+                    projectFile.FullName
+                    buildConfig
 #else
                 let maybeDebugDefine =
                     if buildConfigIsDebug then
