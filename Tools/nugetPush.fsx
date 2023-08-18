@@ -157,7 +157,9 @@ let FindOrGenerateNugetPackages() : seq<FileInfo> =
                     {
                         Command = "dotnet"
                         Arguments =
-                            sprintf "pack -c Release -p:Version=%s" nugetVersion
+                            sprintf
+                                "pack --configuration Release -p:Version=%s"
+                                nugetVersion
                     }
 
                 Process
