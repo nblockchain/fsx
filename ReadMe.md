@@ -8,7 +8,7 @@ Unfinished tasks so far:
 * Revamp this ReadMe.md file to remove any mentions to Mono or the legacy .NET4.x framework.
 * Remove legacy framework support (so that build system can converge into .fsx files instead of autotools in Unix + fsx in Windows).
 * Make fsxc always enable warnAsError and fsx always disable it.
-* After doing the above, make both fsx and fsxc always enable warnAsError for the warning described in https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it
+* After doing the above, make both fsx and fsxc always enable warnAsError for the FS0020 warning described in https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it
 * Try creating VMs for CI that uninstall .NETCore/.NET6 completely (not just the dotnet executable removal hack), to make sure legacy framework build still works there.
 * Try creating VMs for CI that uninstall Mono/.NET4.x completey (e.g. for macOS see: https://github.com/mono/website/commit/490797429d4b92584394292ff69fbdc0eb002948 )
 

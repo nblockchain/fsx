@@ -1,8 +1,14 @@
 <Project>
+  <!-- TODO: check if we can use WarnOn instead of OtherFlags below:
+       (see https://github.com/dotnet/fsharp/pull/10885 ) -->
   <PropertyGroup>
     <OtherFlags>$(OtherFlags) --warnon:0193</OtherFlags>
     <OtherFlags>$(OtherFlags) --warnon:1182</OtherFlags>
     <OtherFlags>$(OtherFlags) --warnon:3218</OtherFlags>
+
+    <!-- not sure if this one below was already ON by default,
+         but it is so important that we add it just in case: -->
+    <OtherFlags>$(OtherFlags) --warnon:0020</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' != 'Debug' ">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
