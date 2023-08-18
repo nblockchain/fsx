@@ -331,3 +331,54 @@ let legacyDefineTest =
 
 Process.Execute(CreateCommand(legacyDefineTest, String.Empty), Echo.All)
 |> UnwrapDefault
+
+
+let contentOfScriptWithWarning =
+    """#!/usr/bin/env fsx
+
+let GiveMeBool() : bool =
+    false
+
+GiveMeBool()
+printf "hello"
+"""
+
+let warningTest = Path.Combine(TestDir.FullName, "testWarning.fsx") |> FileInfo
+File.WriteAllText(warningTest.FullName, contentOfScriptWithWarning)
+
+match Misc.GuessPlatform() with
+| Misc.Platform.Windows -> ()
+| _ ->
+    Process
+        .Execute(
+            {
+                Command = "chmod"
+                Arguments = sprintf "+x %s" warningTest.FullName
+            },
+            Echo.All
+        )
+        .UnwrapDefault()
+    |> ignore<string>
+
+let currentDir = Directory.GetCurrentDirectory()
+
+let possibleDirBuildProps =
+    Path.Combine(currentDir, "Directory.Build.props") |> FileInfo
+
+if possibleDirBuildProps.Exists then
+    // this file could alter the behaviour of fsxc when compiling, making the result of the test be misleading
+    possibleDirBuildProps.Delete()
+
+let warningAsErrorProc =
+    Process.Execute(CreateCommand(warningTest, String.Empty), Echo.All)
+
+match warningAsErrorProc.Result with
+| Error _ ->
+    // warning as error worked!
+    ()
+| _ ->
+    failwithf
+        "Should have failed to compile/execute %s because warnings as errors"
+        warningTest.Name
+
+warningTest.Delete()
