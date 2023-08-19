@@ -1,18 +1,5 @@
 # FSX
 
-## PUBLIC SERVICE ANNOUNCEMENT
-
-THIS REPO IS FACING A COMPLETE OVERHAUL/REVAMP/RENOVATION IN ORDER TO SUPPORT .NET6.
-
-Unfinished tasks so far:
-* Revamp this ReadMe.md file to remove any mentions to Mono or the legacy .NET4.x framework.
-* Remove legacy framework support (so that build system can converge into .fsx files instead of autotools in Unix + fsx in Windows).
-* Allow fsxc && fsx disable warnAsError (via --w flag? or --ignore-warnings).
-* After doing the above, make both fsx and fsxc always enable warnAsError for the FS0020 warning described in https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it
-* Try creating VMs for CI that uninstall .NETCore/.NET6 completely (not just the dotnet executable removal hack), to make sure legacy framework build still works there.
-* Try creating VMs for CI that uninstall Mono/.NET4.x completey (e.g. for macOS see: https://github.com/mono/website/commit/490797429d4b92584394292ff69fbdc0eb002948 )
-
-
 ## Motivation
 
 FSX is the ideal tool for people that use F# for their scripting needs.
@@ -34,17 +21,14 @@ FSX answers all of these latter questions with a categorical YES!
 The creation of FSX was inspired by several facts:
 * FSI is slower than the F# compiler (obviously).
 * There should be an easy and programatic way to compile an F# script without trying to run it (see https://stackoverflow.com/questions/33468298/f-how-can-i-compile-and-then-release-a-file-fsx ).
-* FSI (or the components required to run it) suffers from bugs frequently. Examples:
-  * If your version of Mono is too old (e.g. 4.6.2, the version that comes by default in Ubuntu 18.04), then it might crash with a segmentation fault. More info: https://bugzilla.xamarin.com/show_bug.cgi?id=42417 .
-  * If your version of Mono is not too old, but your version of F# is not too new (e.g. what happens exactly with Ubuntu 19.04), then FSI might not work at all. More info: https://github.com/fsharp/fsharp/issues/740 .
 * FSI stands for F Sharp **Interactive**, which means that it's not really suited for scripting but more for debugging:
   * It doesn't treat warnings as errors by default (you would need to remember to use the flag --warnaserror when calling fsharpi, which is not handy).
   * Because of the previous point above about warnings, it can even cancel the advantage of the promise of "statically-compiled scripts" altogether, because what should be a compilation error could be translated to a runtime error when using currified arguments, due to FSI defaulting to "interactive" needs. (More info: https://stackoverflow.com/questions/38202685/fsx-script-ignoring-a-function-call-when-i-add-a-parameter-to-it )
-  * AFAIK there's no way to use flags in a shebang (so can't use `#!/usr/bin/env fsharpi --warnaserror` as the flag gets ignored). Note that using fsx in shebang, however, will treat warnings as errors.
+  * AFAIK dotnet fsi doesn't have a `--warnaserror` flag. Note that fsx will treat warnings as errors by default.
   * It can consume a lot of memory, just compare it this way:
 
 ```
-echo $'#!/usr/bin/env fsharpi\nSystem.Threading.Thread.Sleep(999999999)'>testfsi.fsx
+echo $'#!/usr/bin/env -S dotnet fsi\nSystem.Threading.Thread.Sleep(999999999)'>testfsi.fsx
 echo $'#!/usr/bin/env fsx\nSystem.Threading.Thread.Sleep(999999999)'>testfsx.fsx
 chmod u+x test*.fsx
 nohup ./testfsi.fsx >/dev/null 2>&1 &
@@ -54,8 +38,10 @@ ps aux | grep testfs
 
 In my machine, the above prints:
 ```
-andres   23596 16.6  0.9 254504 148268 pts/24  Sl   03:38   0:01 cli /usr/lib/cli/fsharp/fsi.exe --exename:fsharpi ./testfsi.fsx
-andres   23600  0.0  0.0 129332 15936 pts/24   Sl   03:38   0:00 mono bin/./testfsx.fsx.exe
+knocte@Ubuntu22:~/Documents/fsx$ ps aux | grep testfs
+knocte     22388  0.0  2.2 2921872 44288 pts/1   Sl   12:33   0:00 dotnet fsi ./testfsi.fsx
+knocte     22398  0.6  7.5 2934240 150948 pts/1  Sl   12:33   0:01 /usr/lib/dotnet/dotnet exec /usr/lib/dotnet/sdk/6.0.121/FSharp/fsi.dll ./testfsi.fsx
+knocte     22409  0.0  1.0 2741472 20352 pts/1   Sl   12:33   0:00 dotnet ./bin/testfsx.fsx.dll
 ```
 
 Which is a huge difference in memory footprint.
@@ -103,3 +89,10 @@ An example of how to do this with GitHub Actions, is this YML fragment that you 
         find . -type f -name "*.fsx" | xargs -t -I {} dotnet fsxc {}
 ```
 
+
+### Roadmap
+
+* Remove legacy framework support (so that build system can converge into .fsx files instead of autotools in Unix + fsx in Windows).
+* Allow fsxc & fsx disable warnAsError (via -w flag? or --ignore-warnings).
+* Try creating VMs for CI that uninstall .NETCore/.NET6 completely (not just the dotnet executable removal hack), to make sure legacy framework build still works there.
+* Try creating VMs for CI that uninstall Mono/.NET4.x completey (e.g. for macOS see: https://github.com/mono/website/commit/490797429d4b92584394292ff69fbdc0eb002948 )
