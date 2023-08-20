@@ -104,43 +104,39 @@ let SplitArgsIntoFsxcArgsAndUserArgs() : seq<string> * string * seq<string> =
     |> List.ofArray
     |> userArgsInternal FsxFsxNotFoundYet List.empty List.empty
 
-let InjectBinSubfolderInPath(userScript: FileInfo) =
-    if not(userScript.FullName.EndsWith ".fsx") then
-        failwithf
-            "Assertion failed: %s should end with .fsx"
-            userScript.FullName
+let InjectBinSubfolderInPath(userScriptPath: string) =
+    if not(userScriptPath.EndsWith ".fsx") then
+        failwithf "Assertion failed: %s should end with .fsx" userScriptPath
 
     let binPath =
-        match userScript.FullName.LastIndexOf Path.DirectorySeparatorChar with
+        match userScriptPath.LastIndexOf Path.DirectorySeparatorChar with
         | index when index >= 0 ->
-            let path = userScript.FullName.Substring(0, index)
+            let path = userScriptPath.Substring(0, index)
 
             sprintf
                 "%s%sbin%s%s.exe"
                 path
                 (Path.DirectorySeparatorChar.ToString())
                 (Path.DirectorySeparatorChar.ToString())
-                (Path.GetFileName userScript.FullName)
+                (Path.GetFileName userScriptPath)
         | _ ->
             sprintf
                 "bin%s%s.exe"
                 (Path.DirectorySeparatorChar.ToString())
-                (Path.GetFileName userScript.FullName)
+                (Path.GetFileName userScriptPath)
 
     FileInfo binPath
 
-let fsxcArgs, userScript, userArgs = SplitArgsIntoFsxcArgsAndUserArgs()
-
-let userScriptFile = FileInfo userScript
+let fsxcArgs, userScriptPath, userArgs = SplitArgsIntoFsxcArgsAndUserArgs()
 
 let fsxcMainArguments =
-    Seq.append fsxcArgs (Seq.singleton userScript) |> Seq.toArray
+    Seq.append fsxcArgs (Seq.singleton userScriptPath) |> Seq.toArray
 
 Program.Main fsxcMainArguments |> ignore
 
 let finalLaunch =
     {
-        Command = (InjectBinSubfolderInPath userScriptFile).FullName
+        Command = (InjectBinSubfolderInPath userScriptPath).FullName
         Arguments = String.Join(" ", userArgs)
     }
 
