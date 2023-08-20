@@ -93,6 +93,33 @@ let UnwrapDefault(proc: ProcessResult) =
     proc.UnwrapDefault() |> ignore<string>
 #endif
 
+let fsxWorkingCommandInUnixAfterBeingInstalled =
+    {
+        Command = "/usr/bin/env"
+        Arguments = "fsx"
+    }
+
+let versionCommand =
+    let versionFlag = "--version"
+
+    match Misc.GuessPlatform() with
+    | Misc.Platform.Windows ->
+        {
+            Command = GetFsxWindowsLauncher().FullName
+            Arguments = versionFlag
+        }
+    | _ ->
+        {
+            Command = fsxWorkingCommandInUnixAfterBeingInstalled.Command
+            Arguments =
+                sprintf
+                    "%s %s"
+                    fsxWorkingCommandInUnixAfterBeingInstalled.Arguments
+                    versionFlag
+        }
+
+Process.Execute(versionCommand, Echo.All) |> UnwrapDefault
+
 let basicTest = Path.Combine(TestDir.FullName, "test.fsx") |> FileInfo
 
 Process.Execute(CreateCommand(basicTest, String.Empty), Echo.All)
@@ -334,7 +361,8 @@ Process.Execute(CreateCommand(legacyDefineTest, String.Empty), Echo.All)
 
 
 let contentOfScriptWithWarning =
-    """#!/usr/bin/env fsx
+    sprintf
+        """#!%s %s
 
 let GiveMeBool() : bool =
     false
@@ -342,6 +370,8 @@ let GiveMeBool() : bool =
 GiveMeBool()
 printf "hello"
 """
+        fsxWorkingCommandInUnixAfterBeingInstalled.Command
+        fsxWorkingCommandInUnixAfterBeingInstalled.Arguments
 
 let warningTest = Path.Combine(TestDir.FullName, "testWarning.fsx") |> FileInfo
 File.WriteAllText(warningTest.FullName, contentOfScriptWithWarning)
