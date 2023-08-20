@@ -137,10 +137,10 @@ module Program =
 
         if parsedArgs.Flags.Contains Flag.Version then
             let exitCode =
-                if parsedArgs.Flags.Length > 1 then
+                if parsedArgs.Flags.Length > 1 || parsedArgs.MaybeScript.IsSome then
                     Console.Error.WriteLine(
                         sprintf
-                            "WARNING: flag `--%s` cannot be used along other flags, so they will be ignored"
+                            "WARNING: flag `--%s` cannot be used along other flags/params, so they will be ignored"
                             (Flag.Version.ToString().ToLower())
                     )
 

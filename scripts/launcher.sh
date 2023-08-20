@@ -47,9 +47,11 @@ done
 $RUNNER $FSXC_PATH $FIRST_ARGS
 
 if [ -z "$FSX_SCRIPT" ]; then
-    echo "Compilation of anything that is not an .fsx should have been rejected by fsx"
-    echo "and shouldn't have reached this point. Please report this bug."
-    exit 3
+    versionFlag="--version"
+    case "$FIRST_ARGS" in
+    *$versionFlag*) ;;
+    *             ) echo "Compilation of anything that is not an .fsx should have been rejected by fsx and shouldn't have reached this point. Please report this bug" && exit 3;;
+    esac
 fi
 
 TARGET_DIR=$(dirname -- "$FSX_SCRIPT")
