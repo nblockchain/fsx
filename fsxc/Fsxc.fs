@@ -11,6 +11,7 @@ type Flag =
     | Force
     | OnlyCheck
     | Verbose
+    | Version
 
 type ProvidedCommandLineArguments =
     {
@@ -56,6 +57,15 @@ module Program =
              tmpNuget)
 #endif
 
+    let PrintVersion() =
+        Console.WriteLine(
+            Reflection
+                .Assembly
+                .GetExecutingAssembly()
+                .GetName()
+                .Version.ToString()
+        )
+
     let PrintUsage() =
         Console.WriteLine()
         Console.WriteLine "Usage: dotnet fsxc [OPTION] yourscript.fsx"
@@ -87,6 +97,8 @@ module Program =
                     Some OnlyCheck
                 elif arg = "-v" || arg = "--verbose" then
                     Some Verbose
+                elif arg = "--version" then
+                    Some Version
                 elif arg.StartsWith "-" then
                     failwithf "Flag not recognized: %s" arg
                 else
@@ -123,8 +135,25 @@ module Program =
                     MaybeScript = None
                 }
 
+        if parsedArgs.Flags.Contains Flag.Version then
+            let exitCode =
+                if parsedArgs.Flags.Length > 1 then
+                    Console.Error.WriteLine(
+                        sprintf
+                            "WARNING: flag `--%s` cannot be used along other flags, so they will be ignored"
+                            (Flag.Version.ToString().ToLower())
+                    )
+
+                    1
+                else
+                    0
+
+            PrintVersion()
+            Environment.Exit exitCode
+
         match parsedArgs.MaybeScript with
-        | None -> raise NoScriptProvided
+        | None ->
+            raise NoScriptProvided
         | Some scriptFileName ->
             {
                 Flags = parsedArgs.Flags
