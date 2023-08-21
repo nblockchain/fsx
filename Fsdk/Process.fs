@@ -167,6 +167,8 @@ module Process =
                 innerException
             )
 
+    // TODO: explore if this complex implementation can be replaced with https://www.nuget.org/packages/Owl.cli
+    //       (maybe only after https://github.com/tatsuya-midorikawa/Owl.cli/issues/3 is addressed)
     let Execute(procDetails: ProcessDetails, echo: Echo) : ProcessResult =
 
         // I know, this shit below is mutable, but it's a consequence of dealing with .NET's Process class' events?
