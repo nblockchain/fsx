@@ -141,7 +141,7 @@ let fsxcMainArguments =
         Seq.append fsxcArgs (Seq.singleton userScriptPath) |> Seq.toArray
     | None -> fsxcArgs |> Seq.toArray
 
-Program.Main fsxcMainArguments |> ignore
+Program.OuterMain fsxcMainArguments |> ignore
 
 match maybeUserScriptPath with
 | None ->
