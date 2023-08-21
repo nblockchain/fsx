@@ -24,19 +24,25 @@ let assemblyExecutableExtension =
 #endif
 
 
-let SplitArgsIntoFsxcArgsAndUserArgs() : seq<string> * string * seq<string> =
+let SplitArgsIntoFsxcArgsAndUserArgs
+    ()
+    : seq<string> * Option<string> * seq<string> =
     let rec userArgsInternal
         (fsxScriptDiscoverySoFar: FsxScriptDiscoveryInfo)
         (fsxcArgsSoFar: List<string>)
         (userArgsSoFar: List<string>)
         (nextArgs: List<string>)
-        : seq<string> * string * seq<string> =
+        : seq<string> * Option<string> * seq<string> =
         match nextArgs, fsxScriptDiscoverySoFar with
         | [], FsxFsxFoundAndFsxScriptNameSupplied userScriptName ->
             let finalFscxArgs = fsxcArgsSoFar |> List.rev |> Seq.ofList
             let finalUserArgs = userArgsSoFar |> List.rev |> Seq.ofList
-            finalFscxArgs, userScriptName, finalUserArgs
-        | [], _ ->
+            finalFscxArgs, Some userScriptName, finalUserArgs
+        | [], FsxFsxFoundButNoFsxScriptFoundYet ->
+            let finalFscxArgs = fsxcArgsSoFar |> List.rev |> Seq.ofList
+            let finalUserArgs = userArgsSoFar |> List.rev |> Seq.ofList
+            finalFscxArgs, None, finalUserArgs
+        | [], FsxFsxNotFoundYet ->
             failwith(sprintf "fsx.%s not found" assemblyExecutableExtension)
         | head :: tail, fsxScriptDiscoverySoFar ->
             match fsxScriptDiscoverySoFar, head with
@@ -127,16 +133,29 @@ let InjectBinSubfolderInPath(userScriptPath: string) =
 
     FileInfo binPath
 
-let fsxcArgs, userScriptPath, userArgs = SplitArgsIntoFsxcArgsAndUserArgs()
+let fsxcArgs, maybeUserScriptPath, userArgs = SplitArgsIntoFsxcArgsAndUserArgs()
 
 let fsxcMainArguments =
-    Seq.append fsxcArgs (Seq.singleton userScriptPath) |> Seq.toArray
+    match maybeUserScriptPath with
+    | Some userScriptPath ->
+        Seq.append fsxcArgs (Seq.singleton userScriptPath) |> Seq.toArray
+    | None -> fsxcArgs |> Seq.toArray
 
 Program.Main fsxcMainArguments |> ignore
 
+match maybeUserScriptPath with
+| None ->
+    failwith(
+        "Compilation of anything that is not an .fsx should have been rejected by fsx"
+        + " and shouldn't have reached this point. Please report this bug."
+    )
+| _ -> ()
+
 let finalLaunch =
     {
-        Command = (InjectBinSubfolderInPath userScriptPath).FullName
+        Command =
+            (InjectBinSubfolderInPath maybeUserScriptPath.Value)
+                .FullName
         Arguments = String.Join(" ", userArgs)
     }
 

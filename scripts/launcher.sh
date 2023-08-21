@@ -46,10 +46,11 @@ done
 
 $RUNNER $FSXC_PATH $FIRST_ARGS
 
+# if user didn't pass a .fsx script
 if [ -z "$FSX_SCRIPT" ]; then
-    echo "Compilation of anything that is not an .fsx should have been rejected by fsx"
-    echo "and shouldn't have reached this point. Please report this bug."
-    exit 3
+    # either a) fsxc already errored w/ exitCode<>0 <- but if that was the case, `set -e` would cause prev call to abort this script, so it'd not reach here
+    # or b) user gave valid flag that exited with exitCode=0 even without .fsx (e.g. `--help`) <- this case here, so let's exit:
+    exit 0
 fi
 
 TARGET_DIR=$(dirname -- "$FSX_SCRIPT")
