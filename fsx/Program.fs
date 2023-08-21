@@ -160,10 +160,11 @@ let finalLaunch =
     }
 
 let finalProc = Process.Execute(finalLaunch, Echo.OutputOnly)
-// FIXME: maybe using a .fsx file as a launcher in Windows wasn't the best idea after all, because it means
-// that, on Windows, fsx will run fsharpi while the compiled user script is running, which means that the
-// memory gains of using fsx instead of fsharpi (as explained in the ReadMe.md file) don't exist for this OS
-// (while in Unix, i.e. Linux and macOS, they exist because we use a bash script which uses 'exec')
+// FIXME: maybe using an F# file as a launcher wasn't the best idea after all, because it means that, on
+// Windows (and in Unix when installed via 'dotnet tool install fsx'), fsx will be running 'dotnet fsi' (or 'fsharpi')
+// while the compiled user script is running, which means that the memory gains of using fsx instead of fsharpi
+// (as explained in the ReadMe.md file) don't exist for this OS (while in Unix, i.e. Linux and macOS, when the
+// tool is not installed via `dotnet tool install fsx`, they exist because we use a bash script which uses 'exec')
 match finalProc.Result with
 | Error(exitCode, _errOutput) -> Environment.Exit exitCode
 | _ -> Environment.Exit 0
