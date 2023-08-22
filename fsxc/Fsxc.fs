@@ -58,7 +58,18 @@ module Program =
 
     let PrintUsage() =
         Console.WriteLine()
-        Console.WriteLine "Usage: dotnet fsxc [OPTION] yourscript.fsx"
+
+        let dotnetToolPrefix =
+#if !LEGACY_FRAMEWORK
+            "dotnet "
+#else
+            String.Empty
+#endif
+
+        Console.WriteLine(
+            sprintf "Usage: %sfsxc [OPTION] yourscript.fsx" dotnetToolPrefix
+        )
+
         Console.WriteLine()
         Console.WriteLine "Options"
 
