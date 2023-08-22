@@ -94,6 +94,13 @@ module Misc =
                     args
 #endif
 
+    type ArgsParsed =
+        | OnlyFlags of seq<string>
+        | BothFlags of seq<string>*string*seq<string>
+
+    let ParseArgs (_args: array<string>): ArgsParsed =
+        failwith "NIE"
+
     let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
 #if !LEGACY_FRAMEWORK

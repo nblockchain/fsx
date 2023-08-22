@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="ArgsParsing.fs" />
     <Compile Include="FSharpUtil.fs" />
     <Compile Include="AsyncExtensions.fs" />
     <Compile Include="AsyncCancellation.fs" />
