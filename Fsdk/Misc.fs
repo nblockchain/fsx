@@ -96,10 +96,28 @@ module Misc =
 
     type ArgsParsed =
         | OnlyFlags of seq<string>
-        | BothFlags of seq<string>*string*seq<string>
+        | BothFlags of seq<string> * string * seq<string>
 
-    let ParseArgs (_args: array<string>): ArgsParsed =
-        failwith "NIE"
+    let ParseArgs(args: array<string>) : ArgsParsed =
+        let rec innerFunc (theArgs: List<string>) currentCount =
+            match theArgs with
+            | [] -> currentCount
+            | head :: tail ->
+                if head.StartsWith "--" || head.StartsWith "-" then
+                    innerFunc tail (currentCount + 1)
+                else
+                    currentCount
+
+        let revArgs = Array.rev args |> List.ofArray
+        let count = innerFunc revArgs 0
+
+        let dummyList =
+            [
+                for _dummyItem in 0 .. (count - 1) -> String.Empty
+            ]
+            |> Seq.ofList
+
+        ArgsParsed.OnlyFlags dummyList
 
     let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
