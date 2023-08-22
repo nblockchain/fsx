@@ -233,13 +233,6 @@ let Install(isReinstall: bool) =
         List.Empty
     )
 
-    let fsiBat = Path.Combine(ToolsDir.FullName, "fsi.bat") |> FileInfo
-
-    File.Copy(
-        fsiBat.FullName,
-        Path.Combine(fsxInstallationDir.FullName, fsiBat.Name)
-    )
-
     let fsxLauncher =
         Path.Combine(
             finalReleaseFolderPath,
