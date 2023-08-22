@@ -188,12 +188,17 @@ let fsxInstallationDir =
 
 #if !LEGACY_FRAMEWORK
 let fsxBat = Path.Combine(ScriptsDir.FullName, "fsx.bat") |> FileInfo
-#else
-let fsxBat = Path.Combine(ScriptsDir.FullName, "fsx-legacy.bat") |> FileInfo
-#endif
 
 let fsxBatDestination =
     Path.Combine(fsxInstallationDir.FullName, "fsx.bat") |> FileInfo
+
+let fsxInstalledExecutable = fsxBatDestination
+#else
+let fsxExeDestination =
+    Path.Combine(fsxInstallationDir.FullName, "fsx.exe") |> FileInfo
+
+let fsxInstalledExecutable = fsxExeDestination
+#endif
 
 let maybeTarget = GatherTarget(Misc.FsxOnlyArguments())
 
@@ -253,9 +258,9 @@ let Install(isReinstall: bool) =
         Path.Combine(finalReleaseFolderPath, "fsx.runtimeconfig.json"),
         Path.Combine(fsxInstallationDir.FullName, "fsx.runtimeconfig.json")
     )
-#endif
 
     File.Copy(fsxBat.FullName, fsxBatDestination.FullName)
+#endif
 
     let fsdkInstallDir =
         Path.Combine(fsxInstallationDir.FullName, "Fsdk") |> DirectoryInfo
@@ -324,14 +329,14 @@ match maybeTarget with
 | Some "check" ->
 
     // FIXME: contributor should be able to run 'make check' before 'make install'
-    if not fsxBatDestination.Exists then
+    if not fsxInstalledExecutable.Exists then
         Console.WriteLine "install first"
         Environment.Exit 1
 
     let testProcess =
         Process.Execute(
             {
-                Command = fsxBatDestination.FullName
+                Command = fsxInstalledExecutable.FullName
                 Arguments = Path.Combine(ScriptsDir.FullName, "runTests.fsx")
             },
             Echo.All

@@ -31,7 +31,11 @@ let GetFsxWindowsLauncher() =
     let fsxWinInstallationDir =
         Path.Combine(programFiles.FullName, "fsx") |> DirectoryInfo
 
+#if !LEGACY_FRAMEWORK
     Path.Combine(fsxWinInstallationDir.FullName, "fsx.bat") |> FileInfo
+#else
+    Path.Combine(fsxWinInstallationDir.FullName, "fsx.exe") |> FileInfo
+#endif
 
 let CreateCommand(executable: FileInfo, args: string) =
     let platform = Misc.GuessPlatform()
