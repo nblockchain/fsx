@@ -95,8 +95,10 @@ module Misc =
 #endif
 
     type ArgsParsed =
+        | NoArgsWhatsoever
+        | ArgWithoutFlags of string
         | OnlyFlags of List<string>
-        | BothFlags of List<string> * string * List<string>
+        | ArgWithFlags of List<string> * string * List<string>
 
     let ParseArgs
         (args: array<string>)
@@ -114,10 +116,18 @@ module Misc =
                 elif head.StartsWith "--" || head.StartsWith "-" then
                     let newAcc =
                         match acc with
+                        | NoArgsWhatsoever ->
+                            ArgsParsed.OnlyFlags(head :: List.Empty)
+                        | ArgWithoutFlags arg ->
+                            ArgsParsed.ArgWithFlags(
+                                head :: List.Empty,
+                                arg,
+                                List.Empty
+                            )
                         | ArgsParsed.OnlyFlags flagsSoFar ->
                             ArgsParsed.OnlyFlags(head :: flagsSoFar)
-                        | ArgsParsed.BothFlags(preFlags, arg, postFlags) ->
-                            ArgsParsed.BothFlags(
+                        | ArgsParsed.ArgWithFlags(preFlags, arg, postFlags) ->
+                            ArgsParsed.ArgWithFlags(
                                 head :: preFlags,
                                 arg,
                                 postFlags
@@ -126,15 +136,20 @@ module Misc =
                     innerFunc tail newAcc
                 else
                     match acc with
+                    | NoArgsWhatsoever -> innerFunc tail (ArgWithoutFlags head)
                     | ArgsParsed.OnlyFlags flagsSoFar ->
                         let newAcc =
-                            ArgsParsed.BothFlags(List.Empty, head, flagsSoFar)
+                            ArgsParsed.ArgWithFlags(
+                                List.Empty,
+                                head,
+                                flagsSoFar
+                            )
 
                         innerFunc tail newAcc
                     | bothFlags -> bothFlags
 
         let revArgs = Array.rev args |> List.ofArray
-        let parsedArgs = innerFunc revArgs (ArgsParsed.OnlyFlags List.Empty)
+        let parsedArgs = innerFunc revArgs NoArgsWhatsoever
 
         parsedArgs
 

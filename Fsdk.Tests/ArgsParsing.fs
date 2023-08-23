@@ -8,6 +8,27 @@ open Fsdk
 type ArgsParsing() =
 
     [<Test>]
+    member __.``no args``() =
+        let commandLine = "someProgram".Split(' ')
+
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
+
+        match res with
+        | Misc.ArgsParsed.NoArgsWhatsoever -> Assert.Pass()
+        | _ -> Assert.Fail "res was not ArgsParsing.NoArgsWhatsoever subtype"
+
+    [<Test>]
+    member __.``single args``() =
+        let commandLine = "someProgram someArg".Split(' ')
+
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
+
+        match res with
+        | Misc.ArgsParsed.ArgWithoutFlags arg ->
+            Assert.That(arg, Is.EqualTo "someArg")
+        | _ -> Assert.Fail "res was not ArgsParsing.ArgWithoutFlags subtype"
+
+    [<Test>]
     member __.``simplest flags usage``() =
         let commandLine = "someProgram --someLongFlag1 -f2".Split(' ')
 
@@ -29,7 +50,7 @@ type ArgsParsing() =
         let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
 
         match res with
-        | Misc.ArgsParsed.BothFlags(preFlags, arg, postFlags) ->
+        | Misc.ArgsParsed.ArgWithFlags(preFlags, arg, postFlags) ->
             Assert.That(arg, Is.EqualTo "someNonFlagArg")
             Assert.That(Seq.length preFlags, Is.EqualTo 2)
             Assert.That(Seq.item 0 preFlags, Is.EqualTo "--someLongPreFlag1")
