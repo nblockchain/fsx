@@ -10,7 +10,9 @@ type ArgsParsing() =
     [<Test>]
     member __.``simplest flags usage``() =
         let commandLine = "someProgram --someLongFlag1 -f2".Split(' ')
-        let res: Misc.ArgsParsed = Misc.ParseArgs commandLine
+
+        let res: Misc.ArgsParsed =
+            Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
 
         match res with
         | Misc.ArgsParsed.OnlyFlags flags ->
@@ -25,7 +27,7 @@ type ArgsParsing() =
             "someProgram --someLongPreFlag1 -f2 someNonFlagArg --someLongPostFlag3 -f4"
                 .Split(' ')
 
-        let res = Misc.ParseArgs commandLine
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
 
         match res with
         | Misc.ArgsParsed.BothFlags(preFlags, arg, postFlags) ->

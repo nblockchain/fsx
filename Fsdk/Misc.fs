@@ -98,20 +98,47 @@ module Misc =
         | OnlyFlags of seq<string>
         | BothFlags of seq<string> * string * seq<string>
 
-    let ParseArgs(args: array<string>) : ArgsParsed =
-        let rec innerFunc (theArgs: List<string>) acc =
+    let ParseArgs
+        (args: array<string>)
+        (predicateToRecognizeProgram: string -> bool)
+        : ArgsParsed =
+        let rec innerFunc
+            (theArgs: List<string>)
+            (acc: ArgsParsed)
+            : ArgsParsed =
             match theArgs with
             | [] -> acc
             | head :: tail ->
-                if head.StartsWith "--" || head.StartsWith "-" then
-                    innerFunc tail (head :: acc)
-                else
+                if predicateToRecognizeProgram head then
                     acc
+                elif head.StartsWith "--" || head.StartsWith "-" then
+                    let newAcc =
+                        match acc with
+                        | ArgsParsed.OnlyFlags flagsSoFar ->
+                            ArgsParsed.OnlyFlags(
+                                head :: (flagsSoFar |> List.ofSeq) |> Seq.ofList
+                            )
+                        | ArgsParsed.BothFlags(preFlags, arg, postFlags) ->
+                            ArgsParsed.BothFlags(
+                                (head :: (preFlags |> List.ofSeq) |> Seq.ofList),
+                                arg,
+                                postFlags
+                            )
+
+                    innerFunc tail newAcc
+                else
+                    match acc with
+                    | ArgsParsed.OnlyFlags flagsSoFar ->
+                        let newAcc =
+                            ArgsParsed.BothFlags(Seq.empty, head, flagsSoFar)
+
+                        innerFunc tail newAcc
+                    | bothFlags -> bothFlags
 
         let revArgs = Array.rev args |> List.ofArray
-        let args = innerFunc revArgs List.Empty
+        let parsedArgs = innerFunc revArgs (ArgsParsed.OnlyFlags List.Empty)
 
-        ArgsParsed.OnlyFlags args
+        parsedArgs
 
     let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
