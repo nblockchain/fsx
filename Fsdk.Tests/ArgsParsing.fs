@@ -18,15 +18,30 @@ type ArgsParsing() =
         | _ -> Assert.Fail "res was not ArgsParsing.NoArgsWhatsoever subtype"
 
     [<Test>]
-    member __.``single args``() =
+    member __.``single arg``() =
         let commandLine = "someProgram someArg".Split(' ')
 
         let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
 
         match res with
-        | Misc.ArgsParsed.ArgWithoutFlags arg ->
+        | Misc.ArgsParsed.ArgsWithoutFlags args ->
+            Assert.That(args.Length, Is.EqualTo 1)
+            let arg = args.[0]
             Assert.That(arg, Is.EqualTo "someArg")
-        | _ -> Assert.Fail "res was not ArgsParsing.ArgWithoutFlags subtype"
+        | _ -> Assert.Fail "res was not ArgsParsing.ArgsWithoutFlags subtype"
+
+    [<Test>]
+    member __.``only args``() =
+        let commandLine = "someProgram someArg1 someArg2".Split(' ')
+
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
+
+        match res with
+        | Misc.ArgsParsed.ArgsWithoutFlags args ->
+            Assert.That(args.Length, Is.EqualTo 2)
+            Assert.That(args.[0], Is.EqualTo "someArg1")
+            Assert.That(args.[1], Is.EqualTo "someArg2")
+        | _ -> Assert.Fail "res was not ArgsParsing.ArgsWithoutFlags subtype"
 
     [<Test>]
     member __.``simplest flags usage``() =
@@ -50,7 +65,9 @@ type ArgsParsing() =
         let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
 
         match res with
-        | Misc.ArgsParsed.ArgWithFlags(preFlags, arg, postFlags) ->
+        | Misc.ArgsParsed.ArgsWithFlags(preFlags, args, postFlags) ->
+            Assert.That(args.Length, Is.EqualTo 1)
+            let arg = args.[0]
             Assert.That(arg, Is.EqualTo "someNonFlagArg")
             Assert.That(Seq.length preFlags, Is.EqualTo 2)
             Assert.That(Seq.item 0 preFlags, Is.EqualTo "--someLongPreFlag1")
@@ -72,6 +89,22 @@ type ArgsParsing() =
                 )
 
         match res with
-        | Misc.ArgsParsed.ErrorDetectingProgram -> Assert.Pass()
+        | Misc.ArgsParsed.ErrorDetectingProgram -> ()
         | _ ->
-            Assert.Fail "res was not ArgsParsing.ErrorDetectingProgram subtype"
+            Assert.Fail "res1 was not ArgsParsing.ErrorDetectingProgram subtype"
+
+        let commandLine =
+            "someProgramThatDoesNotMatchPredicate someArg"
+                .Split(' ')
+
+        let res =
+            Misc.ParseArgs
+                commandLine
+                (fun arg ->
+                    arg = "someProgramArgThatDoesNotMatchProgramUsedInCommandLine"
+                )
+
+        match res with
+        | Misc.ArgsParsed.ErrorDetectingProgram -> ()
+        | _ ->
+            Assert.Fail "res2 was not ArgsParsing.ErrorDetectingProgram subtype"

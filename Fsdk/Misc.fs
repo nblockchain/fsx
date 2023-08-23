@@ -97,9 +97,9 @@ module Misc =
     type ArgsParsed =
         | ErrorDetectingProgram
         | NoArgsWhatsoever
-        | ArgWithoutFlags of string
+        | ArgsWithoutFlags of List<string>
         | OnlyFlags of List<string>
-        | ArgWithFlags of List<string> * string * List<string>
+        | ArgsWithFlags of List<string> * List<string> * List<string>
 
     let ParseArgs
         (args: array<string>)
@@ -121,16 +121,16 @@ module Misc =
                             failwith "Error case should not be used as acc"
                         | NoArgsWhatsoever ->
                             ArgsParsed.OnlyFlags(head :: List.Empty)
-                        | ArgWithoutFlags arg ->
-                            ArgsParsed.ArgWithFlags(
+                        | ArgsWithoutFlags arg ->
+                            ArgsParsed.ArgsWithFlags(
                                 head :: List.Empty,
                                 arg,
                                 List.Empty
                             )
                         | ArgsParsed.OnlyFlags flagsSoFar ->
                             ArgsParsed.OnlyFlags(head :: flagsSoFar)
-                        | ArgsParsed.ArgWithFlags(preFlags, arg, postFlags) ->
-                            ArgsParsed.ArgWithFlags(
+                        | ArgsParsed.ArgsWithFlags(preFlags, arg, postFlags) ->
+                            ArgsParsed.ArgsWithFlags(
                                 head :: preFlags,
                                 arg,
                                 postFlags
@@ -141,12 +141,15 @@ module Misc =
                     match acc with
                     | ErrorDetectingProgram ->
                         failwith "Error case should not be used as acc"
-                    | NoArgsWhatsoever -> innerFunc tail (ArgWithoutFlags head)
+                    | ArgsWithoutFlags args ->
+                        innerFunc tail (ArgsWithoutFlags(head :: args))
+                    | NoArgsWhatsoever ->
+                        innerFunc tail (ArgsWithoutFlags(head :: List.Empty))
                     | ArgsParsed.OnlyFlags flagsSoFar ->
                         let newAcc =
-                            ArgsParsed.ArgWithFlags(
+                            ArgsParsed.ArgsWithFlags(
                                 List.Empty,
-                                head,
+                                head :: List.Empty,
                                 flagsSoFar
                             )
 
