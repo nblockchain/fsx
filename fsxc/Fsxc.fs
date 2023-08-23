@@ -61,10 +61,10 @@ module Program =
 #endif
 
     let PrintUsage(invocationType: ProgramInvocationType) =
-        let programInvocation =
+        let programInvocation, scriptOptions =
             match invocationType with
-            | FsxcPureInvocation -> "fsxc"
-            | FsxLauncherScript -> "fsx"
+            | FsxcPureInvocation -> "fsxc", String.Empty
+            | FsxLauncherScript -> "fsx", " [yourScriptOptions]"
 
         Console.WriteLine()
 
@@ -77,9 +77,10 @@ module Program =
 
         Console.WriteLine(
             sprintf
-                "Usage: %s%s [OPTION] yourScript.fsx"
+                "Usage: %s%s [OPTION] yourScript.fsx%s"
                 dotnetToolPrefix
                 programInvocation
+                scriptOptions
         )
 
         Console.WriteLine()
