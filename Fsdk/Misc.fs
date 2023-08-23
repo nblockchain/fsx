@@ -39,17 +39,32 @@ module Misc =
 #if LEGACY_FRAMEWORK
     // this below is crazy but is to avoid # char being ignored in Uri.LocalPath property, see https://stackoverflow.com/a/41203269
     let private currentExeUri =
-        Uri(Uri.EscapeUriString(Assembly.GetEntryAssembly().CodeBase))
+        let entryAssembly = Assembly.GetEntryAssembly()
+
+        if isNull entryAssembly then
+            None
+        else
+            Uri(Uri.EscapeUriString(entryAssembly.CodeBase)) |> Some
 
     let private currentExe =
-        FileInfo(
-            sprintf
-                "%s%s"
-                (Uri.UnescapeDataString(currentExeUri.PathAndQuery))
-                (Uri.UnescapeDataString(currentExeUri.Fragment))
-        )
+        match currentExeUri with
+        | None -> None
+        | Some currentExeUri ->
+            FileInfo(
+                sprintf
+                    "%s%s"
+                    (Uri.UnescapeDataString(currentExeUri.PathAndQuery))
+                    (Uri.UnescapeDataString(currentExeUri.Fragment))
+            )
+            |> Some
 
     let rec private FsxOnlyArgumentsInternalFsx(args: list<string>) =
+        let currentExe =
+            if currentExe.IsNone then
+                failwith "Could not get EntryAssembly"
+            else
+                currentExe.Value
+
         match args with
         | [] -> []
         | head :: tail ->
@@ -96,6 +111,12 @@ module Misc =
             // likely running a fsxc-ed assembly from an .fsx script (so 'dotnet someFile.fsx.dll someArg1' instead of 'dotnet fsi someFile.fsx someArg1')
             List.skip 1 cmdLineArgs
 #else
+        let currentExe =
+            if currentExe.IsNone then
+                failwith "Could not get EntryAssembly"
+            else
+                currentExe.Value
+
         let isFsi =
             String.Equals(
                 currentExe.Name,
