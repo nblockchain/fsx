@@ -11,6 +11,7 @@ type Flag =
     | Force
     | OnlyCheck
     | Verbose
+    | Debug
 
 type ProvidedCommandLineArguments =
     {
@@ -86,6 +87,8 @@ module Program =
         Console.WriteLine()
         Console.WriteLine "Options"
 
+        Console.WriteLine "  -d, --debug     Show debugging information"
+
         Console.WriteLine
             "  -f, --force     Always generate binaries again even if existing binaries are new enough"
 
@@ -111,6 +114,8 @@ module Program =
                     Some OnlyCheck
                 elif arg = "-v" || arg = "--verbose" then
                     Some Verbose
+                elif arg = "-d" || arg = "--debug" then
+                    Some Debug
                 elif arg.StartsWith "-" then
                     failwithf "Flag not recognized: %s" arg
                 else
@@ -943,6 +948,21 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
             parsedArgs.Flags.Contains Flag.Force
 
         let verbose = parsedArgs.Flags.Contains Flag.Verbose
+
+        let debug = parsedArgs.Flags.Contains Flag.Debug
+
+        if debug then
+            let cmdLineArgs = Environment.GetCommandLineArgs()
+
+            Console.WriteLine(
+                sprintf "DEBUG: __SOURCE_FILE__: %s" __SOURCE_FILE__
+            )
+
+            Console.WriteLine(
+                sprintf
+                    "DEBUG: Env.CmdLineArgs: %s"
+                    (String.Join(",", cmdLineArgs))
+            )
 
         let scriptContents, lastWriteTimeOfSourceFiles =
             GetParsedContentsAndOldestLastWriteTimeFromScriptOrItsDependencies
