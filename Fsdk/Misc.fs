@@ -95,6 +95,7 @@ module Misc =
 #endif
 
     type ArgsParsed =
+        | ErrorDetectingMoreArgsAfterPreFlags
         | ErrorDetectingProgram
         | NoArgsWhatsoever
         | ArgsWithoutFlags of List<string>
@@ -135,26 +136,30 @@ module Misc =
                                 arg,
                                 postFlags
                             )
+                        | _ -> acc
 
                     innerFunc tail newAcc
                 else
-                    match acc with
-                    | ErrorDetectingProgram ->
-                        failwith "Error case should not be used as acc"
-                    | ArgsWithoutFlags args ->
-                        innerFunc tail (ArgsWithoutFlags(head :: args))
-                    | NoArgsWhatsoever ->
-                        innerFunc tail (ArgsWithoutFlags(head :: List.Empty))
-                    | ArgsParsed.OnlyFlags flagsSoFar ->
-                        let newAcc =
+                    let newAcc =
+                        match acc with
+                        | ErrorDetectingProgram ->
+                            failwith "Error case should not be used as acc"
+                        | ArgsWithoutFlags args ->
+                            ArgsWithoutFlags(head :: args)
+                        | NoArgsWhatsoever ->
+                            ArgsWithoutFlags(head :: List.Empty)
+                        | ArgsParsed.OnlyFlags flagsSoFar ->
                             ArgsParsed.ArgsWithFlags(
                                 List.Empty,
                                 head :: List.Empty,
                                 flagsSoFar
                             )
+                        | ArgsWithFlags([], args, postFlags) ->
+                            ArgsWithFlags(List.Empty, (head :: args), postFlags)
+                        | ArgsWithFlags _ -> ErrorDetectingMoreArgsAfterPreFlags
+                        | _ -> acc
 
-                        innerFunc tail newAcc
-                    | bothFlags -> bothFlags
+                    innerFunc tail newAcc
 
         let revArgs = Array.rev args |> List.ofArray
         let parsedArgs = innerFunc revArgs NoArgsWhatsoever

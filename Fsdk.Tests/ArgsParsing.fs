@@ -108,3 +108,76 @@ type ArgsParsing() =
         | Misc.ArgsParsed.ErrorDetectingProgram -> ()
         | _ ->
             Assert.Fail "res2 was not ArgsParsing.ErrorDetectingProgram subtype"
+
+        let commandLine =
+            "someProgramThatDoesNotMatchPredicate --someFlag"
+                .Split(' ')
+
+        let res =
+            Misc.ParseArgs
+                commandLine
+                (fun arg ->
+                    arg = "someProgramArgThatDoesNotMatchProgramUsedInCommandLine"
+                )
+
+        match res with
+        | Misc.ArgsParsed.ErrorDetectingProgram -> ()
+        | _ ->
+            Assert.Fail "res3 was not ArgsParsing.ErrorDetectingProgram subtype"
+
+        let commandLine =
+            "someProgramThatDoesNotMatchPredicate someArg --someFlag"
+                .Split(' ')
+
+        let res =
+            Misc.ParseArgs
+                commandLine
+                (fun arg ->
+                    arg = "someProgramArgThatDoesNotMatchProgramUsedInCommandLine"
+                )
+
+        match res with
+        | Misc.ArgsParsed.ErrorDetectingProgram -> ()
+        | _ ->
+            Assert.Fail "res4 was not ArgsParsing.ErrorDetectingProgram subtype"
+
+
+        let commandLine =
+            "someProgramThatDoesNotMatchPredicate --somePreFlag someArg --somePostFlag"
+                .Split(' ')
+
+        let res =
+            Misc.ParseArgs
+                commandLine
+                (fun arg ->
+                    arg = "someProgramArgThatDoesNotMatchProgramUsedInCommandLine"
+                )
+
+        match res with
+        | Misc.ArgsParsed.ErrorDetectingProgram -> ()
+        | _ ->
+            Assert.Fail "res5 was not ArgsParsing.ErrorDetectingProgram subtype"
+
+        let commandLine =
+            "someProgram someArg1 --somePreFlag someArg2 --somePostFlag"
+                .Split(' ')
+
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
+
+        match res with
+        | Misc.ArgsParsed.ErrorDetectingMoreArgsAfterPreFlags -> ()
+        | _ ->
+            Assert.Fail
+                "res6 was not ArgsParsing.ErrorDetectingMoreArgsAfterPreFlags subtype"
+
+        let commandLine =
+            "someProgram someArg1 --somePreFlag someArg2"
+                .Split(' ')
+
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
+
+        match res with
+        | Misc.ArgsParsed.ErrorDetectingMoreArgsAfterPreFlags -> ()
+        | _ ->
+            Assert.Fail
+                "res7 was not ArgsParsing.ErrorDetectingMoreArgsAfterPreFlags subtype"
