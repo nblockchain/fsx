@@ -40,6 +40,10 @@ type BuildResult =
     | Failure of BinFolder
     | Success of ExeTarget
 
+type ProgramInvocationType =
+    | FsxLauncherScript
+    | FsxcPureInvocation
+
 exception NoScriptProvided
 
 module Program =
@@ -56,7 +60,12 @@ module Program =
              tmpNuget)
 #endif
 
-    let PrintUsage() =
+    let PrintUsage(invocationType: ProgramInvocationType) =
+        let programInvocation =
+            match invocationType with
+            | FsxcPureInvocation -> "fsxc"
+            | FsxLauncherScript -> "fsx"
+
         Console.WriteLine()
 
         let dotnetToolPrefix =
@@ -67,7 +76,10 @@ module Program =
 #endif
 
         Console.WriteLine(
-            sprintf "Usage: %sfsxc [OPTION] yourscript.fsx" dotnetToolPrefix
+            sprintf
+                "Usage: %s%s [OPTION] yourScript.fsx"
+                dotnetToolPrefix
+                programInvocation
         )
 
         Console.WriteLine()
@@ -901,14 +913,17 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
             exeTarget.Exe
 
-    let private InnerMain(argv: array<string>) =
+    let private InnerMain
+        (invocationType: ProgramInvocationType)
+        (argv: array<string>)
+        =
         if argv.Length = 0 then
             Console.Error.WriteLine "Please pass the .fsx script as an argument"
-            PrintUsage()
+            PrintUsage invocationType
             Environment.Exit 1
 
         if argv.Length = 1 && argv.[0] = "--help" then
-            PrintUsage()
+            PrintUsage invocationType
             Environment.Exit 0
 
         let parsedArgs =
@@ -953,9 +968,9 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
         0 // return an integer exit code
 
-    let Main argv =
+    let private WrapperForMain invocationType argv =
         try
-            InnerMain argv
+            InnerMain invocationType argv
         finally
 #if LEGACY_FRAMEWORK
             if nugetExeTmpLocation.IsValueCreated then
@@ -963,3 +978,9 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 #else
             ()
 #endif
+
+    let internal Main argv =
+        WrapperForMain ProgramInvocationType.FsxcPureInvocation argv
+
+    let OuterMain argv =
+        WrapperForMain ProgramInvocationType.FsxLauncherScript argv
