@@ -75,7 +75,61 @@ type ArgsParsing() =
             Assert.That(Seq.length postFlags, Is.EqualTo 2)
             Assert.That(Seq.item 0 postFlags, Is.EqualTo "--someLongPostFlag3")
             Assert.That(Seq.item 1 postFlags, Is.EqualTo "-f4")
-        | _ -> Assert.Fail "res was not ArgsParsing.BothFlags subtype"
+        | _ -> Assert.Fail "res1 was not ArgsParsing.ArgsWithFlags subtype"
+
+        let commandLine =
+            "someProgram --someLongPreFlag1 -f2 someNonFlagArg1 someNonFlagArg2 --someLongPostFlag3 -f4"
+                .Split(' ')
+
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
+
+        match res with
+        | Misc.ArgsParsed.ArgsWithFlags(preFlags, args, postFlags) ->
+            Assert.That(args.Length, Is.EqualTo 2)
+            Assert.That(args.[0], Is.EqualTo "someNonFlagArg1")
+            Assert.That(args.[1], Is.EqualTo "someNonFlagArg2")
+            Assert.That(Seq.length preFlags, Is.EqualTo 2)
+            Assert.That(Seq.item 0 preFlags, Is.EqualTo "--someLongPreFlag1")
+            Assert.That(Seq.item 1 preFlags, Is.EqualTo "-f2")
+            Assert.That(Seq.length postFlags, Is.EqualTo 2)
+            Assert.That(Seq.item 0 postFlags, Is.EqualTo "--someLongPostFlag3")
+            Assert.That(Seq.item 1 postFlags, Is.EqualTo "-f4")
+        | _ -> Assert.Fail "res2 was not ArgsParsing.ArgsWithFlags subtype"
+
+        let commandLine =
+            "someProgram someNonFlagArg1 someNonFlagArg2 --someLongPostFlag3 -f4"
+                .Split(' ')
+
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
+
+        match res with
+        | Misc.ArgsParsed.ArgsWithFlags(preFlags, args, postFlags) ->
+            Assert.That(args.Length, Is.EqualTo 2)
+            Assert.That(args.[0], Is.EqualTo "someNonFlagArg1")
+            Assert.That(args.[1], Is.EqualTo "someNonFlagArg2")
+            Assert.That(Seq.length preFlags, Is.EqualTo 0)
+            Assert.That(Seq.length postFlags, Is.EqualTo 2)
+            Assert.That(Seq.item 0 postFlags, Is.EqualTo "--someLongPostFlag3")
+            Assert.That(Seq.item 1 postFlags, Is.EqualTo "-f4")
+        | _ -> Assert.Fail "res3 was not ArgsParsing.ArgsWithFlags subtype"
+
+
+        let commandLine =
+            "someProgram --someLongPreFlag1 -f2 someNonFlagArg1 someNonFlagArg2"
+                .Split(' ')
+
+        let res = Misc.ParseArgs commandLine (fun arg -> arg = "someProgram")
+
+        match res with
+        | Misc.ArgsParsed.ArgsWithFlags(preFlags, args, postFlags) ->
+            Assert.That(args.Length, Is.EqualTo 2)
+            Assert.That(args.[0], Is.EqualTo "someNonFlagArg1")
+            Assert.That(args.[1], Is.EqualTo "someNonFlagArg2")
+            Assert.That(Seq.length preFlags, Is.EqualTo 2)
+            Assert.That(Seq.item 0 preFlags, Is.EqualTo "--someLongPreFlag1")
+            Assert.That(Seq.item 1 preFlags, Is.EqualTo "-f2")
+            Assert.That(Seq.length postFlags, Is.EqualTo 0)
+        | _ -> Assert.Fail "res3 was not ArgsParsing.ArgsWithFlags subtype"
 
     [<Test>]
     member __.errors() =
