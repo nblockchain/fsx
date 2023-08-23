@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="FSharpUtil.fs" />
     <Compile Include="AsyncExtensions.fs" />
+    <Compile Include="Tsv.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Fsdk\Fsdk-legacy.fsproj" />
