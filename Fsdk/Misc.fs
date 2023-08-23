@@ -95,8 +95,8 @@ module Misc =
 #endif
 
     type ArgsParsed =
-        | OnlyFlags of seq<string>
-        | BothFlags of seq<string> * string * seq<string>
+        | OnlyFlags of List<string>
+        | BothFlags of List<string> * string * List<string>
 
     let ParseArgs
         (args: array<string>)
@@ -115,12 +115,10 @@ module Misc =
                     let newAcc =
                         match acc with
                         | ArgsParsed.OnlyFlags flagsSoFar ->
-                            ArgsParsed.OnlyFlags(
-                                head :: (flagsSoFar |> List.ofSeq) |> Seq.ofList
-                            )
+                            ArgsParsed.OnlyFlags(head :: flagsSoFar)
                         | ArgsParsed.BothFlags(preFlags, arg, postFlags) ->
                             ArgsParsed.BothFlags(
-                                (head :: (preFlags |> List.ofSeq) |> Seq.ofList),
+                                head :: preFlags,
                                 arg,
                                 postFlags
                             )
@@ -130,7 +128,7 @@ module Misc =
                     match acc with
                     | ArgsParsed.OnlyFlags flagsSoFar ->
                         let newAcc =
-                            ArgsParsed.BothFlags(Seq.empty, head, flagsSoFar)
+                            ArgsParsed.BothFlags(List.Empty, head, flagsSoFar)
 
                         innerFunc tail newAcc
                     | bothFlags -> bothFlags
