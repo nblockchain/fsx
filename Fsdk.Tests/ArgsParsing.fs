@@ -59,3 +59,19 @@ type ArgsParsing() =
             Assert.That(Seq.item 0 postFlags, Is.EqualTo "--someLongPostFlag3")
             Assert.That(Seq.item 1 postFlags, Is.EqualTo "-f4")
         | _ -> Assert.Fail "res was not ArgsParsing.BothFlags subtype"
+
+    [<Test>]
+    member __.errors() =
+        let commandLine = "someProgramThatDoesNotMatchPredicate".Split(' ')
+
+        let res =
+            Misc.ParseArgs
+                commandLine
+                (fun arg ->
+                    arg = "someProgramArgThatDoesNotMatchProgramUsedInCommandLine"
+                )
+
+        match res with
+        | Misc.ArgsParsed.ErrorDetectingProgram -> Assert.Pass()
+        | _ ->
+            Assert.Fail "res was not ArgsParsing.ErrorDetectingProgram subtype"

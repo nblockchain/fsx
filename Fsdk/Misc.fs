@@ -95,6 +95,7 @@ module Misc =
 #endif
 
     type ArgsParsed =
+        | ErrorDetectingProgram
         | NoArgsWhatsoever
         | ArgWithoutFlags of string
         | OnlyFlags of List<string>
@@ -109,13 +110,15 @@ module Misc =
             (acc: ArgsParsed)
             : ArgsParsed =
             match theArgs with
-            | [] -> acc
+            | [] -> ErrorDetectingProgram
             | head :: tail ->
                 if predicateToRecognizeProgram head then
                     acc
                 elif head.StartsWith "--" || head.StartsWith "-" then
                     let newAcc =
                         match acc with
+                        | ErrorDetectingProgram ->
+                            failwith "Error case should not be used as acc"
                         | NoArgsWhatsoever ->
                             ArgsParsed.OnlyFlags(head :: List.Empty)
                         | ArgWithoutFlags arg ->
@@ -136,6 +139,8 @@ module Misc =
                     innerFunc tail newAcc
                 else
                     match acc with
+                    | ErrorDetectingProgram ->
+                        failwith "Error case should not be used as acc"
                     | NoArgsWhatsoever -> innerFunc tail (ArgWithoutFlags head)
                     | ArgsParsed.OnlyFlags flagsSoFar ->
                         let newAcc =
