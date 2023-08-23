@@ -99,25 +99,19 @@ module Misc =
         | BothFlags of seq<string> * string * seq<string>
 
     let ParseArgs(args: array<string>) : ArgsParsed =
-        let rec innerFunc (theArgs: List<string>) currentCount =
+        let rec innerFunc (theArgs: List<string>) acc =
             match theArgs with
-            | [] -> currentCount
+            | [] -> acc
             | head :: tail ->
                 if head.StartsWith "--" || head.StartsWith "-" then
-                    innerFunc tail (currentCount + 1)
+                    innerFunc tail (head :: acc)
                 else
-                    currentCount
+                    acc
 
         let revArgs = Array.rev args |> List.ofArray
-        let count = innerFunc revArgs 0
+        let args = innerFunc revArgs List.Empty
 
-        let dummyList =
-            [
-                for _dummyItem in 0 .. (count - 1) -> String.Empty
-            ]
-            |> Seq.ofList
-
-        ArgsParsed.OnlyFlags dummyList
+        ArgsParsed.OnlyFlags args
 
     let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
