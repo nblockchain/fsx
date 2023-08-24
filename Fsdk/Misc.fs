@@ -18,6 +18,7 @@ open System.Xml.XPath
 
 module Misc =
 
+#if LEGACY_FRAMEWORK
     let private FileMatchesIfArgumentIsAPath(argument: string, file: FileInfo) =
         try
             FileInfo(argument).FullName.Equals(file.FullName)
@@ -36,7 +37,6 @@ module Misc =
         with
         | _ -> false
 
-#if LEGACY_FRAMEWORK
     // this below is crazy but is to avoid # char being ignored in Uri.LocalPath property, see https://stackoverflow.com/a/41203269
     let private currentExeUri =
         let entryAssembly = Assembly.GetEntryAssembly()
@@ -94,6 +94,7 @@ module Misc =
                     args
 #endif
 
+    [<Obsolete "Use Environment.GetCommandLineArgs() yourself, or fsi.CommandLineArgs">]
     let FsxOnlyArguments() =
         let cmdLineArgs = Environment.GetCommandLineArgs() |> List.ofSeq
 #if !LEGACY_FRAMEWORK
