@@ -103,8 +103,8 @@ module Misc =
         | ArgsWithFlags of List<string> * List<string> * List<string>
 
     let ParseArgs
-        (args: array<string>)
-        (predicateToRecognizeProgram: string -> bool)
+        (args: seq<string>)
+        (predicateToRecognizeProgram: Option<string -> bool>)
         : ArgsParsed =
         let rec innerFunc
             (theArgs: List<string>)
@@ -113,7 +113,8 @@ module Misc =
             match theArgs with
             | [] -> ErrorDetectingProgram
             | head :: tail ->
-                if predicateToRecognizeProgram head then
+                if predicateToRecognizeProgram.IsSome
+                   && predicateToRecognizeProgram.Value head then
                     acc
                 elif head.StartsWith "--" || head.StartsWith "-" then
                     let newAcc =
@@ -161,7 +162,7 @@ module Misc =
 
                     innerFunc tail newAcc
 
-        let revArgs = Array.rev args |> List.ofArray
+        let revArgs = List.rev(List.ofSeq args)
         let parsedArgs = innerFunc revArgs NoArgsWhatsoever
 
         parsedArgs
