@@ -111,7 +111,11 @@ module Misc =
             (acc: ArgsParsed)
             : ArgsParsed =
             match theArgs with
-            | [] -> ErrorDetectingProgram
+            | [] ->
+                if predicateToRecognizeProgram.IsSome then
+                    ErrorDetectingProgram
+                else
+                    acc
             | head :: tail ->
                 if predicateToRecognizeProgram.IsSome
                    && predicateToRecognizeProgram.Value head then
