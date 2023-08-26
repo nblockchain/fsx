@@ -48,6 +48,8 @@ type ProgramInvocationType =
 exception NoScriptProvided
 
 module Program =
+    let CheckFlagDeprecationMessage =
+        "If you need to only compile (without running), use 'fsxc' instead of 'fsx'"
 
 #if LEGACY_FRAMEWORK
     let private nugetExeTmpLocation: Lazy<FileInfo> =
@@ -94,8 +96,14 @@ module Program =
 
         Console.WriteLine "  -h, --help      Show this help"
 
-        Console.WriteLine
-            "  -k, --check     Only check if it compiles, removing generated binaries"
+        match invocationType with
+        | FsxcPureInvocation ->
+            Console.WriteLine
+                "  -k, --check     Only check if it compiles, removing generated binaries"
+        | FsxLauncherScript ->
+            Console.WriteLine(
+                "  -k, --check     DEPRECATED: " + CheckFlagDeprecationMessage
+            )
 
         Console.WriteLine
             "  -v, --verbose   Verbose mode, ideal for debugging purposes"

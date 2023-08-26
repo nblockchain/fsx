@@ -135,6 +135,14 @@ let InjectBinSubfolderInPath(userScriptPath: string) =
 
 let fsxcArgs, maybeUserScriptPath, userArgs = SplitArgsIntoFsxcArgsAndUserArgs()
 
+if fsxcArgs.Any(fun arg -> arg = "--check" || arg = "-k") then
+    Console.Error.WriteLine(
+        "The flag --check/-k is DEPRECATED. "
+        + FSX.Compiler.Program.CheckFlagDeprecationMessage
+    )
+
+    Environment.Exit 1
+
 let fsxcMainArguments =
     match maybeUserScriptPath with
     | Some userScriptPath ->
