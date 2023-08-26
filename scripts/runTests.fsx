@@ -333,8 +333,19 @@ Process.Execute(
 let cmdLineArgsTest =
     Path.Combine(TestDir.FullName, "testFsiCommandLineArgs.fsx") |> FileInfo
 
-Process.Execute(CreateCommand(cmdLineArgsTest, "one 2 three"), Echo.All)
-|> UnwrapDefault
+let args = "one 2 three"
+
+Process.Execute(CreateCommand(cmdLineArgsTest, args), Echo.All) |> UnwrapDefault
+
+#if !LEGACY_FRAMEWORK
+let dotnetFsiCmd =
+    {
+        Command = "dotnet"
+        Arguments = sprintf "fsi %s %s" cmdLineArgsTest.FullName args
+    }
+
+Process.Execute(dotnetFsiCmd, Echo.All) |> UnwrapDefault
+#endif
 
 let processTest = Path.Combine(TestDir.FullName, "testProcess.fsx") |> FileInfo
 
