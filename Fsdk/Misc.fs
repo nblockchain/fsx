@@ -838,7 +838,7 @@ module Misc =
                     GatherPrefix(head.Substring prefixArgWithEquals.Length)
                 )
             else
-                failwithf "argument not recognized: %s" head
+                GatherOrGetDefaultPrefix(tail, false, prefixSet)
 
 
     let ReplaceTextInFile
