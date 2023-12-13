@@ -48,6 +48,9 @@
     <Compile Include="..\Fsdk\Process.fs">
       <Link>..\Fsdk\Process.fs</Link>
     </Compile>
+    <Compile Include="..\Fsdk\Git.fs">
+      <Link>..\Fsdk\Git.fs</Link>
+    </Compile>
     <Compile Include="..\Fsdk\Network.fs">
       <Link>..\Fsdk\Network.fs</Link>
     </Compile>

@@ -55,8 +55,8 @@
     <Compile Include="Misc.fs" />
     <Compile Include="Process.fs" />
     <Compile Include="Unix.fs" />
-    <Compile Include="Network.fs" />
     <Compile Include="Git.fs" />
+    <Compile Include="Network.fs" />
     <Compile Include="Taiga.fs" />
   </ItemGroup>
   <Import Project="..\CommonBuildProps-legacy.proj" />

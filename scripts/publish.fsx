@@ -6,8 +6,8 @@ open System.Configuration
 
 #load "../Fsdk/Misc.fs"
 #load "../Fsdk/Process.fs"
-#load "../Fsdk/Network.fs"
 #load "../Fsdk/Git.fs"
+#load "../Fsdk/Network.fs"
 
 open Fsdk
 open Fsdk.Process

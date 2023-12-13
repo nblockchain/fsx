@@ -9,8 +9,8 @@ open System.Configuration
 
 #load "../Fsdk/Misc.fs"
 #load "../Fsdk/Process.fs"
-#load "../Fsdk/Network.fs"
 #load "../Fsdk/Git.fs"
+#load "../Fsdk/Network.fs"
 
 open Fsdk
 open Fsdk.Process
@@ -30,32 +30,6 @@ if args.Length > 2 && args.[0] <> "--output-version" then
     PrintUsage()
 
 let currentDir = Directory.GetCurrentDirectory() |> DirectoryInfo
-
-// this is a translation of doing this in unix (assuming initialVersion="0.1.0"):
-// 0.1.0--date`date +%Y%m%d-%H%M`.git-`git rev-parse --short=7 HEAD`
-let GetIdealNugetVersion(inputVersion: string) =
-    let initialVersion =
-        let versionSplit = inputVersion.Split '.'
-
-        if versionSplit.Length = 4 && versionSplit.[3] = "0" then
-            String.Join(".", versionSplit.Take 3)
-        else
-            inputVersion
-
-    let dateSegment =
-        sprintf "date%s" (DateTime.UtcNow.ToString "yyyyMMdd-hhmm")
-
-    let gitHash = Git.GetLastCommit()
-
-    if null = gitHash then
-        Console.Error.WriteLine "Not in a git repository?"
-        Environment.Exit 2
-
-    let gitHashDefaultShortLength = 7
-    let gitShortHash = gitHash.Substring(0, gitHashDefaultShortLength)
-    let gitSegment = sprintf "git-%s" gitShortHash
-    let finalVersion = sprintf "%s--%s.%s" initialVersion dateSegment gitSegment
-    finalVersion
 
 let IsDotNetSdkInstalled() =
     try
@@ -115,7 +89,8 @@ let FindOrGenerateNugetPackages() : seq<FileInfo> =
                 let packageName =
                     Path.GetFileNameWithoutExtension nuspecFile.FullName
 
-                let nugetVersion = GetIdealNugetVersion baseVersion
+                let nugetVersion =
+                    Network.GetNugetPrereleaseVersionFromBaseVersion baseVersion
 
                 // we need to download nuget.exe here because `dotnet pack` doesn't support using standalone (i.e.
                 // without a project association) .nuspec files, see https://github.com/NuGet/Home/issues/4254
@@ -150,7 +125,9 @@ let FindOrGenerateNugetPackages() : seq<FileInfo> =
                 Environment.Exit 1
 
             let baseVersion = args.First()
-            let nugetVersion = GetIdealNugetVersion baseVersion
+
+            let nugetVersion =
+                Network.GetNugetPrereleaseVersionFromBaseVersion baseVersion
 
             if IsDotNetSdkInstalled() then
                 let dotnetPackCmd =
@@ -218,7 +195,11 @@ if args.Length > 0 && args.[0] = "--output-version" then
         Environment.Exit 4
 
     let baseVersion = args.[1]
-    Console.WriteLine(GetIdealNugetVersion baseVersion)
+
+    Console.WriteLine(
+        Network.GetNugetPrereleaseVersionFromBaseVersion baseVersion
+    )
+
     Environment.Exit 0
 
 let nugetPkgs = FindOrGenerateNugetPackages() |> List.ofSeq

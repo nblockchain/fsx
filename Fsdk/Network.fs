@@ -421,6 +421,35 @@ module Network =
             GetPrivateIpOfThisServer()
         )
 
+    // this is a translation of doing this in unix (assuming initialVersion="0.1.0"):
+    // 0.1.0--date`date +%Y%m%d-%H%M`.git-`git rev-parse --short=7 HEAD`
+    let GetNugetPrereleaseVersionFromBaseVersion(baseVersion: string) =
+        let initialVersion =
+            let versionSplit = baseVersion.Split '.'
+
+            if versionSplit.Length = 4 && versionSplit.[3] = "0" then
+                String.Join(".", versionSplit.Take 3)
+            else
+                baseVersion
+
+        let dateSegment =
+            sprintf "date%s" (DateTime.UtcNow.ToString "yyyyMMdd-hhmm")
+
+        let gitHash = Git.GetLastCommit()
+
+        if isNull gitHash then
+            Console.Error.WriteLine "Not in a git repository?"
+            Environment.Exit 2
+
+        let gitHashDefaultShortLength = 7
+        let gitShortHash = gitHash.Substring(0, gitHashDefaultShortLength)
+        let gitSegment = sprintf "git-%s" gitShortHash
+
+        let finalVersion =
+            sprintf "%s--%s.%s" initialVersion dateSegment gitSegment
+
+        finalVersion
+
     let NugetDownloadUrl =
         "https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe"
 
