@@ -217,8 +217,10 @@ module FSharpUtil =
                 return failwith "unreachable"
         }
 
-    // FIXME: we should not need this workaround anymore when this gets addressed:
+    // NOTE: no need for this workaround anymore after this gets addressed:
     //        https://github.com/fsharp/fslang-suggestions/issues/660
+    // TODO: actually, reraise in async blocks is not that important; rather use Result<TSuccess,TErr>!
+    //       so let's mark this as [<Obsolete>] with this recommendation
     let ReRaise(ex: Exception) : Exception =
         (ExceptionDispatchInfo.Capture ex).Throw()
         failwith "Should be unreachable"
