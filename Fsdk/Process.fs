@@ -19,7 +19,7 @@ module Process =
             let myTicket = Interlocked.Increment ticketsCount
             Monitor.Enter innerLock
 
-            while myTicket <> Volatile.Read ticketToRide do
+            while myTicket <> ticketToRide.Value do
                 Monitor.Wait innerLock |> ignore
 
         member __.Exit() =
