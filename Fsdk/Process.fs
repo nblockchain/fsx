@@ -12,18 +12,18 @@ module Process =
     // https://stackoverflow.com/a/961904/544947
     type internal QueuedLock() =
         let innerLock = Object()
-        let ticketsCount = ref 0
-        let ticketToRide = ref 1
+        let mutable ticketsCount = 0
+        let mutable ticketToRide = 1
 
         member __.Enter() =
-            let myTicket = Interlocked.Increment ticketsCount
+            let myTicket = Interlocked.Increment &ticketsCount
             Monitor.Enter innerLock
 
-            while myTicket <> ticketToRide.Value do
+            while myTicket <> Volatile.Read &ticketToRide do
                 Monitor.Wait innerLock |> ignore
 
         member __.Exit() =
-            Interlocked.Increment ticketToRide |> ignore
+            Interlocked.Increment &ticketToRide |> ignore
             Monitor.PulseAll innerLock
             Monitor.Exit innerLock
 
