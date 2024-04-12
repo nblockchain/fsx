@@ -3,7 +3,6 @@
 SET "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 SET "INSTALL_MSG=Please install .NET v6, or higher; or Visual Studio."
 
-ECHO checking for '%VSWHERE%'...
 IF NOT EXIST "%VSWHERE%" (
     echo:
     echo Tool vswhere.exe not found.
@@ -11,7 +10,6 @@ IF NOT EXIST "%VSWHERE%" (
     exit /b 1
 )
 
-ECHO checking for fsi.exe...
 FOR /f "tokens=* delims=" %%A in ('"%VSWHERE%" -latest -requires Microsoft.VisualStudio.Component.FSharp -find **\fsi.exe') do set RUNNER=%%A
 
 IF "%RUNNER%"=="" (
