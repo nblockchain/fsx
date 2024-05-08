@@ -91,7 +91,7 @@ jobs:
         git diff --exit-code
 
   macOS--dotnet6-and-mono:
-    runs-on: macOS-latest
+    runs-on: macOS-12
     steps:
     - uses: actions/checkout@v1
     - name: Setup .NET SDK 6.0.x
@@ -120,7 +120,7 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   macOS--mono:
-    runs-on: macOS-latest
+    runs-on: macOS-12
     steps:
     - uses: actions/checkout@v1
     - name: HACK to emulate dotnet uninstall
