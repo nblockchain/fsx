@@ -26,12 +26,6 @@ let NugetDir = Path.Combine(RootDir.FullName, ".nuget") |> DirectoryInfo
 let NugetExe = Path.Combine(NugetDir.FullName, "nuget.exe") |> FileInfo
 let NugetPackages = Path.Combine(RootDir.FullName, "packages") |> DirectoryInfo
 
-#if !LEGACY_FRAMEWORK
-let DotNetVersions = ["net8.0"; "net6.0"]
-#else
-let NunitVersion = "2.7.1"
-#endif
-
 let NugetScriptsPackagesDir() =
     let dir = Path.Combine(NugetDir.FullName, "packages") |> DirectoryInfo
 
