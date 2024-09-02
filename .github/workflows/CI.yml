@@ -30,7 +30,7 @@ jobs:
         run: |
             sudo apt install --yes git
 
-            sudo DEBIAN_FRONTEND=noninteractive apt install --yes dotnet6
+            sudo DEBIAN_FRONTEND=noninteractive apt install --yes dotnet7
 
       # workaround for https://github.com/actions/runner/issues/2033
       - name: ownership workaround
@@ -41,7 +41,7 @@ jobs:
 
   sanity-check:
     needs:
-    - macOS--dotnet6-and-mono
+    - macOS--dotnet7-and-mono
     - macOS--mono
     - linux-oldLTS-github--dotnet-and-xbuild
     - linux-oldLTS-github--dotnet-and-msbuild
@@ -51,9 +51,9 @@ jobs:
     - linux-newLTS-github--dotnet-and-msbuild
     - linux-newLTS-vanilla--stockmono
     - linux-newLTS-vanilla--newmono
-    - linux-newLTS-vanilla--dotnet6
+    - linux-newLTS-vanilla--dotnet7
     - windows--legacyFramework
-    - windows--dotnet6
+    - windows--dotnet7
 
     runs-on: ubuntu-22.04
     steps:
@@ -79,10 +79,10 @@ jobs:
       if: github.event_name == 'pull_request'
       run: ./conventions/commitlint.sh --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-    - name: Setup .NET SDK 6.0.x
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: '6.0.x'
+        dotnet-version: '7.0.x'
     - name: fantomless
       run: |
         dotnet new tool-manifest
@@ -90,14 +90,14 @@ jobs:
         dotnet fantomless --recurse .
         git diff --exit-code
 
-  macOS--dotnet6-and-mono:
+  macOS--dotnet7-and-mono:
     runs-on: macOS-12
     steps:
     - uses: actions/checkout@v1
-    - name: Setup .NET SDK 6.0.x
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: '6.0.x'
+        dotnet-version: '7.0.x'
     - name: configure
       run: ./configure.sh
     - name: build in DEBUG mode
@@ -442,7 +442,7 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux-newLTS-vanilla--dotnet6:
+  linux-newLTS-vanilla--dotnet7:
     runs-on: ubuntu-22.04
     container:
       image: "ubuntu:22.04"
@@ -451,7 +451,7 @@ jobs:
     - name: install sudo
       run: apt update && apt install --yes sudo
     - name: install dependencies
-      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make dotnet6
+      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make dotnet7
 
     # workaround for https://github.com/actions/runner/issues/2033
     - name: ownership workaround
@@ -504,14 +504,14 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: .\Tools\fsi.bat compileFSharpScripts.fsx
 
-  windows--dotnet6:
+  windows--dotnet7:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Setup .NET SDK 6.0.x
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: '6.0.x'
+        dotnet-version: '7.0.x'
     - name: build in DEBUG mode
       run: .\make.bat
     - name: run unit tests
