@@ -54,6 +54,24 @@ let fullVersion =
                 versionConfigFile.Name
                 baseVersionTokenString
         | Some baseVersion ->
+            let procResult =
+                Process.Execute(
+                    {
+                        Command = "git"
+                        Arguments = sprintf "tag %s" baseVersion
+                    },
+                    Echo.Off
+                )
+
+            match procResult.Result with
+            | ProcessResultState.Error _ ->
+                failwithf
+                    "Shouldn't use %s as BaseVersion (in %s) if tag %s already exists (for pushing prereleases)"
+                    baseVersion
+                    versionConfigFileName
+                    baseVersion
+            | _ -> ()
+
             let nugetPush =
                 Path.Combine(rootDir.FullName, "Tools", "nugetPush.fsx")
                 |> FileInfo
