@@ -110,9 +110,13 @@ let SplitArgsIntoFsxcArgsAndUserArgs
     |> List.ofArray
     |> userArgsInternal FsxFsxNotFoundYet List.empty List.empty
 
-let InjectBinSubfolderInPath(userScriptPath: string) =
+let InjectBinSubfolderInPath(userScript: FileInfo) =
+    let userScriptPath = userScript.FullName
+
     if not(userScriptPath.EndsWith ".fsx") then
-        failwithf "Assertion failed: %s should end with .fsx" userScriptPath
+        failwithf
+            "Assertion failed: %s should end with .fsx"
+            userScript.FullName
 
     let binPath =
         match userScriptPath.LastIndexOf Path.DirectorySeparatorChar with
@@ -149,23 +153,29 @@ match maybeUserScriptPath with
         "Compilation of anything that is not an .fsx should have been rejected by fsx"
         + " and shouldn't have reached this point. Please report this bug."
     )
-| _ -> ()
+| Some userScriptPath ->
+    // FIXME: we shouldn't need to use FileInfo below, and in fact it looks
+    // dangerous because userScriptPath could be a relative path, but relative
+    // to what? to current dir or to folder where fsx/fsxc is? so I'm not
+    // sure what's going when creating the FileInfo instance here, but if we
+    // try to not use FileInfo then we cause a regression, see this PR:
+    // https://github.com/nblockchain/fsx/pull/44
+    let userScriptFile = FileInfo userScriptPath
 
-let finalLaunch =
-    {
-        Command =
-            (InjectBinSubfolderInPath maybeUserScriptPath.Value)
-                .FullName
-        Arguments = String.Join(" ", userArgs)
-    }
+    let finalLaunch =
+        {
+            Command = (InjectBinSubfolderInPath userScriptFile).FullName
+            Arguments = String.Join(" ", userArgs)
+        }
 
-let finalProc = Process.Execute(finalLaunch, Echo.OutputOnly)
-// FIXME: fsx being an F# project instead of a launcher script means that, on
+    let finalProc = Process.Execute(finalLaunch, Echo.OutputOnly)
+
+    // FIXME: fsx being an F# project instead of a launcher script means that, on
 // Windows (and in Unix when installed via 'dotnet tool install fsx'), fsx will be running the user script as
 // child process, which may make the memory gains of using fsx instead of fsi/fsharpi
 // (as explained in the ReadMe.md file) not as prominent (while in Unix, i.e. Linux and macOS, when the
 // tool is not installed via `dotnet tool install fsx`, they still are what ReadMe.md claims because we use a
 // bash script which uses 'exec') // TODO: measure measure!
-match finalProc.Result with
-| Error(exitCode, _errOutput) -> Environment.Exit exitCode
-| _ -> Environment.Exit 0
+    match finalProc.Result with
+    | Error(exitCode, _errOutput) -> Environment.Exit exitCode
+    | _ -> Environment.Exit 0
