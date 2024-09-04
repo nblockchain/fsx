@@ -170,6 +170,15 @@ module Program =
         | Ref of string
         | NugetRef of name: string * version: Option<string>
 
+    type PreProcessorConditional =
+        | If
+        | Else
+        | EndIf
+
+    type PreProcessorElement =
+        | Action of PreProcessorAction
+        | Conditional of PreProcessorConditional
+
     type LineKind =
         | Commented
         | Normal
@@ -217,9 +226,13 @@ module Program =
 
     let ReadScriptContents(origScript: FileInfo) : List<LineAction> =
 
-        let readPreprocessorLine(line: string) : PreProcessorAction =
-            if (line.StartsWith("#!")) then
-                PreProcessorAction.Skip
+        let readPreprocessorLine(line: string) : Option<PreProcessorElement> =
+            let trimmedLine = line.TrimStart()
+
+            if not(trimmedLine.StartsWith "#") then
+                None
+            elif (line.StartsWith "#!") then
+                PreProcessorAction.Skip |> PreProcessorElement.Action |> Some
             elif (line.StartsWith LOAD_PREPROCESSOR) then
                 let fileToLoad =
                     line.Substring(
@@ -228,6 +241,8 @@ module Program =
                     )
 
                 PreProcessorAction.Load fileToLoad
+                |> PreProcessorElement.Action
+                |> Some
             elif line.StartsWith REFNUGET_PREPROCESSOR then
                 let libToRef =
                     line.Substring(
@@ -270,6 +285,8 @@ module Program =
                         libToRef, None
 
                 PreProcessorAction.NugetRef(libName, maybeVersion)
+                |> PreProcessorElement.Action
+                |> Some
 
             elif (line.StartsWith REF_PREPROCESSOR) then
                 let libToRef =
@@ -279,6 +296,20 @@ module Program =
                     )
 
                 PreProcessorAction.Ref libToRef
+                |> PreProcessorElement.Action
+                |> Some
+            elif trimmedLine.StartsWith "#else" then
+                PreProcessorConditional.Else
+                |> PreProcessorElement.Conditional
+                |> Some
+            elif trimmedLine.StartsWith "#endif" then
+                PreProcessorConditional.EndIf
+                |> PreProcessorElement.Conditional
+                |> Some
+            elif trimmedLine.StartsWith "#if" then
+                PreProcessorConditional.If
+                |> PreProcessorElement.Conditional
+                |> Some
             else
                 failwithf "Unrecognized preprocessor line: %s" line
 
@@ -288,43 +319,27 @@ module Program =
             (acc: List<LineAction>)
             : List<LineAction> =
 
-            let isFsiPreProcessorAction(line: string) =
-                if not(line.StartsWith "#") then
-                    false
-                elif line.StartsWith "#if"
-                     || line.StartsWith "#else"
-                     || line.StartsWith "#endif" then
-                    false
-                else
-                    true
-
             match Seq.tryHead lines with
             | Some line ->
                 let rest = Seq.tail lines
 
                 let newAcc, newState =
                     let noStateChange() =
-                        if isFsiPreProcessorAction line then
-                            let lineAction =
-                                {
-                                    Line = line
-                                    LineKind =
-                                        LineKind.PreProcessorAction(
-                                            readPreprocessorLine line
-                                        )
-                                }
+                        let lineKind =
+                            match readPreprocessorLine line with
+                            | Some(PreProcessorElement.Action action) ->
+                                LineKind.PreProcessorAction action
+                            | None -> LineKind.Normal
+                            | _ -> LineKind.Commented
 
-                            let newAcc = lineAction :: acc
-                            newAcc, readState
-                        else
-                            let lineAction =
-                                {
-                                    Line = line
-                                    LineKind = LineKind.Normal
-                                }
+                        let newAcc =
+                            {
+                                Line = line
+                                LineKind = lineKind
+                            }
+                            :: acc
 
-                            let newAcc = lineAction :: acc
-                            newAcc, readState
+                        newAcc, readState
 
                     match readState with
                     | IgnoreLinesUntilNextPreProcessorConditional ->
@@ -355,24 +370,26 @@ module Program =
 
                         if trimmedLine.StartsWith "#if"
                            && line.Contains "LEGACY_FRAMEWORK" then
-                            match trimmedLine with
-                            | "#if LEGACY_FRAMEWORK" ->
+                            let newState =
+                                match trimmedLine with
+                                | "#if LEGACY_FRAMEWORK" ->
 #if LEGACY_FRAMEWORK
-                                acc,
-                                DeliverLinesUntilNextPreProcessorConditional
+                                    DeliverLinesUntilNextPreProcessorConditional
 #else
-                                acc, IgnoreLinesUntilNextPreProcessorConditional
+                                    IgnoreLinesUntilNextPreProcessorConditional
 #endif
-                            | "#if !LEGACY_FRAMEWORK" ->
+                                | "#if !LEGACY_FRAMEWORK" ->
 #if LEGACY_FRAMEWORK
-                                acc, IgnoreLinesUntilNextPreProcessorConditional
+                                    IgnoreLinesUntilNextPreProcessorConditional
 #else
-                                acc,
-                                DeliverLinesUntilNextPreProcessorConditional
+                                    DeliverLinesUntilNextPreProcessorConditional
 #endif
-                            | _ ->
-                                failwith
-                                    "Only simple ifdef statements are supported for the LEGACY_FRAMEWORK define"
+
+                                | _ ->
+                                    failwith
+                                        "Only simple ifdef statements are supported for the LEGACY_FRAMEWORK define"
+
+                            acc, newState
                         else
                             noStateChange()
 
