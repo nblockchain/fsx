@@ -877,6 +877,8 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                 | _ -> "fsharpc"
 #endif
 
+            Console.WriteLine(">>>>>>>>>>>>>>>COMPFLAGS: "+ fscompilerflags)
+
             let proc =
                 Process.Execute(
                     {
