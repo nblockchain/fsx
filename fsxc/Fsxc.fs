@@ -315,7 +315,7 @@ module Program =
 
         let rec readLines
             (lines: seq<string>)
-            (readState: ReadState)
+            (currentReadState: ReadState)
             (acc: List<LineAction>)
             : List<LineAction> =
 
@@ -324,74 +324,77 @@ module Program =
                 let rest = Seq.tail lines
 
                 let newAcc, newState =
-                    let noStateChange() =
-                        let lineKind =
-                            match readPreprocessorLine line with
-                            | Some(PreProcessorElement.Action action) ->
-                                LineKind.PreProcessorAction action
-                            | None -> LineKind.Normal
-                            | _ -> LineKind.Commented
-
-                        let newAcc =
-                            {
-                                Line = line
-                                LineKind = lineKind
-                            }
-                            :: acc
-
-                        newAcc, readState
-
-                    match readState with
-                    | IgnoreLinesUntilNextPreProcessorConditional ->
-                        let newAcc, newState =
-                            if line.Trim() = "#else" then
-                                acc,
-                                DeliverLinesUntilNextPreProcessorConditional
-                            elif line.Trim() = "#endif" then
-                                acc, NormalOperation
+                    let lineKind, newState =
+                        match readPreprocessorLine line with
+                        | Some(PreProcessorElement.Action action) ->
+                            if currentReadState
+                               <> IgnoreLinesUntilNextPreProcessorConditional then
+                                LineKind.PreProcessorAction action,
+                                currentReadState
                             else
-                                {
-                                    Line = line
-                                    LineKind = LineKind.Commented
-                                }
-                                :: acc,
-                                readState
-
-                        newAcc, newState
-                    | DeliverLinesUntilNextPreProcessorConditional ->
-                        if line.Trim() = "#else" then
-                            acc, IgnoreLinesUntilNextPreProcessorConditional
-                        elif line.Trim() = "#endif" then
-                            acc, NormalOperation
-                        else
-                            noStateChange()
-                    | NormalOperation ->
-                        let trimmedLine = line.Trim()
-
-                        if trimmedLine.StartsWith "#if"
-                           && line.Contains "LEGACY_FRAMEWORK" then
-                            let newState =
-                                match trimmedLine with
-                                | "#if LEGACY_FRAMEWORK" ->
+                                LineKind.Commented, currentReadState
+                        | Some(PreProcessorElement.Conditional cond) ->
+                            match cond, currentReadState with
+                            | PreProcessorConditional.Else,
+                              IgnoreLinesUntilNextPreProcessorConditional ->
+                                LineKind.Commented,
+                                DeliverLinesUntilNextPreProcessorConditional
+                            | PreProcessorConditional.Else,
+                              DeliverLinesUntilNextPreProcessorConditional ->
+                                LineKind.Commented,
+                                IgnoreLinesUntilNextPreProcessorConditional
+                            | PreProcessorConditional.EndIf,
+                              IgnoreLinesUntilNextPreProcessorConditional ->
+                                LineKind.Commented, NormalOperation
+                            | PreProcessorConditional.EndIf,
+                              DeliverLinesUntilNextPreProcessorConditional ->
+                                LineKind.Commented, NormalOperation
+                            | PreProcessorConditional.EndIf, NormalOperation ->
+                                LineKind.Normal, NormalOperation
+                            | PreProcessorConditional.If, _ ->
+                                if not(line.Contains "LEGACY_FRAMEWORK") then
+                                    match currentReadState with
+                                    | IgnoreLinesUntilNextPreProcessorConditional ->
+                                        LineKind.Commented, currentReadState
+                                    | _ -> LineKind.Normal, currentReadState
+                                else
+                                    let newState =
+                                        match line.Trim() with
+                                        | "#if LEGACY_FRAMEWORK" ->
 #if LEGACY_FRAMEWORK
-                                    DeliverLinesUntilNextPreProcessorConditional
+                                            DeliverLinesUntilNextPreProcessorConditional
 #else
-                                    IgnoreLinesUntilNextPreProcessorConditional
+                                            IgnoreLinesUntilNextPreProcessorConditional
 #endif
-                                | "#if !LEGACY_FRAMEWORK" ->
+                                        | "#if !LEGACY_FRAMEWORK" ->
 #if LEGACY_FRAMEWORK
-                                    IgnoreLinesUntilNextPreProcessorConditional
+                                            IgnoreLinesUntilNextPreProcessorConditional
 #else
-                                    DeliverLinesUntilNextPreProcessorConditional
+                                            DeliverLinesUntilNextPreProcessorConditional
 #endif
 
-                                | _ ->
-                                    failwith
-                                        "Only simple ifdef statements are supported for the LEGACY_FRAMEWORK define"
+                                        | _ ->
+                                            failwith
+                                                "Only simple ifdef statements are supported for the LEGACY_FRAMEWORK define"
 
-                            acc, newState
-                        else
-                            noStateChange()
+                                    LineKind.Commented, newState
+                            | _, NormalOperation ->
+                                LineKind.Normal, currentReadState
+
+                        | None ->
+                            match currentReadState with
+                            | IgnoreLinesUntilNextPreProcessorConditional ->
+                                LineKind.Commented, currentReadState
+                            | _ -> LineKind.Normal, currentReadState
+
+                    let newAcc =
+                        {
+                            Line = line
+                            LineKind = lineKind
+                        }
+                        :: acc
+
+                    newAcc, newState
 
                 readLines rest newState newAcc
             | None -> acc
