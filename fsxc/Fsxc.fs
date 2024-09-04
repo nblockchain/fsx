@@ -547,7 +547,7 @@ module FsxScript
 
 type FsiStub =
     { CommandLineArgs: array<string> }
-let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
+let fsx = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
 """
 
