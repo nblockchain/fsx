@@ -347,12 +347,11 @@ let dotnetFsiCmd =
 Process.Execute(dotnetFsiCmd, Echo.All) |> UnwrapDefault
 #endif
 
-(*
 let processTest = Path.Combine(TestDir.FullName, "testProcess.fsx") |> FileInfo
 
 Process.Execute(CreateCommand(processTest, String.Empty), Echo.All)
 |> UnwrapDefault
-*)
+
 
 (* this is actually only really useful for when process spits both stdout & stderr
 let processConcurrencyTest = Path.Combine(TestDir.FullName, "testProcessConcurrency.fsx") |> FileInfo
