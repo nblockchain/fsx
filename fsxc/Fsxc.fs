@@ -710,6 +710,17 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
             : FileInfo =
             let projectFile = GetAutoGenerationTargets origScript "fsproj"
 
+            let addFile relativeOrAbsoluteFilePath =
+                let fsProjFragment =
+                    sprintf
+                        "<ItemGroup><Compile Include=\"%s\" /></ItemGroup>"
+                        relativeOrAbsoluteFilePath
+
+                File.AppendAllText(
+                    projectFile.FullName,
+                    fsProjFragment + Environment.NewLine
+                )
+
             let rec iterate(lines: List<LineAction>) : unit =
                 match lines with
                 | head :: tail ->
@@ -741,16 +752,13 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
                                 + Environment.NewLine
                             )
                         | PreProcessorAction.Load fileName ->
-                            let fsProjFragment =
+                            addFile(
                                 sprintf
-                                    "<ItemGroup><Compile Include=\"..%c%s\" /></ItemGroup>"
+                                    "..%c%s"
                                     Path.DirectorySeparatorChar
                                     fileName
-
-                            File.AppendAllText(
-                                projectFile.FullName,
-                                fsProjFragment + Environment.NewLine
                             )
+
                         | PreProcessorAction.Ref refName ->
                             let fsProjFragment =
                                 if refName.ToLower().EndsWith(".dll") then
@@ -797,13 +805,9 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
             iterate contents
 
-            File.AppendAllText(
-                projectFile.FullName,
-                "<ItemGroup>
-                  <Compile Include=\"{userScriptFileName}.fs\" />
-                </ItemGroup></Project>"
-                    .Replace("{userScriptFileName}", origScript.Name)
-            )
+            addFile(sprintf "%s.fs" origScript.Name)
+
+            File.AppendAllText(projectFile.FullName, "</Project>")
 
             projectFile
 #endif
