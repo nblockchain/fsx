@@ -17,9 +17,9 @@ jobs:
     needs:
     - sanity-check
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
-      image: "ubuntu:22.04"
+      image: "ubuntu:24.04"
     env:
       NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
@@ -51,11 +51,11 @@ jobs:
     - linux-newLTS-github--dotnet-and-msbuild
     - linux-newLTS-vanilla--stockmono
     - linux-newLTS-vanilla--newmono
-    - linux-newLTS-vanilla--dotnet6
+    - linux-newLTS-vanilla--dotnet8
     - windows--legacyFramework
     - windows--dotnet6
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v1
       with:
@@ -147,7 +147,7 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   linux-oldLTS-github--dotnet-and-xbuild:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
     - name: check mono version
@@ -178,7 +178,7 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   linux-oldLTS-github--dotnet-and-msbuild:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v1
     - name: check mono version
@@ -209,15 +209,15 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   linux-oldLTS-vanilla--stockmono:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
-      image: "ubuntu:20.04"
+      image: "ubuntu:22.04"
     steps:
     - uses: actions/checkout@v1
     - name: install sudo
       run: apt update && apt install --yes sudo
     - name: install all dependencies
-      run: sudo apt install --yes git make curl fsharp nunit-console
+      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make curl fsharp nunit-console
 
     # workaround for https://github.com/actions/runner/issues/2033
     - name: ownership workaround
@@ -251,9 +251,9 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   linux-oldLTS-vanilla--newmono:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
-      image: "ubuntu:20.04"
+      image: "ubuntu:22.04"
     steps:
     - uses: actions/checkout@v1
     - name: install sudo
@@ -295,11 +295,9 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   linux-newLTS-github--dotnet-and-xbuild:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v1
-    - name: check mono version
-      run: mono --version
     - name: install dependencies
       run: sudo apt install --yes fsharp
     - name: check mono version
@@ -326,11 +324,9 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   linux-newLTS-github--dotnet-and-msbuild:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v1
-    - name: check mono version
-      run: mono --version
     - name: install last version of mono (Microsoft APT repositories)
       run: sudo ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
     - name: check mono version
@@ -357,9 +353,9 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   linux-newLTS-vanilla--stockmono:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
-      image: "ubuntu:22.04"
+      image: "ubuntu:24.04"
     steps:
     - uses: actions/checkout@v1
     - name: install sudo
@@ -399,9 +395,9 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   linux-newLTS-vanilla--newmono:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
-      image: "ubuntu:22.04"
+      image: "ubuntu:24.04"
     steps:
     - uses: actions/checkout@v1
     - name: install sudo
@@ -442,16 +438,16 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux-newLTS-vanilla--dotnet6:
-    runs-on: ubuntu-22.04
+  linux-newLTS-vanilla--dotnet8:
+    runs-on: ubuntu-24.04
     container:
-      image: "ubuntu:22.04"
+      image: "ubuntu:24.04"
     steps:
     - uses: actions/checkout@v1
     - name: install sudo
       run: apt update && apt install --yes sudo
     - name: install dependencies
-      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make dotnet6
+      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make dotnet8
 
     # workaround for https://github.com/actions/runner/issues/2033
     - name: ownership workaround
