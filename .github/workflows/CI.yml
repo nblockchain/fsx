@@ -144,6 +144,8 @@ jobs:
 
   linux-newLTS-github--dotnet-and-xbuild:
     runs-on: ubuntu-22.04
+    env:
+      DOTNET_ROLL_FORWARD: major
     steps:
     - uses: actions/checkout@v1
     - name: check mono version
@@ -175,6 +177,8 @@ jobs:
 
   linux-newLTS-github--dotnet-and-msbuild:
     runs-on: ubuntu-22.04
+    env:
+      DOTNET_ROLL_FORWARD: major
     steps:
     - uses: actions/checkout@v1
     - name: check mono version
