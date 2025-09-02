@@ -43,10 +43,6 @@ jobs:
     needs:
     - macOS--dotnet6-and-mono
     - macOS--mono
-    - linux-oldLTS-github--dotnet-and-xbuild
-    - linux-oldLTS-github--dotnet-and-msbuild
-    - linux-oldLTS-vanilla--stockmono
-    - linux-oldLTS-vanilla--newmono
     - linux-newLTS-github--dotnet-and-xbuild
     - linux-newLTS-github--dotnet-and-msbuild
     - linux-newLTS-vanilla--stockmono
@@ -146,156 +142,10 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  linux-oldLTS-github--dotnet-and-xbuild:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v1
-    - name: check mono version
-      run: mono --version
-    - name: install dependencies
-      run: sudo apt install --yes fsharp
-    - name: check mono version
-      run: mono --version
-    - name: configure
-      run: ./configure.sh && cat build.config
-    - name: build in DEBUG mode
-      run: make
-    - name: run unit tests
-      run: dotnet fsi scripts/runUnitTests.fsx
-
-    - name: install
-      run: |
-        # to clean Debug artifacts first (make install builds in Release config)
-        git clean -fdx
-
-        ./configure.sh
-        make release
-        sudo make install
-
-    - name: run tests
-      run: make check
-    - name: compile this repo's .fsx scripts with fsx
-      run: ./compileFSharpScripts.fsx
-
-  linux-oldLTS-github--dotnet-and-msbuild:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v1
-    - name: check mono version
-      run: mono --version
-    - name: install last version of mono (Microsoft APT repositories)
-      run: sudo ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
-    - name: check mono version
-      run: mono --version
-    - name: configure
-      run: ./configure.sh
-    - name: build in DEBUG mode
-      run: make
-    - name: run unit tests
-      run: dotnet fsi scripts/runUnitTests.fsx
-
-    - name: install
-      run: |
-        # to clean Debug artifacts first (make install builds in Release config)
-        git clean -fdx
-
-        ./configure.sh
-        make release
-        sudo make install
-
-    - name: run tests
-      run: make check
-    - name: compile this repo's .fsx scripts with fsx
-      run: ./compileFSharpScripts.fsx
-
-  linux-oldLTS-vanilla--stockmono:
-    runs-on: ubuntu-20.04
-    container:
-      image: "ubuntu:20.04"
-    steps:
-    - uses: actions/checkout@v1
-    - name: install sudo
-      run: apt update && apt install --yes sudo
-    - name: install all dependencies
-      run: sudo apt install --yes git make curl fsharp nunit-console
-
-    # workaround for https://github.com/actions/runner/issues/2033
-    - name: ownership workaround
-      run: git config --global --add safe.directory '*'
-
-    - name: check mono version
-      run: mono --version
-    - name: install dependencies
-      run: sudo apt install --yes fsharp
-    - name: check mono version
-      run: mono --version
-    - name: configure
-      run: ./configure.sh
-    - name: build in DEBUG mode
-      run: make
-
-    - name: install
-      run: |
-        # to clean Debug artifacts first (make install builds in Release config)
-        git clean -fdx
-
-        ./configure.sh
-        make release
-        sudo make install
-
-    - name: run unit tests
-      run: ./scripts/runUnitTests.fsx
-    - name: run tests
-      run: make check
-    - name: compile this repo's .fsx scripts with fsx
-      run: ./compileFSharpScripts.fsx
-
-  linux-oldLTS-vanilla--newmono:
-    runs-on: ubuntu-20.04
-    container:
-      image: "ubuntu:20.04"
-    steps:
-    - uses: actions/checkout@v1
-    - name: install sudo
-      run: apt update && apt install --yes sudo
-    - name: install last version of mono (Microsoft APT repositories)
-      run: sudo ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
-    - name: install rest of dependencies
-      run: sudo apt install --yes git make curl fsharp nunit-console
-
-    # workaround for https://github.com/actions/runner/issues/2033
-    - name: ownership workaround
-      run: git config --global --add safe.directory '*'
-
-    - name: check mono version
-      run: mono --version
-    - name: install dependencies
-      run: sudo apt install --yes fsharp
-    - name: check mono version
-      run: mono --version
-    - name: configure
-      run: ./configure.sh
-    - name: build in DEBUG mode
-      run: make
-    - name: run unit tests
-      run: fsharpi --define:LEGACY_FRAMEWORK scripts/runUnitTests.fsx
-
-    - name: install
-      run: |
-        # to clean Debug artifacts first (make install builds in Release config)
-        git clean -fdx
-
-        ./configure.sh
-        make release
-        sudo make install
-
-    - name: run tests
-      run: make check
-    - name: compile this repo's .fsx scripts with fsx
-      run: ./compileFSharpScripts.fsx
-
   linux-newLTS-github--dotnet-and-xbuild:
     runs-on: ubuntu-22.04
+    env:
+      DOTNET_ROLL_FORWARD: major
     steps:
     - uses: actions/checkout@v1
     - name: check mono version
@@ -327,6 +177,8 @@ jobs:
 
   linux-newLTS-github--dotnet-and-msbuild:
     runs-on: ubuntu-22.04
+    env:
+      DOTNET_ROLL_FORWARD: major
     steps:
     - uses: actions/checkout@v1
     - name: check mono version
@@ -481,7 +333,7 @@ jobs:
       run: ./compileFSharpScripts.fsx
 
   windows--legacyFramework:
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
     - uses: actions/checkout@v1
     - name: HACK to emulate dotnet uninstall
