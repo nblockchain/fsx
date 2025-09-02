@@ -329,3 +329,119 @@ module Git =
                     else
                         let lastCommitSingleOutput = lines.[0]
                         sprintf "(%s/%s)" branch lastCommitSingleOutput
+
+    let GetTags() =
+        let tags =
+            Process
+                .Execute(
+                    {
+                        Command = "git"
+                        Arguments = "tag"
+                    },
+                    Echo.All
+                )
+                .UnwrapDefault()
+
+        let tagsSplitted =
+            tags.Split(
+                [| "\r\n"; "\n" |],
+                StringSplitOptions.RemoveEmptyEntries
+            )
+
+        tagsSplitted
+
+    let DoesTagExist(tagName: string) =
+        GetTags() |> Seq.contains tagName
+
+    let CreateTag(tagName: string) =
+        Process
+            .Execute(
+                {
+                    Command = "git"
+                    Arguments = (sprintf "tag %s" tagName)
+                },
+                Echo.All
+            )
+            .UnwrapDefault()
+        |> ignore<string>
+
+        let processResultRemote =
+            Process.Execute(
+                {
+                    Command = "git"
+                    Arguments = "push --tags"
+                },
+                Echo.All
+            )
+
+        let _remoteResultRemote =
+            match processResultRemote.Result with
+            | ProcessResultState.Error(_exitCode, output) ->
+                failwith(
+                    sprintf
+                        "pushing tags finished with an error: %s"
+                        output.StdErr
+                )
+            | _ -> ()
+
+        ()
+
+    let CreateTagWithForce(tagName: string) =
+        Process
+            .Execute(
+                {
+                    Command = "git"
+                    Arguments = sprintf "tag %s --force" tagName
+                },
+                Echo.All
+            )
+            .UnwrapDefault()
+        |> ignore<string>
+
+        let processResultRemote =
+            Process.Execute(
+                {
+                    Command = "git"
+                    Arguments =
+                        sprintf "push origin \"refs/tags/%s\" --force" tagName
+                },
+                Echo.All
+            )
+
+        match processResultRemote.Result with
+        | ProcessResultState.Error(_exitCode, output) ->
+            failwithf "pushing tag finished with an error: %s" output.StdErr
+        | _ -> ()
+
+    let DeleteTag tagName =
+        Process
+            .Execute(
+                {
+                    Command = "git"
+                    Arguments = (sprintf "tag --delete %s" tagName)
+                },
+                Echo.All
+            )
+            .UnwrapDefault()
+        |> ignore<string>
+
+        let processResultRemote =
+            Process.Execute(
+                {
+                    Command = "git"
+                    Arguments = (sprintf "push --delete origin %s" tagName)
+                },
+                Echo.All
+            )
+
+        let _processResultRemote =
+            match processResultRemote.Result with
+            | ProcessResultState.Error(_exitCode, output) ->
+                failwith(
+                    sprintf
+                        "deleting remote tag finished with an error: %s"
+                        output.StdErr
+                )
+            | _ -> ()
+
+        ()
