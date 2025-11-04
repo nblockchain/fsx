@@ -369,7 +369,7 @@ module Git =
             Process.Execute(
                 {
                     Command = "git"
-                    Arguments = "push --tags"
+                    Arguments = sprintf "push origin \"refs/tags/%s\"" tagName
                 },
                 Echo.All
             )
