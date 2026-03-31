@@ -47,8 +47,37 @@ let computeMd5sum (filePath: string) : string =
     with
     | ex -> failwithf "Error computing MD5 for '%s': %s" filePath ex.Message
 
+/// Parse command line arguments
+let parseArgs (args: string[]) =
+    let mutable folder1 = ""
+    let mutable folder2 = ""
+    let mutable isParallel = true  // Default is parallel processing
+    
+    let rec parse i =
+        if i >= args.Length then ()
+        else
+            match args.[i] with
+            | "--non-parallel" ->
+                isParallel <- false
+                parse (i + 1)
+            | arg when arg.StartsWith("-") ->
+                eprintfn "Error: Unknown option '%s'" arg
+                exit 1
+            | arg when folder1 = "" -> folder1 <- arg; parse (i + 1)
+            | arg when folder2 = "" -> folder2 <- arg; parse (i + 1)
+            | _ ->
+                eprintfn "Error: Unexpected argument '%s'" args.[i]
+                exit 1
+    
+    parse 0
+    
+    if folder1 = "" || folder2 = "" then
+        None
+    else
+        Some(folder1, folder2, isParallel)
+
 /// Main comparison logic
-let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) =
+let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) (isParallel: bool) =
     printfn "Comparing folders:"
     printfn "  Folder 1: %s" dir1.FullName
     printfn "  Folder 2: %s" dir2.FullName
@@ -104,8 +133,15 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) =
     
     printfn "✓ File sizes match"
     
-    // Check 4: Compare MD5 checksums (in parallel with progress bar)
-    printfn "Computing MD5 checksums in parallel..."
+    // Check 4: Compare MD5 checksums
+    // Prepare file pairs for comparison
+    let filePairs =
+        files1
+        |> Map.toArray
+        |> Array.map (fun (name, _) ->
+            let file1Path = Path.Combine(dir1.FullName, name)
+            let file2Path = Path.Combine(dir2.FullName, name)
+            (name, file1Path, file2Path))
     
     let totalFiles = Map.count files1
     let progressLock = obj()
@@ -124,23 +160,34 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) =
                 printfn ""
         )
     
-    let filesWithDiffs = 
-        files1
-        |> Map.toArray
-        |> Array.map (fun (name, _) ->
-            let file1Path = Path.Combine(dir1.FullName, name)
-            let file2Path = Path.Combine(dir2.FullName, name)
-            (name, file1Path, file2Path))
-        |> Array.map (fun (name, path1, path2) ->
-            // Run md5sum for both files in parallel
-            let task1 = Task.Run(fun () -> computeMd5sum path1)
-            let task2 = Task.Run(fun () -> computeMd5sum path2)
-            Task.WaitAll(task1, task2)
-            let hash1 = task1.Result
-            let hash2 = task2.Result
-            updateProgress ()
-            (name, hash1, hash2))
-        |> Array.filter (fun (_, hash1, hash2) -> hash1 <> hash2)
+    let filesWithDiffs =
+        if isParallel then
+            printfn "Computing MD5 checksums in parallel..."
+            
+            // Results array (filled by parallel workers)
+            let results = Array.init filePairs.Length (fun _ -> ("", "", ""))
+            
+            // Use Parallel.For with parallelism of 20
+            let options = ParallelOptions(MaxDegreeOfParallelism = 20)
+            Parallel.For(0, filePairs.Length, options, (fun i _ ->
+                let (name, path1, path2) = filePairs.[i]
+                let hash1 = computeMd5sum path1
+                let hash2 = computeMd5sum path2
+                results.[i] <- (name, hash1, hash2)
+                updateProgress ()
+            )) |> ignore
+            
+            results |> Array.filter (fun (_, hash1, hash2) -> hash1 <> hash2)
+        else
+            printfn "Computing MD5 checksums (sequential)..."
+            
+            filePairs
+            |> Array.map (fun (name, path1, path2) ->
+                let hash1 = computeMd5sum path1
+                let hash2 = computeMd5sum path2
+                updateProgress ()
+                (name, hash1, hash2))
+            |> Array.filter (fun (_, hash1, hash2) -> hash1 <> hash2)
     
     if not (Array.isEmpty filesWithDiffs) then
         eprintfn "Error: MD5 checksums differ for the following files:"
@@ -157,21 +204,25 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) =
 
 /// Entry point
 let main (args: string[]) =
-    if args.Length <> 2 then
-        eprintfn "Usage: dir-diff.fsx <folder1> <folder2>"
+    match parseArgs args with
+    | None ->
+        eprintfn "Usage: dir-diff.fsx <folder1> <folder2> [--non-parallel]"
+        eprintfn ""
         eprintfn "Compares two folders and checks if their contents are identical."
+        eprintfn ""
+        eprintfn "Arguments:"
+        eprintfn "  folder1         Path to the first folder"
+        eprintfn "  folder2         Path to the second folder"
+        eprintfn "  --non-parallel  Disable parallel processing (default: parallel)"
         exit 1
-    
-    let folder1Path = args.[0]
-    let folder2Path = args.[1]
-    
-    printfn "Validating paths..."
-    let dir1 = validatePath folder1Path
-    let dir2 = validatePath folder2Path
-    
-    compareFolders dir1 dir2
-    
-    0  // Success exit code
+    | Some(folder1Path, folder2Path, isParallel) ->
+        printfn "Validating paths..."
+        let dir1 = validatePath folder1Path
+        let dir2 = validatePath folder2Path
+        
+        compareFolders dir1 dir2 isParallel
+        
+        0  // Success exit code
 
 #if INTERACTIVE
 main fsi.CommandLineArgs.[1..]
