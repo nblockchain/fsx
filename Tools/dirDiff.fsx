@@ -15,11 +15,12 @@ let validatePath (path: string) : DirectoryInfo =
         exit 1
     dirInfo
 
-/// Gets all file details (name and size) for a directory
-let getFileDetails (dirInfo: DirectoryInfo) : Map<string, int64> =
-    dirInfo.GetFiles("*", SearchOption.AllDirectories)
-    |> Array.map (fun f -> f.Name, f.Length)
-    |> Map.ofArray
+/// Gets all file details (name, size) and hidden file count for a directory
+let getFileDetails (dirInfo: DirectoryInfo) : Map<string, int64> * int =
+    let files = dirInfo.GetFiles("*", SearchOption.AllDirectories)
+    let fileMap = files |> Array.map (fun f -> f.Name, f.Length) |> Map.ofArray
+    let hiddenCount = files |> Array.filter (fun f -> f.Name.StartsWith(".")) |> Array.length
+    (fileMap, hiddenCount)
 
 /// Computes MD5 hash for a file using md5sum command
 let computeMd5sum (filePath: string) : string =
@@ -82,17 +83,19 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) (isParallel: bool
     printfn ""
     
     // Get file details
-    let files1 = getFileDetails dir1
-    let files2 = getFileDetails dir2
+    let (files1, hidden1) = getFileDetails dir1
+    let (files2, hidden2) = getFileDetails dir2
     
     // Check 1: Compare number of files
     let count1 = Map.count files1
     let count2 = Map.count files2
     
     if count1 <> count2 then
+        let visible1 = count1 - hidden1
+        let visible2 = count2 - hidden2
         eprintfn "Error: Number of files differ."
-        eprintfn "  Folder 1 has %d files" count1
-        eprintfn "  Folder 2 has %d files" count2
+        eprintfn "  Folder 1 has %d files (%d visible, %d hidden)" count1 visible1 hidden1
+        eprintfn "  Folder 2 has %d files (%d visible, %d hidden)" count2 visible2 hidden2
         exit 1
     
     printfn "✓ Number of files matches: %d" count1
