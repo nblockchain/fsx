@@ -3,8 +3,6 @@
 open System
 open System.IO
 open System.Diagnostics
-open System.Threading
-open System.Threading.Tasks
 
 /// Validates that a path exists and is a directory
 let validatePath (path: string) : DirectoryInfo =
@@ -144,40 +142,50 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) (isParallel: bool
             (name, file1Path, file2Path))
     
     let totalFiles = Map.count files1
-    let progressLock = obj()
     let mutable completedFiles = 0
     
-    // Progress update function (thread-safe)
+    // Progress update function
     let updateProgress () =
-        lock progressLock (fun () ->
-            completedFiles <- completedFiles + 1
-            let pct = int (float completedFiles / float totalFiles * 100.0)
-            let barWidth = 30
-            let filled = int (float completedFiles / float totalFiles * float barWidth)
-            let bar = String.replicate filled "=" + String.replicate (barWidth - filled) "-"
-            printf "\r  Progress: [%s] %d/%d (%d%%)" bar completedFiles totalFiles pct
-            if completedFiles = totalFiles then
-                printfn ""
-        )
+        completedFiles <- completedFiles + 1
+        let pct = int (float completedFiles / float totalFiles * 100.0)
+        let barWidth = 30
+        let filled = int (float completedFiles / float totalFiles * float barWidth)
+        let bar = String.replicate filled "=" + String.replicate (barWidth - filled) "-"
+        printf "\r  Progress: [%s] %d/%d (%d%%)" bar completedFiles totalFiles pct
+        if completedFiles = totalFiles then
+            printfn ""
     
     let filesWithDiffs =
         if isParallel then
             printfn "Computing MD5 checksums in parallel..."
             
-            // Results array (filled by parallel workers)
-            let results = Array.init filePairs.Length (fun _ -> ("", "", ""))
+            // Process in batches of 20 using Async.Parallel
+            let batchSize = 20
+            let results = ResizeArray<_>()
             
-            // Use Parallel.For with parallelism of 20
-            let options = ParallelOptions(MaxDegreeOfParallelism = 20)
-            Parallel.For(0, filePairs.Length, options, (fun i _ ->
-                let (name, path1, path2) = filePairs.[i]
-                let hash1 = computeMd5sum path1
-                let hash2 = computeMd5sum path2
-                results.[i] <- (name, hash1, hash2)
-                updateProgress ()
-            )) |> ignore
+            filePairs
+            |> Array.chunkBySize batchSize
+            |> Array.iter (fun batch ->
+                let asyncWorkItems =
+                    batch
+                    |> Array.map (fun (name, path1, path2) ->
+                        async {
+                            let hash1 = computeMd5sum path1
+                            let hash2 = computeMd5sum path2
+                            return (name, hash1, hash2)
+                        })
+                
+                let batchResults =
+                    asyncWorkItems
+                    |> Async.Parallel
+                    |> Async.RunSynchronously
+                
+                batchResults |> Array.iter (fun r ->
+                    updateProgress ()
+                    results.Add(r))
+            )
             
-            results |> Array.filter (fun (_, hash1, hash2) -> hash1 <> hash2)
+            results.ToArray() |> Array.filter (fun (_, hash1, hash2) -> hash1 <> hash2)
         else
             printfn "Computing MD5 checksums (sequential)..."
             
