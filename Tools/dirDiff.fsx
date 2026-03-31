@@ -3,6 +3,7 @@
 open System
 open System.IO
 open System.Diagnostics
+open System.Threading
 open System.Threading.Tasks
 
 /// Validates that a path exists and is a directory
@@ -103,8 +104,25 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) =
     
     printfn "✓ File sizes match"
     
-    // Check 4: Compare MD5 checksums (in parallel)
+    // Check 4: Compare MD5 checksums (in parallel with progress bar)
     printfn "Computing MD5 checksums in parallel..."
+    
+    let totalFiles = Map.count files1
+    let progressLock = obj()
+    let mutable completedFiles = 0
+    
+    // Progress update function (thread-safe)
+    let updateProgress () =
+        lock progressLock (fun () ->
+            completedFiles <- completedFiles + 1
+            let pct = int (float completedFiles / float totalFiles * 100.0)
+            let barWidth = 30
+            let filled = int (float completedFiles / float totalFiles * float barWidth)
+            let bar = String.replicate filled "=" + String.replicate (barWidth - filled) "-"
+            printf "\r  Progress: [%s] %d/%d (%d%%)" bar completedFiles totalFiles pct
+            if completedFiles = totalFiles then
+                printfn ""
+        )
     
     let filesWithDiffs = 
         files1
@@ -120,6 +138,7 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) =
             Task.WaitAll(task1, task2)
             let hash1 = task1.Result
             let hash2 = task2.Result
+            updateProgress ()
             (name, hash1, hash2))
         |> Array.filter (fun (_, hash1, hash2) -> hash1 <> hash2)
     
