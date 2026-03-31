@@ -15,11 +15,16 @@ let validatePath (path: string) : DirectoryInfo =
         exit 1
     dirInfo
 
+/// Check if a file is hidden (cross-platform: dot-prefix on Unix, Hidden attribute on Windows)
+let isHidden (file: FileInfo) =
+    file.Name.StartsWith(".") ||
+    (file.Attributes &&& FileAttributes.Hidden) = FileAttributes.Hidden
+
 /// Gets all file details (name, size) and hidden file count for a directory
 let getFileDetails (dirInfo: DirectoryInfo) : Map<string, int64> * int =
     let files = dirInfo.GetFiles("*", SearchOption.AllDirectories)
     let fileMap = files |> Array.map (fun f -> f.Name, f.Length) |> Map.ofArray
-    let hiddenCount = files |> Array.filter (fun f -> f.Name.StartsWith(".")) |> Array.length
+    let hiddenCount = files |> Array.filter isHidden |> Array.length
     (fileMap, hiddenCount)
 
 /// Computes MD5 hash for a file using md5sum command
