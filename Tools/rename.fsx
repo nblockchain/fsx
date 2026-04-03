@@ -4,7 +4,7 @@ open System
 open System.IO
 
 #if LEGACY_FRAMEWORK
-Console.Error.WriteLine "This script is only compatible with .NET6 or higher"
+Console.Error.WriteLine "This script is only compatible with .NET8 or higher"
 Environment.Exit 1
 #else
 
