@@ -10,7 +10,7 @@ mkdir -p $FSX_INSTALL_DIR
 mkdir -p $BIN_INSTALL_DIR
 
 if [[ x"$Solution" == "xfsx.sln" ]]; then
-    cp -rfvp ./fsxc/bin/Release/net6.0/* $FSX_INSTALL_DIR
+    cp -rfvp ./fsxc/bin/Release/net8.0/* $FSX_INSTALL_DIR
 else
     cp -rfvp ./fsxc/bin/Release/* $FSX_INSTALL_DIR
 fi
