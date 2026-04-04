@@ -92,8 +92,8 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) (isParallel: bool
     let (files2, hidden2) = getFileDetails dir2
     
     // Check 1: Compare number of files
-    let count1 = Map.count files1
-    let count2 = Map.count files2
+    let count1 = files1.Count
+    let count2 = files2.Count
     
     if count1 <> count2 then
         let visible1 = count1 - hidden1
@@ -104,10 +104,14 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) (isParallel: bool
         exit 1
     
     printfn "✓ Number of files matches: %d" count1
-    
+
+    // in older versions of F#, Map.keys doesn't exist yet
+    let mapKeys (map: Map<'K,'V>) =
+        seq { for kvp in map do yield kvp.Key }
+
     // Check 2: Compare file names
-    let names1 = Set.ofList (Map.keys files1 |> Seq.toList)
-    let names2 = Set.ofList (Map.keys files2 |> Seq.toList)
+    let names1 = Set.ofList (mapKeys files1 |> Seq.toList)
+    let names2 = Set.ofList (mapKeys files2 |> Seq.toList)
     
     let onlyIn1 = Set.difference names1 names2
     let onlyIn2 = Set.difference names2 names1
@@ -149,7 +153,7 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) (isParallel: bool
             let file2Path = Path.Combine(dir2.FullName, name)
             (name, file1Path, file2Path))
     
-    let totalFiles = Map.count files1
+    let totalFiles = files1.Count
     let mutable completedFiles = 0
     
     // Progress update function
@@ -219,7 +223,7 @@ let compareFolders (dir1: DirectoryInfo) (dir2: DirectoryInfo) (isParallel: bool
     printfn "SUCCESS: All files are identical!"
 
 /// Entry point
-let main (args: string[]) =
+let main (args: string[]): int =
     match parseArgs args with
     | None ->
         eprintfn "Usage: dir-diff.fsx <folder1> <folder2> [--non-parallel]"
@@ -230,7 +234,9 @@ let main (args: string[]) =
         eprintfn "  folder1         Path to the first folder"
         eprintfn "  folder2         Path to the second folder"
         eprintfn "  --non-parallel  Disable parallel processing (default: parallel)"
-        exit 1
+
+        1  // error exit code
+
     | Some(folder1Path, folder2Path, isParallel) ->
         printfn "Validating paths..."
         let dir1 = validatePath folder1Path
@@ -240,8 +246,10 @@ let main (args: string[]) =
         
         0  // Success exit code
 
+let exitCode =
 #if INTERACTIVE
-main fsi.CommandLineArgs.[1..]
+    main fsi.CommandLineArgs.[1..]
 #else
-main (fsi.CommandLineArgs |> Array.tail)
+    main (fsi.CommandLineArgs |> Array.tail)
 #endif
+exit exitCode
