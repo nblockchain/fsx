@@ -72,28 +72,9 @@ let fullVersion =
                     baseVersion
             | _ -> ()
 
-            let nugetPush =
-                Path.Combine(rootDir.FullName, "Tools", "nugetPush.fsx")
-                |> FileInfo
-
-            // to disable welcome msg, see https://stackoverflow.com/a/70493818/544947
-            Environment.SetEnvironmentVariable("DOTNET_NOLOGO", "true")
-
             let fullVersion =
-                Process
-                    .Execute(
-                        {
-                            Command = "dotnet"
-                            Arguments =
-                                sprintf
-                                    "fsi %s --output-version %s"
-                                    nugetPush.FullName
-                                    baseVersion
-                        },
-                        Echo.Off
-                    )
-                    .UnwrapDefault()
-                    .Trim()
+                Fsdk.Network.GetNugetPrereleaseVersionFromBaseVersion
+                    baseVersion
 
             fullVersion
 
