@@ -273,7 +273,7 @@ module Misc =
         if not(sourceDir.Exists) then
             raise
             <| ArgumentException(
-                "Source directory does not exist: " + targetDir.FullName,
+                "Source directory does not exist: " + sourceDir.FullName,
                 "sourceDir"
             )
 
