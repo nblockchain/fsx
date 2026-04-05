@@ -1,2 +1,7 @@
+# top entries are newer, bottom ones older
+
+# Tools/dirDiff.fsx: fix formatting
+c4b5fa7631a87811fa1c916f9c12c758dd9348e6
+
 # Format F# files and scripts with fantomless v4.7.996
 14deca289798ce31908a77344324558c4bdc047b
