@@ -243,10 +243,12 @@ module Network =
     let private DownloadFileIgnoringSslCertificates
         (uri: Uri)
         : Async<FileInfo> =
+#if LEGACY_FRAMEWORK
         ServicePointManager.ServerCertificateValidationCallback <-
             System.Net.Security.RemoteCertificateValidationCallback(fun _ _ _ _ ->
                 true
             )
+#endif
 
         async {
             try
@@ -491,7 +493,7 @@ module Network =
 
 #if !LEGACY_FRAMEWORK
         Console.Error.WriteLine
-            "WARNING: using nuget.exe is deprecated when using .NET8 or newer, consider using dotnet restore instead"
+            "WARNING: using nuget.exe is deprecated when using .NET10 or newer, consider using dotnet restore instead"
 #endif
 
         let cmd = CreateNugetCommand nugetExe command

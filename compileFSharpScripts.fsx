@@ -7,8 +7,8 @@ open System.Linq
 #r "System.Configuration"
 open System.Configuration
 
-#load "Fsdk/Misc.fs"
-#load "Fsdk/Process.fs"
+#load "src/Fsdk/Misc.fs"
+#load "src/Fsdk/Process.fs"
 
 open Fsdk
 open Fsdk.Process
@@ -23,7 +23,7 @@ let rec FindFsxc(nestedCall: bool) : bool * FileInfo =
     let fsxCompiler = "fsxc.exe"
 #endif
 
-    let fsxcBinDir = Path.Combine(__SOURCE_DIRECTORY__, "fsxc", "bin")
+    let fsxcBinDir = Path.Combine(__SOURCE_DIRECTORY__, "src", "fsxc", "bin")
 
     let findFsxcExeFiles() =
         Directory.GetFiles(fsxcBinDir, fsxCompiler, SearchOption.AllDirectories)

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 25.0.1703.8
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsxc", "fsxc\fsxc.fsproj", "{9E754152-E69A-4DB9-B23A-3B72C189FF5A}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsxc", "src\fsxc\fsxc.fsproj", "{9E754152-E69A-4DB9-B23A-3B72C189FF5A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fsdk", "Fsdk\Fsdk.fsproj", "{B532D664-2864-4532-9673-3E52DD363BB9}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fsdk", "src\Fsdk\Fsdk.fsproj", "{B532D664-2864-4532-9673-3E52DD363BB9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{17C46E45-4C73-4981-9EE4-686675C2DDBB}"
 	ProjectSection(SolutionItems) = preProject
@@ -52,8 +52,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FD764CDA
 		Tools\safeRun.fsx = Tools\safeRun.fsx
 	EndProjectSection
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fsdk.Tests", "Fsdk.Tests\Fsdk.Tests.fsproj", "{43BA7E25-975B-4DF9-B274-EEF6C806C1D0}"
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsx", "fsx\fsx.fsproj", "{534A9824-CD0A-47FC-AEF0-9A5F04021507}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fsdk.Tests", "src\Fsdk.Tests\Fsdk.Tests.fsproj", "{43BA7E25-975B-4DF9-B274-EEF6C806C1D0}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fsx", "src\fsx\fsx.fsproj", "{534A9824-CD0A-47FC-AEF0-9A5F04021507}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -811,7 +811,7 @@ let fsi = { CommandLineArgs = System.Environment.GetCommandLineArgs() }
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
 
     <!-- the two settings below allow the binaries sit directly in subfolder /bin/ -->
     <OutputPath>.</OutputPath>

@@ -5,8 +5,8 @@ open System.IO
 #r "System.Configuration"
 open System.Configuration
 
-#load "../Fsdk/Misc.fs"
-#load "../Fsdk/Process.fs"
+#load "../src/Fsdk/Misc.fs"
+#load "../src/Fsdk/Process.fs"
 
 open Fsdk
 open Fsdk.Process

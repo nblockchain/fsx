@@ -6,7 +6,7 @@ open System.IO
 #r "System.Configuration"
 open System.Configuration
 
-#load "../Fsdk/Misc.fs"
+#load "../src/Fsdk/Misc.fs"
 open Fsdk
 
 let args = Misc.FsxOnlyArguments()
