@@ -11,10 +11,10 @@ open System.Diagnostics
 open System.Configuration
 #endif
 
-#load "../Fsdk/Misc.fs"
-#load "../Fsdk/Process.fs"
-#load "../Fsdk/Git.fs"
-#load "../Fsdk/Network.fs"
+#load "../src/Fsdk/Misc.fs"
+#load "../src/Fsdk/Process.fs"
+#load "../src/Fsdk/Git.fs"
+#load "../src/Fsdk/Network.fs"
 
 open Fsdk
 open Fsdk.Process
@@ -50,6 +50,7 @@ let RunUnitTests() =
     let testTarget =
         Path.Combine(
             RootDir.FullName,
+            "src",
             testProjectName,
             testProjectName + ".fsproj"
         )
@@ -61,6 +62,7 @@ let RunUnitTests() =
     let testTargetDebug =
         Path.Combine(
             RootDir.FullName,
+            "src",
             testProjectName,
             "bin",
             "Debug",
@@ -71,6 +73,7 @@ let RunUnitTests() =
     let testTargetRelease =
         Path.Combine(
             RootDir.FullName,
+            "src",
             testProjectName,
             "bin",
             "Release",

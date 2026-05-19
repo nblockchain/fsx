@@ -8,7 +8,7 @@ Console.Error.WriteLine "This script is only compatible with .NET8 or higher"
 Environment.Exit 1
 #else
 
-#load "../Fsdk/Misc.fs"
+#load "../src/Fsdk/Misc.fs"
 open Fsdk
 
 let args = Misc.FsxOnlyArguments()

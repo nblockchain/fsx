@@ -4,10 +4,10 @@ open System.IO
 #r "System.Configuration"
 open System.Configuration
 
-#load "../Fsdk/Misc.fs"
-#load "../Fsdk/Process.fs"
-#load "../Fsdk/Git.fs"
-#load "../Fsdk/Network.fs"
+#load "../src/Fsdk/Misc.fs"
+#load "../src/Fsdk/Process.fs"
+#load "../src/Fsdk/Git.fs"
+#load "../src/Fsdk/Network.fs"
 
 open Fsdk
 open Fsdk.Process
@@ -85,7 +85,7 @@ let Pack proj =
                 Command = "dotnet"
                 Arguments =
                     sprintf
-                        "pack %s/%s.fsproj -property:PackageVersion=%s"
+                        "pack src/%s/%s.fsproj -property:PackageVersion=%s"
                         proj
                         proj
                         fullVersion
@@ -144,7 +144,7 @@ match githubEventName with
                     Command = "dotnet"
                     Arguments =
                         sprintf
-                            "nuget push %s/nupkg/%s.%s.nupkg --api-key %s --source %s"
+                            "nuget push src/%s/nupkg/%s.%s.nupkg --api-key %s --source %s"
                             proj
                             proj
                             fullVersion

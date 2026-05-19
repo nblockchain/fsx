@@ -7,10 +7,10 @@ open System.Diagnostics
 #r "System.Configuration"
 open System.Configuration
 
-#load "../Fsdk/Misc.fs"
-#load "../Fsdk/Process.fs"
-#load "../Fsdk/Git.fs"
-#load "../Fsdk/Network.fs"
+#load "../src/Fsdk/Misc.fs"
+#load "../src/Fsdk/Process.fs"
+#load "../src/Fsdk/Git.fs"
+#load "../src/Fsdk/Network.fs"
 
 open Fsdk
 open Fsdk.Process
@@ -19,7 +19,7 @@ let ScriptsDir = __SOURCE_DIRECTORY__ |> DirectoryInfo
 let RootDir = Path.Combine(ScriptsDir.FullName, "..") |> DirectoryInfo
 let TestDir = Path.Combine(RootDir.FullName, "test") |> DirectoryInfo
 let ToolsDir = Path.Combine(RootDir.FullName, "Tools") |> DirectoryInfo
-let FsdkDir = Path.Combine(RootDir.FullName, "Fsdk") |> DirectoryInfo
+let FsdkDir = Path.Combine(RootDir.FullName, "src", "Fsdk") |> DirectoryInfo
 let NugetDir = Path.Combine(RootDir.FullName, ".nuget") |> DirectoryInfo
 let NugetExe = Path.Combine(NugetDir.FullName, "nuget.exe") |> FileInfo
 
@@ -49,13 +49,14 @@ let mainBinariesDir binaryConfig =
 #if !LEGACY_FRAMEWORK
     Path.Combine(
         RootDir.FullName,
+        "src",
         "fsxc",
         "bin",
         binaryConfig.ToString(),
         "net8.0"
     )
 #else
-    Path.Combine(RootDir.FullName, "fsxc", "bin", binaryConfig.ToString())
+    Path.Combine(RootDir.FullName, "src", "fsxc", "bin", binaryConfig.ToString())
 #endif
     |> DirectoryInfo
 
@@ -209,7 +210,7 @@ let assemblyExecutableExtension =
     "exe"
 #endif
 
-let releaseFolderPath = Path.Combine(RootDir.FullName, "fsx", "bin", "Release")
+let releaseFolderPath = Path.Combine(RootDir.FullName, "src", "fsx", "bin", "Release")
 
 #if !LEGACY_FRAMEWORK
 let finalReleaseFolderPath = Path.Combine(releaseFolderPath, "net8.0")

@@ -6,8 +6,8 @@ open System.IO
 #r "System.Configuration"
 open System.Configuration
 
-#load "../Fsdk/Misc.fs"
-#load "../Fsdk/Process.fs"
+#load "../src/Fsdk/Misc.fs"
+#load "../src/Fsdk/Process.fs"
 
 open Fsdk
 open Fsdk.Process
@@ -119,7 +119,7 @@ let GitCommit (fullVersion: Version) (newFullVersion: Version) =
         .Execute(
             {
                 Command = "git"
-                Arguments = "add Fsdk/AssemblyInfo.fs"
+                Arguments = "add src/Fsdk/AssemblyInfo.fs"
             },
             Echo.Off
         )
