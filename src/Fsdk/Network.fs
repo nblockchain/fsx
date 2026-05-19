@@ -243,10 +243,12 @@ module Network =
     let private DownloadFileIgnoringSslCertificates
         (uri: Uri)
         : Async<FileInfo> =
+#if LEGACY_FRAMEWORK
         ServicePointManager.ServerCertificateValidationCallback <-
             System.Net.Security.RemoteCertificateValidationCallback(fun _ _ _ _ ->
                 true
             )
+#endif
 
         async {
             try
