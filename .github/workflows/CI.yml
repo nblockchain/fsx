@@ -42,12 +42,8 @@ jobs:
   sanity-check:
     needs:
     - macOS--dotnet10-and-mono
-    - macOS--mono
     - linux-oldLTS-github--dotnet-and-newmono
-    - linux-newLTS-vanilla--stockmono
-    - linux-newLTS-vanilla--newmono
     - linux-newLTS-vanilla--dotnet10
-    - windows--legacyFramework
     - windows--dotnet10
 
     runs-on: ubuntu-latest
@@ -116,35 +112,6 @@ jobs:
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
 
-  macOS--mono:
-    runs-on: macOS-14
-    steps:
-    - uses: actions/checkout@v1
-    - name: HACK to emulate dotnet uninstall
-      run: sudo rm -f `which dotnet`
-    - name: check mono version
-      run: mono --version
-    - name: configure
-      run: ./configure.sh
-    - name: build in DEBUG mode
-      run: make
-    - name: run unit tests
-      run: fsharpi --define:LEGACY_FRAMEWORK scripts/runUnitTests.fsx
-
-    - name: install
-      run: |
-        # to clean Debug artifacts first (make install builds in Release config)
-        git clean -fdx
-
-        ./configure.sh
-        make release
-        sudo make install
-
-    - name: run tests
-      run: make check
-    - name: compile this repo's .fsx scripts with fsx
-      run: ./compileFSharpScripts.fsx
-
   linux-oldLTS-github--dotnet-and-newmono:
     runs-on: ubuntu-24.04
     env:
@@ -161,92 +128,6 @@ jobs:
       run: make
     - name: run unit tests
       run: dotnet fsi scripts/runUnitTests.fsx
-
-    - name: install
-      run: |
-        # to clean Debug artifacts first (make install builds in Release config)
-        git clean -fdx
-
-        ./configure.sh
-        make release
-        sudo make install
-
-    - name: run tests
-      run: make check
-    - name: compile this repo's .fsx scripts with fsx
-      run: ./compileFSharpScripts.fsx
-
-  linux-newLTS-vanilla--stockmono:
-    runs-on: ubuntu-latest
-    container:
-      image: "ubuntu:26.04"
-    steps:
-    - uses: actions/checkout@v1
-    - name: install sudo
-      run: apt update && apt install --yes sudo
-    - name: install all dependencies
-      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make curl fsharp nunit-console
-
-    # workaround for https://github.com/actions/runner/issues/2033
-    - name: ownership workaround
-      run: git config --global --add safe.directory '*'
-
-    - name: check mono version
-      run: mono --version
-    - name: install dependencies
-      run: sudo apt install --yes fsharp
-    - name: check mono version
-      run: mono --version
-    - name: configure
-      run: ./configure.sh
-    - name: build in DEBUG mode
-      run: make
-
-    - name: install
-      run: |
-        # to clean Debug artifacts first (make install builds in Release config)
-        git clean -fdx
-
-        ./configure.sh
-        make release
-        sudo make install
-
-    - name: run unit tests
-      run: ./scripts/runUnitTests.fsx
-    - name: run tests
-      run: make check
-    - name: compile this repo's .fsx scripts with fsx
-      run: ./compileFSharpScripts.fsx
-
-  linux-newLTS-vanilla--newmono:
-    runs-on: ubuntu-latest
-    container:
-      image: "ubuntu:26.04"
-    steps:
-    - uses: actions/checkout@v1
-    - name: install sudo
-      run: apt update && apt install --yes sudo
-    - name: install last version of mono (Microsoft APT repositories)
-      run: sudo ./scripts/CI/install_mono_from_microsoft_deb_packages.sh
-    - name: install rest of dependencies
-      run: sudo DEBIAN_FRONTEND=noninteractive apt install --yes git make curl fsharp nunit-console
-
-    # workaround for https://github.com/actions/runner/issues/2033
-    - name: ownership workaround
-      run: git config --global --add safe.directory '*'
-
-    - name: check mono version
-      run: mono --version
-    - name: install dependencies
-      run: sudo apt install --yes fsharp
-    - name: check mono version
-      run: mono --version
-    - name: configure
-      run: ./configure.sh
-    - name: build in DEBUG mode
-      run: make
-    - name: run unit tests
-      run: fsharpi --define:LEGACY_FRAMEWORK scripts/runUnitTests.fsx
 
     - name: install
       run: |
@@ -299,30 +180,6 @@ jobs:
       run: make check
     - name: compile this repo's .fsx scripts with fsx
       run: ./compileFSharpScripts.fsx
-
-  windows--legacyFramework:
-    runs-on: windows-2022
-    steps:
-    - uses: actions/checkout@v1
-    - name: HACK to emulate dotnet uninstall
-      run: del $(where.exe dotnet)
-    - name: build in DEBUG mode
-      run: .\make.bat
-    - name: run unit tests
-      run: .\Tools\fsi.bat scripts\runUnitTests.fsx
-
-    - name: install
-      run: |
-        # to clean Debug artifacts first (make install builds in Release config)
-        git clean -fdx
-
-        .\make.bat release
-        .\make.bat install
-
-    - name: run tests
-      run: .\make.bat check
-    - name: compile this repo's .fsx scripts with fsx
-      run: .\Tools\fsi.bat compileFSharpScripts.fsx
 
   windows--dotnet10:
     runs-on: windows-latest
