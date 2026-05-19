@@ -53,10 +53,16 @@ let mainBinariesDir binaryConfig =
         "fsxc",
         "bin",
         binaryConfig.ToString(),
-        "net8.0"
+        "net10.0"
     )
 #else
-    Path.Combine(RootDir.FullName, "src", "fsxc", "bin", binaryConfig.ToString())
+    Path.Combine(
+        RootDir.FullName,
+        "src",
+        "fsxc",
+        "bin",
+        binaryConfig.ToString()
+    )
 #endif
     |> DirectoryInfo
 
@@ -210,10 +216,11 @@ let assemblyExecutableExtension =
     "exe"
 #endif
 
-let releaseFolderPath = Path.Combine(RootDir.FullName, "src", "fsx", "bin", "Release")
+let releaseFolderPath =
+    Path.Combine(RootDir.FullName, "src", "fsx", "bin", "Release")
 
 #if !LEGACY_FRAMEWORK
-let finalReleaseFolderPath = Path.Combine(releaseFolderPath, "net8.0")
+let finalReleaseFolderPath = Path.Combine(releaseFolderPath, "net10.0")
 #else
 let finalReleaseFolderPath = releaseFolderPath
 #endif
