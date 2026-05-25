@@ -10,18 +10,6 @@ module Git =
 
     let private gitCommand = "git"
 
-    let rec private GetBranchFromGitBranch(outchunks: list<string>) =
-        match outchunks with
-        | [] ->
-            failwith
-                "current branch not found, unexpected output from `git branch`"
-        | head :: tail ->
-            if (head.StartsWith("*")) then
-                let branchName = head.Substring("* ".Length)
-                branchName
-            else
-                GetBranchFromGitBranch(tail)
-
     let private IsGitInstalled() : bool =
         let gitCheckCommand =
             match Misc.GuessPlatform() with
@@ -58,15 +46,12 @@ module Git =
             Process.Execute(
                 {
                     Command = gitCommand
-                    Arguments = "branch"
+                    Arguments = "branch --show-current"
                 },
                 Echo.Off
             )
 
-        let output = gitBranch.UnwrapDefault()
-        let branchesOutput = Misc.CrossPlatformStringSplitInLines output
-
-        GetBranchFromGitBranch branchesOutput
+        gitBranch.UnwrapDefault().Trim()
 
     let GetLastCommit() =
         CheckGitIsInstalled()
