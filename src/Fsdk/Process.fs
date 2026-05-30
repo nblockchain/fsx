@@ -47,38 +47,35 @@ module Process =
 
     type OutputBuffer(buffer: list<OutputChunk>) =
 
-        //NOTE both Filter() and Print() process tail before head
-        // because of the way the buffer-aggregation is implemented in
-        // Execute()'s ReadIteration()
+        //NOTE the buffer is built by prepending (see ReadIteration),
+        // so we List.rev before iterating to restore chronological order
 
-        let rec Filter
-            (
-                subBuffer: list<OutputChunk>,
-                outputType: Option<Standard>
-            ) =
-            match subBuffer with
-            | [] -> new StringBuilder()
-            | head :: tail ->
-                let filteredTail = Filter(tail, outputType)
+        // Iterative version: List.rev + fold/iter avoids stack overflow on large buffers
+        // (the buffer is built by prepending, so rev restores chronological order)
+        let Filter(subBuffer: list<OutputChunk>, outputType: Option<Standard>) =
+            subBuffer
+            |> List.rev
+            |> List.fold
+                (fun (sb: StringBuilder) chunk ->
+                    if (outputType.IsNone || chunk.OutputType = outputType.Value) then
+                        sb.Append(chunk.Chunk.ToString())
+                    else
+                        sb
+                )
+                (StringBuilder())
 
-                if (outputType.IsNone || head.OutputType = outputType.Value) then
-                    filteredTail.Append(head.Chunk.ToString())
-                else
-                    filteredTail
-
-        let rec Print(subBuffer: list<OutputChunk>) : unit =
-            match subBuffer with
-            | [] -> ()
-            | head :: tail ->
-                Print(tail)
-
-                match head.OutputType with
+        let Print(subBuffer: list<OutputChunk>) : unit =
+            subBuffer
+            |> List.rev
+            |> List.iter(fun chunk ->
+                match chunk.OutputType with
                 | Standard.Output ->
-                    Console.Write(head.Chunk.ToString())
+                    Console.Write(chunk.Chunk.ToString())
                     Console.Out.Flush()
                 | Standard.Error ->
-                    Console.Error.Write(head.Chunk.ToString())
+                    Console.Error.Write(chunk.Chunk.ToString())
                     Console.Error.Flush()
+            )
 
         member this.StdOut = Filter(buffer, Some(Standard.Output)).ToString()
 
