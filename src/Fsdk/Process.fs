@@ -52,7 +52,11 @@ module Process =
 
         // Iterative version: List.rev + fold/iter avoids stack overflow on large buffers
         // (the buffer is built by prepending, so rev restores chronological order)
-        let Filter(subBuffer: list<OutputChunk>, outputType: Option<Standard>) =
+        let FilterByOutputType
+            (
+                subBuffer: list<OutputChunk>,
+                outputType: Option<Standard>
+            ) =
             subBuffer
             |> List.rev
             |> List.fold
@@ -77,15 +81,19 @@ module Process =
                     Console.Error.Flush()
             )
 
-        member this.StdOut = Filter(buffer, Some(Standard.Output)).ToString()
+        member this.StdOut =
+            FilterByOutputType(buffer, Some(Standard.Output))
+                .ToString()
 
-        member this.StdErr = Filter(buffer, Some(Standard.Error)).ToString()
+        member this.StdErr =
+            FilterByOutputType(buffer, Some(Standard.Error))
+                .ToString()
 
         member this.PrintToConsole() =
             Print(buffer)
 
         override self.ToString() =
-            Filter(buffer, None).ToString()
+            FilterByOutputType(buffer, None).ToString()
 
     type ProcessResultState =
         // exitCode=0, no stdErr
